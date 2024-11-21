@@ -166,6 +166,6 @@ public final class CamelUtils {
         exchange.getIn().setHeader(HTTP_QUERY, queryParams + oauthParams);
     }
 
-    record Result(String proxyName, int indexEnd) {
+    private record Result(String proxyName, int indexEnd) {
     }
 }
