@@ -26,12 +26,10 @@ import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION_
 import static org.apache.camel.Exchange.EXCEPTION_CAUGHT;
 import static org.apache.camel.Exchange.FAILURE_ENDPOINT;
 import static org.apache.camel.Exchange.HTTP_PATH;
-import static org.apache.camel.Exchange.HTTP_QUERY;
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
 import static org.apache.camel.Exchange.HTTP_URI;
 import static org.apache.camel.ExchangePropertyKey.FAILURE_ROUTE_ID;
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.AUTHENTICATED_USER;
-import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.REMOTE_ADDRESS;
 
 public final class CamelUtils {
 
@@ -84,7 +82,7 @@ public final class CamelUtils {
         }
 
         exchange.setProperty("forwardUrl", "%s%s".formatted(proxyUrl, proxyPath));
-        exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
+//        exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
     }
 
     public static Result extractProxyName(String incomingRequestPath) {
@@ -164,11 +162,11 @@ public final class CamelUtils {
     }
 
     public static void clientCredentialsAuth(Exchange exchange, ApiCredentialEntity credential) {
-        var queryParams = exchange.getIn().getHeader(HTTP_QUERY, String.class);
-        var firstChar = isNullOrEmpty(queryParams) ? '?' : '&';
-        var oauthParams = "%soauth2ClientId=%s&oauth2ClientSecret=%s&oauth2TokenEndpoint=%s&oauth2Scope=%s"
-                .formatted(firstChar, credential.clientId, credential.clientSecret, credential.clientUrl, credential.clientScope);
-        exchange.getIn().setHeader(HTTP_QUERY, queryParams + oauthParams);
+        exchange.getIn().removeHeader(AUTHORIZATION);
+        var oauthParams = "&oauth2ClientId=%s&oauth2ClientSecret=%s&oauth2TokenEndpoint=%s"
+                .formatted(credential.clientId, credential.clientSecret, credential.clientUrl);
+        oauthParams += credential.clientScope != null ? "&oauth2Scope=%s".formatted(credential.clientScope) : "";
+        exchange.setProperty("clientAuth", oauthParams);
     }
 
     private static String apiKey(ApiCredentialEntity credential) {

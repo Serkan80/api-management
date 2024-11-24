@@ -38,6 +38,7 @@ public record ApiPOST(
 
         @Min(1)
         @Max(1_000_000)
+        @Schema(description = "max amount of requests per minute")
         Integer maxRequests,
 
         @NotNull

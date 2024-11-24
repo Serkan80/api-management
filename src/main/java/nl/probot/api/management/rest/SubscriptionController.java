@@ -2,13 +2,11 @@ package nl.probot.api.management.rest;
 
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.api.management.entities.ApiEntity;
@@ -16,10 +14,8 @@ import nl.probot.api.management.entities.SubscriptionEntity;
 import nl.probot.api.management.rest.dto.Subscription;
 import nl.probot.api.management.rest.dto.SubscriptionAll;
 import nl.probot.api.management.rest.dto.SubscriptionPOST;
+import nl.probot.api.management.rest.openapi.SubscriptionOpenApi;
 import nl.probot.api.management.utils.CacheManager;
-import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
-import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
-import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 
@@ -27,19 +23,16 @@ import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
-import static org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType.HTTP;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Authenticated
-@Path("/subscriptions")
-@SecurityRequirement(name = "basic")
-@SecuritySchemes(@SecurityScheme(type = HTTP, scheme = "basic", securitySchemeName = "basic"))
-public class SubscriptionController {
+@ApplicationScoped
+public class SubscriptionController implements SubscriptionOpenApi {
 
     @Inject
     CacheManager cacheManager;
 
-    @POST
+    @Override
     @Transactional
     public RestResponse<Void> save(@Valid SubscriptionPOST sub, @Context UriInfo uriInfo) {
         var entity = SubscriptionEntity.toEntity(sub.subject());
@@ -49,7 +42,7 @@ public class SubscriptionController {
         return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
     }
 
-    @GET
+    @Override
     public List<Subscription> findAll() {
         return SubscriptionEntity.findAll()
                 .withHint(HINT_READONLY, true)
@@ -57,14 +50,12 @@ public class SubscriptionController {
                 .list();
     }
 
-    @GET
-    @Path("/{key}")
+    @Override
     public SubscriptionAll findByKey(@RestPath String key) {
         return SubscriptionAll.toDto(SubscriptionEntity.findByKey(key));
     }
 
-    @POST
-    @Path("/{key}/apis")
+    @Override
     @Transactional
     public RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds) {
         var sub = SubscriptionEntity.findByKey(key);
@@ -72,7 +63,7 @@ public class SubscriptionController {
 
         if (!apis.isEmpty()) {
             apis.forEach(api -> sub.addApi(api));
-            this.cacheManager.invalidate(key, sub);
+            this.cacheManager.invalidate(key);
             Log.infof("New Api's for Subscription(subject=%s) added", sub.subject);
             return RestResponse.ok(SubscriptionAll.toDto(sub));
         } else {

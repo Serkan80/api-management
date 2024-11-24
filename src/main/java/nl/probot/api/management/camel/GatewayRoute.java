@@ -8,7 +8,6 @@ import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION_
 import static nl.probot.api.management.camel.SubscriptionProcessor.THROTTLING_ENABLED;
 import static nl.probot.api.management.camel.SubscriptionProcessor.THROTTLING_MAX_REQUESTS;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
-import static org.apache.camel.LoggingLevel.INFO;
 import static org.apache.hc.core5.http.ContentType.MULTIPART_FORM_DATA;
 
 @ApplicationScoped
@@ -41,8 +40,9 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .end()
                 .process(CamelUtils::forwardUrlProcessor)
                 .process(CamelUtils::cleanUpHeaders)
-                .log(INFO, "headers after: ${headers}")
-                .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=false&followRedirects=true&connectionClose=true&copyHeaders=true")
+                .to("http://ifconfig.me")
+                .setHeader("X-Forward-For", body().convertToString())
+                .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=false&followRedirects=true&connectionClose=true&copyHeaders=true${exchangeProperty.clientAuth}")
                 .to("micrometer:timer:gateway-metrics?action=stop");
         //@formatter:on
 

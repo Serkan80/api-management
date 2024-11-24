@@ -8,7 +8,7 @@ public record SubscriptionPOST(
 
         @NotBlank
         @Size(max = 50)
-        @Schema(example = "The A-Team")
+        @Schema(example = "The A-Team", description = "the one that owns this subscription")
         String subject
 ) {
 }

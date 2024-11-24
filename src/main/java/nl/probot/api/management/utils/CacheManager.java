@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 public class CacheManager {
 
     static final int MAX_AMOUNT = 100;
+    // 5 minute
     static final int OLD_DATA_CLEANUP_MILLIS = 300_000;
     Map<String, TimedValue> cache = new ConcurrentHashMap<>(MAX_AMOUNT);
 
@@ -34,8 +35,8 @@ public class CacheManager {
         return (T) timedValue.value;
     }
 
-    public void invalidate(String key, Object value) {
-        this.cache.remove(key, new TimedValue(value));
+    public void invalidate(String key) {
+        this.cache.remove(key);
         Log.debugf("Cache invalidated for key %s", key);
     }
 

@@ -1,7 +1,5 @@
 package nl.probot.api.management.camel;
 
-import io.quarkus.logging.Log;
-import io.quarkus.security.UnauthorizedException;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -38,13 +36,8 @@ public class SubscriptionProcessor implements Processor {
         var subscriptionKey = in.getHeader(SUBSCRIPTION_KEY, String.class);
         var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findByKey(subscriptionKey));
         var api = subscription.findApiBy(extractProxyName(incomingRequest).proxyName(), Function.identity());
-
-        if (api == null) {
-            Log.errorf("Subscriber has no authorization for %s", incomingRequest);
-            throw new UnauthorizedException("Subscriber has no authorization for %s".formatted(incomingRequest));
-        }
-
         var credential = subscription.findApiCredential(api.id);
+
         switch (api.authenticationType) {
             case BASIC -> basicAuth(exchange, credential.username, credential.password);
             case API_KEY -> apiTokenAuth(exchange, credential);
