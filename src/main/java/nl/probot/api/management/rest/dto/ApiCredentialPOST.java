@@ -1,21 +1,23 @@
 package nl.probot.api.management.rest.dto;
 
-import nl.probot.api.management.entities.ApiCredentialEntity;
-import nl.probot.api.management.entities.CompositeApiId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import nl.probot.api.management.entities.ApiCredentialEntity;
+import nl.probot.api.management.entities.CompositeApiId;
+import org.hibernate.validator.constraints.URL;
 
 import static io.micrometer.common.util.StringUtils.isNotBlank;
 
-public record ApiCredential(
-        @Min(1) @NotNull
-        Long subscriptionId,
+public record ApiCredentialPOST(
+        @NotBlank
+        String subscriptionKey,
         String username,
         String password,
         String clientId,
         String clientSecret,
+
+        @URL
         String clientUrl,
         String clientScope,
         String apiKey,
@@ -24,8 +26,8 @@ public record ApiCredential(
 ) {
 
     @JsonIgnore
-    @AssertTrue(message = "no credentials were provided")
-    public boolean credentialsArePresent() {
+    @AssertTrue(message = "No credentials were provided")
+    public boolean isCredentialsValid() {
         return (isNotBlank(this.apiKey) && isNotBlank(this.apiKeyHeader) && this.apiKeyHeaderOutsideAuthorization != null)
                || (isNotBlank(this.clientId) && isNotBlank(this.clientSecret) && isNotBlank(this.clientUrl))
                || (isNotBlank(this.username) && isNotBlank(this.password));
@@ -34,7 +36,6 @@ public record ApiCredential(
     public ApiCredentialEntity toEntity() {
         var result = new ApiCredentialEntity();
         result.id = new CompositeApiId();
-        result.id.subscriptionId = this.subscriptionId;
         result.username = this.username;
         result.password = this.password;
         result.clientId = this.clientId;

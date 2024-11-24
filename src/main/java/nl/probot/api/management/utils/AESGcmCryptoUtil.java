@@ -1,4 +1,4 @@
-package nl.probot.api.management.entities.converters;
+package nl.probot.api.management.utils;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;

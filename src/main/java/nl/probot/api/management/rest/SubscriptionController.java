@@ -1,13 +1,8 @@
 package nl.probot.api.management.rest;
 
-import jakarta.inject.Inject;
-import nl.probot.api.management.entities.ApiEntity;
-import nl.probot.api.management.entities.SubscriptionEntity;
-import nl.probot.api.management.rest.dto.Subscription;
-import nl.probot.api.management.rest.dto.SubscriptionAll;
-import nl.probot.api.management.rest.dto.SubscriptionPOST;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,8 +11,15 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
+import nl.probot.api.management.entities.ApiEntity;
+import nl.probot.api.management.entities.SubscriptionEntity;
+import nl.probot.api.management.rest.dto.Subscription;
+import nl.probot.api.management.rest.dto.SubscriptionAll;
+import nl.probot.api.management.rest.dto.SubscriptionPOST;
 import nl.probot.api.management.utils.CacheManager;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
+import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 
@@ -30,7 +32,8 @@ import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Authenticated
 @Path("/subscriptions")
-@SecurityScheme(type = HTTP, scheme = "basic")
+@SecurityRequirement(name = "basic")
+@SecuritySchemes(@SecurityScheme(type = HTTP, scheme = "basic", securitySchemeName = "basic"))
 public class SubscriptionController {
 
     @Inject
@@ -43,7 +46,7 @@ public class SubscriptionController {
         entity.persist();
         Log.infof("Subscription(subject=%s) created", entity.subject);
 
-        return RestResponse.created(URI.create("%s%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
+        return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
     }
 
     @GET
@@ -69,7 +72,7 @@ public class SubscriptionController {
 
         if (!apis.isEmpty()) {
             apis.forEach(api -> sub.addApi(api));
-            this.cacheManager.update(key, sub);
+            this.cacheManager.invalidate(key, sub);
             Log.infof("New Api's for Subscription(subject=%s) added", sub.subject);
             return RestResponse.ok(SubscriptionAll.toDto(sub));
         } else {

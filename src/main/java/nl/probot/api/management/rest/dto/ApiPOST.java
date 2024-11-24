@@ -1,10 +1,12 @@
 package nl.probot.api.management.rest.dto;
 
-import nl.probot.api.management.entities.ApiEntity;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import nl.probot.api.management.entities.ApiEntity;
+import nl.probot.api.management.entities.AuthenticationType;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.hibernate.validator.constraints.URL;
 
@@ -36,7 +38,10 @@ public record ApiPOST(
 
         @Min(1)
         @Max(1_000_000)
-        Integer maxRequests
+        Integer maxRequests,
+
+        @NotNull
+        AuthenticationType authenticationType
 ) {
     public ApiEntity toEntity() {
         var result = new ApiEntity();
@@ -46,6 +51,7 @@ public record ApiPOST(
         result.openApiUrl = this.openApiUrl;
         result.description = this.description;
         result.maxRequests = this.maxRequests;
+        result.authenticationType = this.authenticationType;
         return result;
     }
 }

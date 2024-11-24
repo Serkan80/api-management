@@ -13,11 +13,11 @@ import org.apache.camel.Processor;
 import java.util.function.Function;
 
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import static nl.probot.api.management.camel.CamelUtils.apiKeyAuth;
+import static nl.probot.api.management.camel.CamelUtils.apiTokenAuth;
+import static nl.probot.api.management.camel.CamelUtils.basicAuth;
 import static nl.probot.api.management.camel.CamelUtils.clientCredentialsAuth;
 import static nl.probot.api.management.camel.CamelUtils.extractProxyName;
 import static org.apache.camel.Exchange.HTTP_URI;
-import static org.apache.camel.component.http.HttpCredentialsHelper.generateBasicAuthHeader;
 
 @Singleton
 public class SubscriptionProcessor implements Processor {
@@ -44,13 +44,12 @@ public class SubscriptionProcessor implements Processor {
             throw new UnauthorizedException("Subscriber has no authorization for %s".formatted(incomingRequest));
         }
 
-        if (api.authenticationType != null) {
-            var credential = subscription.findApiCredential(api.id);
-            switch (api.authenticationType) {
-                case BASIC -> in.setHeader(AUTHORIZATION, generateBasicAuthHeader(credential.username, credential.password));
-                case API_KEY -> in.setHeader(credential.apiKeyHeaderOutsideAuthorization ? credential.apiKeyHeader : AUTHORIZATION, apiKeyAuth(credential));
-                case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);
-            }
+        var credential = subscription.findApiCredential(api.id);
+        switch (api.authenticationType) {
+            case BASIC -> basicAuth(exchange, credential.username, credential.password);
+            case API_KEY -> apiTokenAuth(exchange, credential);
+            case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);
+            case NONE -> in.removeHeader(AUTHORIZATION);
         }
 
         if (api.maxRequests != null) {

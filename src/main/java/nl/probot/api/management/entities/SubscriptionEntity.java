@@ -21,7 +21,6 @@ import java.util.function.Function;
 
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Entity
 @Table(name = "subscription")
@@ -56,10 +55,11 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public <T> T findApiBy(String proxyPath, Function<ApiEntity, T> mapper) {
         return this.apis.stream()
+                .filter(api -> api.enabled)
                 .filter(api -> api.proxyPath.equals(proxyPath))
                 .map(mapper::apply)
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Api(proxyPath=%s) not found".formatted(proxyPath)));
+                .orElseThrow(() -> new NotFoundException("Api(proxyPath=%s) not found or was not enabled".formatted(proxyPath)));
     }
 
     public ApiCredentialEntity findApiCredential(Long apiId) {
@@ -69,6 +69,18 @@ public class SubscriptionEntity extends PanacheEntity {
                 .orElseThrow(() -> new NotFoundException("No credential found for the given Api Id"));
     }
 
+    public static SubscriptionEntity findByKey(String key) {
+        return find("""
+                select s 
+                from SubscriptionEntity s 
+                left join fetch s.apis a
+                left join fetch s.apiCredentials ac 
+                where subscriptionKey = ?1 and s.enabled = true
+                """, key)
+                .<SubscriptionEntity>singleResultOptional()
+                .orElseThrow(() -> new NotFoundException("Subscription with given key not found"));
+    }
+
     public static SubscriptionEntity toEntity(String subject) {
         var result = new SubscriptionEntity();
         result.subject = subject;
@@ -76,18 +88,6 @@ public class SubscriptionEntity extends PanacheEntity {
         result.subscriptionKey = createSubscriptionKey();
         result.createdAt = OffsetDateTime.now(ZoneId.of("Europe/Amsterdam"));
         return result;
-    }
-
-    public static SubscriptionEntity findByKey(String key) {
-        return find("""
-                select s 
-                from SubscriptionEntity s 
-                left join fetch s.apis a
-                left join fetch s.apiCredentials ac 
-                where subscriptionKey = ?1 and enabled = true
-                """, key)
-                .<SubscriptionEntity>singleResultOptional()
-                .orElseThrow(() -> new NotFoundException("Subscription with given key not found"));
     }
 
     @Override

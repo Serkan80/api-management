@@ -8,6 +8,7 @@ import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION_
 import static nl.probot.api.management.camel.SubscriptionProcessor.THROTTLING_ENABLED;
 import static nl.probot.api.management.camel.SubscriptionProcessor.THROTTLING_MAX_REQUESTS;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
+import static org.apache.camel.LoggingLevel.INFO;
 import static org.apache.hc.core5.http.ContentType.MULTIPART_FORM_DATA;
 
 @ApplicationScoped
@@ -20,7 +21,7 @@ public class GatewayRoute extends EndpointRouteBuilder {
     public void configure() {
         onException(Throwable.class)
                 .handled(true)
-                .process(CamelUtils::cleanHeaders)
+                .process(CamelUtils::cleanUpHeaders)
                 .process(CamelUtils::setErrorMessage)
                 .end();
 
@@ -39,8 +40,9 @@ public class GatewayRoute extends EndpointRouteBuilder {
                         .process(CamelUtils::multiPartProcessor)
                 .end()
                 .process(CamelUtils::forwardUrlProcessor)
-                .process(CamelUtils::cleanHeaders)
-                .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=true&followRedirects=true&connectionClose=true&copyHeaders=true")
+                .process(CamelUtils::cleanUpHeaders)
+                .log(INFO, "headers after: ${headers}")
+                .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=false&followRedirects=true&connectionClose=true&copyHeaders=true")
                 .to("micrometer:timer:gateway-metrics?action=stop");
         //@formatter:on
 

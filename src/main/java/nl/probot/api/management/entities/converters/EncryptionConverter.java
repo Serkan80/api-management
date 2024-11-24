@@ -1,6 +1,7 @@
 package nl.probot.api.management.entities.converters;
 
 import jakarta.persistence.AttributeConverter;
+import nl.probot.api.management.utils.AESGcmCryptoUtil;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import java.util.Base64;

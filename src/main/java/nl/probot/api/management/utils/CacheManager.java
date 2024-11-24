@@ -34,9 +34,9 @@ public class CacheManager {
         return (T) timedValue.value;
     }
 
-    public void update(String key, Object value) {
-        this.cache.put(key, new TimedValue(value));
-        Log.debugf("Cache update for key %s", key);
+    public void invalidate(String key, Object value) {
+        this.cache.remove(key, new TimedValue(value));
+        Log.debugf("Cache invalidated for key %s", key);
     }
 
     record TimedValue(Object value, long timestamp) {

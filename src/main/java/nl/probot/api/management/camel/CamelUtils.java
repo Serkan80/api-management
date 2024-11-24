@@ -12,12 +12,14 @@ import nl.probot.api.management.entities.ApiCredentialEntity;
 import nl.probot.api.management.entities.SubscriptionEntity;
 import org.apache.camel.Exchange;
 import org.apache.camel.attachment.AttachmentMessage;
+import org.apache.camel.component.http.HttpCredentialsHelper;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 
 import java.util.Map;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
+import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
@@ -95,11 +97,12 @@ public final class CamelUtils {
         return new Result(incomingRequestPath.substring(proxyIndexStart, proxyIndexEnd), proxyIndexEnd);
     }
 
-    public static void cleanHeaders(Exchange exchange) {
+    public static void cleanUpHeaders(Exchange exchange) {
         exchange.getIn().removeHeader(HTTP_URI);
         exchange.getIn().removeHeader(HTTP_PATH);
         exchange.getIn().removeHeader(SUBSCRIPTION);
         exchange.getIn().removeHeader(SUBSCRIPTION_KEY);
+        exchange.getIn().removeHeader(AUTHENTICATED_USER);
     }
 
     public static void setErrorMessage(Exchange exchange) {
@@ -150,12 +153,14 @@ public final class CamelUtils {
         return url.substring(0, optionsIndex);
     }
 
-    public static String apiKeyAuth(ApiCredentialEntity credential) {
-        if (credential.apiKeyHeaderOutsideAuthorization) {
-            return credential.apiKey;
-        }
+    public static void basicAuth(Exchange exchange, String username, String password) {
+        exchange.getIn().removeHeader(AUTHORIZATION);
+        exchange.getIn().setHeader(AUTHORIZATION, HttpCredentialsHelper.generateBasicAuthHeader(username, password));
+    }
 
-        return "%s %s".formatted(credential.apiKeyHeader, credential.apiKey);
+    public static void apiTokenAuth(Exchange exchange, ApiCredentialEntity credential) {
+        exchange.getIn().removeHeader(AUTHORIZATION);
+        exchange.getIn().setHeader(credential.apiKeyHeaderOutsideAuthorization ? credential.apiKeyHeader : AUTHORIZATION, apiKey(credential));
     }
 
     public static void clientCredentialsAuth(Exchange exchange, ApiCredentialEntity credential) {
@@ -166,6 +171,14 @@ public final class CamelUtils {
         exchange.getIn().setHeader(HTTP_QUERY, queryParams + oauthParams);
     }
 
-    private record Result(String proxyName, int indexEnd) {
+    private static String apiKey(ApiCredentialEntity credential) {
+        if (credential.apiKeyHeaderOutsideAuthorization) {
+            return credential.apiKey;
+        }
+
+        return "%s %s".formatted(credential.apiKeyHeader, credential.apiKey);
+    }
+
+    record Result(String proxyName, int indexEnd) {
     }
 }
