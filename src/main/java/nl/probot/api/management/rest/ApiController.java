@@ -6,17 +6,19 @@ import io.quarkus.security.Authenticated;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
+import nl.probot.api.management.entities.ApiCredentialEntity;
 import nl.probot.api.management.entities.ApiEntity;
+import nl.probot.api.management.entities.PanacheDyanmicQueryHelper;
+import nl.probot.api.management.entities.PanacheDyanmicQueryHelper.StaticStatement;
+import nl.probot.api.management.entities.PanacheDyanmicQueryHelper.WhereStatement;
 import nl.probot.api.management.entities.SubscriptionEntity;
 import nl.probot.api.management.rest.dto.Api;
-import nl.probot.api.management.rest.dto.ApiCredentialPOST;
+import nl.probot.api.management.rest.dto.ApiCredential;
 import nl.probot.api.management.rest.dto.ApiPOST;
+import nl.probot.api.management.rest.dto.ApiUPDATE;
 import nl.probot.api.management.rest.openapi.ApiOpenApi;
 import nl.probot.api.management.utils.CacheManager;
-import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.net.URI;
@@ -33,24 +35,71 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
-    public RestResponse<Void> save(@Valid ApiPOST api, @Context UriInfo uriInfo) {
-        api.toEntity().persist();
-        Log.infof("Api(proxyPath=%s, proxyUrl=%s, owner=%s) created", api.proxyPath(), api.proxyUrl(), api.owner());
+    public RestResponse<Void> save(ApiPOST api, UriInfo uriInfo) {
+        var apiEntity = api.toEntity();
+        apiEntity.persist();
+        Log.infof("Api(id=%d, proxyPath=%s, proxyUrl=%s, owner=%s) created", apiEntity.id, api.proxyPath(), api.proxyUrl(), api.owner());
+
+        var credential = api.credential();
+        if (credential != null) {
+            addCredential(apiEntity.id, credential);
+        }
         return RestResponse.created(URI.create(uriInfo.getPath()));
     }
 
     @Override
     @Transactional
-    public RestResponse<Void> addCredential(@RestPath Long apiId, @Valid ApiCredentialPOST credential, @Context UriInfo uriInfo) {
-        var subscription = SubscriptionEntity.findByKey(credential.subscriptionKey());
+    public ApiUPDATE update(Long apiId, ApiUPDATE api) {
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new StaticStatement("proxyPath", api.proxyPath()),
+                new StaticStatement("proxyUrl", api.proxyUrl()),
+                new StaticStatement("owner", api.owner()),
+                new StaticStatement("openApiUrl", api.openApiUrl()),
+                new StaticStatement("description", api.description()),
+                new StaticStatement("maxRequests", api.maxRequests()),
+                new StaticStatement("authenticationType", api.authenticationType())
+        ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
+
+        ApiEntity.update(query, helper.values());
+        return api;
+    }
+
+    @Override
+    @Transactional
+    public void addCredential(Long apiId, ApiCredential credential) {
+        var subscriptionEntity = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
+        var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, apiId);
         var credentialEntity = credential.toEntity();
-        credentialEntity.id.apiId = apiId;
-        credentialEntity.id.subscriptionId = subscription.id;
-        credentialEntity.subscription = subscription;
+        credentialEntity.id.api = apiEntity;
+        credentialEntity.id.subscription = subscriptionEntity;
         credentialEntity.persist();
         this.cacheManager.invalidate(credential.subscriptionKey());
+        Log.infof("ApiCredential(apiId=%d, subKey=%s) created", apiEntity.id, credential.subscriptionKey());
+    }
 
-        return RestResponse.created(uriInfo.getBaseUri());
+    @Override
+    @Transactional
+    public ApiCredential updateCredential(Long apiId, ApiCredential credential) {
+        var subId = SubscriptionEntity.getByNaturalId(credential.subscriptionKey()).id;
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new StaticStatement("username", credential.username()),
+                new StaticStatement("password", credential.password()),
+                new StaticStatement("clientId", credential.clientId()),
+                new StaticStatement("clientSecret", credential.clientSecret()),
+                new StaticStatement("clientUrl", credential.clientUrl()),
+                new StaticStatement("clientScope", credential.clientScope()),
+                new StaticStatement("apiKey", credential.apiKey()),
+                new StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
+                new StaticStatement("apiKeyHeaderOutsideAuthorization", credential.apiKeyHeaderOutsideAuthorization())
+        ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
+
+        ApiCredentialEntity.update(query, helper.values());
+        this.cacheManager.invalidate(credential.subscriptionKey());
+
+        Log.infof("ApiCredential(apiId=%d, subKey=%s) updated", apiId, credential.subscriptionKey());
+        return credential;
     }
 
     @Override

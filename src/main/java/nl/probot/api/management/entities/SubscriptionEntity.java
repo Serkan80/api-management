@@ -9,27 +9,28 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.NotFoundException;
+import org.hibernate.Session;
+import org.hibernate.annotations.NaturalId;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
+import static nl.probot.api.management.utils.CryptoUtil.createRandomKey;
 
 @Entity
 @Table(name = "subscription")
 public class SubscriptionEntity extends PanacheEntity {
 
-    private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
     @NotBlank
-    @Column(unique = true)
+    @NaturalId
+    @Column(name = "subscription_key", unique = true)
     public String subscriptionKey;
 
     @NotBlank
@@ -42,7 +43,7 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public boolean enabled = true;
 
-    @OneToMany(mappedBy = "subscription")
+    @OneToMany(mappedBy = "id.subscription")
     public List<ApiCredentialEntity> apiCredentials;
 
     @ManyToMany(cascade = {MERGE, PERSIST})
@@ -64,9 +65,16 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public ApiCredentialEntity findApiCredential(Long apiId) {
         return this.apiCredentials.stream()
-                .filter(api -> api.id.apiId == apiId)
+                .filter(api -> api.id.api.id == apiId)
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("No credential found for the given Api Id"));
+    }
+
+    public static SubscriptionEntity getByNaturalId(String subscriptionKey) {
+        return SubscriptionEntity.getEntityManager()
+                .unwrap(Session.class)
+                .bySimpleNaturalId(SubscriptionEntity.class)
+                .load(subscriptionKey);
     }
 
     public static SubscriptionEntity findByKey(String key) {
@@ -85,14 +93,14 @@ public class SubscriptionEntity extends PanacheEntity {
         var result = new SubscriptionEntity();
         result.subject = subject;
         result.enabled = true;
-        result.subscriptionKey = createSubscriptionKey();
+        result.subscriptionKey = createRandomKey(32);
         result.createdAt = OffsetDateTime.now(ZoneId.of("Europe/Amsterdam"));
         return result;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.subject);
+        return Objects.hash(this.subscriptionKey);
     }
 
     @Override
@@ -102,19 +110,8 @@ public class SubscriptionEntity extends PanacheEntity {
         }
 
         if (obj instanceof SubscriptionEntity sub) {
-            return Objects.equals(this.subject, sub.subject);
+            return Objects.equals(this.subscriptionKey, sub.subscriptionKey);
         }
         return false;
-    }
-
-    private static String createSubscriptionKey() {
-        var length = 32;
-        var rnd = new Random();
-        var result = new StringBuffer(length);
-
-        for (int i = 0; i < length; i++) {
-            result.append(CHARS.charAt(rnd.nextInt(CHARS.length())));
-        }
-        return result.toString();
     }
 }

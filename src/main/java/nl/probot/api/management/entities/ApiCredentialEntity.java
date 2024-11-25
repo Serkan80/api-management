@@ -1,15 +1,11 @@
 package nl.probot.api.management.entities;
 
-import nl.probot.api.management.entities.converters.EncryptionConverter;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Convert;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-
-import static jakarta.persistence.FetchType.LAZY;
+import nl.probot.api.management.entities.converters.EncryptionConverter;
 
 @Entity
 @Table(name = "api_credential")
@@ -17,10 +13,6 @@ public class ApiCredentialEntity extends PanacheEntityBase {
 
     @EmbeddedId
     public CompositeApiId id;
-
-    @MapsId("subscriptionId")
-    @ManyToOne(fetch = LAZY)
-    public SubscriptionEntity subscription;
 
     @Convert(converter = EncryptionConverter.class)
     public String username;
@@ -38,8 +30,6 @@ public class ApiCredentialEntity extends PanacheEntityBase {
 
     @Convert(converter = EncryptionConverter.class)
     public String apiKey;
-
     public String apiKeyHeader;
-
     public Boolean apiKeyHeaderOutsideAuthorization;
 }

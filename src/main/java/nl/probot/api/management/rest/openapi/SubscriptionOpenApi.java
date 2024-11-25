@@ -1,5 +1,6 @@
 package nl.probot.api.management.rest.openapi;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.GET;
@@ -10,6 +11,7 @@ import jakarta.ws.rs.core.UriInfo;
 import nl.probot.api.management.rest.dto.Subscription;
 import nl.probot.api.management.rest.dto.SubscriptionAll;
 import nl.probot.api.management.rest.dto.SubscriptionPOST;
+import nl.probot.api.management.rest.dto.Views;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -45,16 +47,21 @@ public interface SubscriptionOpenApi {
 
     @GET
     @Path("/{key}")
+    @JsonView(Views.PublicFields.class)
     @Operation(summary = "Returns the Subscription and its Api's for the given key")
-    @APIResponses(value = {@APIResponse(name = "OK", responseCode = "200"), @APIResponse(name = "Not Found", responseCode = "404", description = "Not Found")})
+    @APIResponses(value = {
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "Not Found")
+    })
     SubscriptionAll findByKey(@RestPath String key);
 
     @POST
     @Path("/{key}/apis")
-    @Operation(summary = "Adds the Api's for the given Subscription")
+    @JsonView(Views.PublicFields.class)
+    @Operation(summary = "Adds the Apis for the given Subscription")
     @APIResponses(value = {
             @APIResponse(name = "OK", responseCode = "200"),
-            @APIResponse(name = "Api's Not Found", responseCode = "204", description = "When the given Api's are not found"),
+            @APIResponse(name = "Apis Not Found", responseCode = "204", description = "When the given Api's are not found"),
             @APIResponse(name = "Subscription Not Found", responseCode = "404", description = "When the given Subscription is not found")
     })
     RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds);

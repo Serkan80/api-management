@@ -6,7 +6,6 @@ import io.quarkus.security.UnauthorizedException;
 import io.quarkus.vertx.http.runtime.security.QuarkusHttpUser;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.JsonObject;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import nl.probot.api.management.entities.ApiCredentialEntity;
 import nl.probot.api.management.entities.SubscriptionEntity;
@@ -77,12 +76,7 @@ public final class CamelUtils {
         var proxyUrl = subscription.findApiBy(proxyName, api -> api.proxyUrl);
         Log.debugf("proxyName: %s, proxyUrl: %s, proxyPath: %s\n", proxyName, proxyUrl, proxyPath);
 
-        if (isNullOrEmpty(proxyUrl)) {
-            throw new NotFoundException("No proxy found for request: %s".formatted(incomingRequestPath));
-        }
-
         exchange.setProperty("forwardUrl", "%s%s".formatted(proxyUrl, proxyPath));
-//        exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
     }
 
     public static Result extractProxyName(String incomingRequestPath) {

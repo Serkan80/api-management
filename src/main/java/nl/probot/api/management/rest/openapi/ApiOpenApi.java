@@ -1,18 +1,23 @@
 package nl.probot.api.management.rest.openapi;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.api.management.rest.dto.Api;
-import nl.probot.api.management.rest.dto.ApiCredentialPOST;
+import nl.probot.api.management.rest.dto.ApiCredential;
 import nl.probot.api.management.rest.dto.ApiPOST;
+import nl.probot.api.management.rest.dto.ApiUPDATE;
+import nl.probot.api.management.rest.dto.Views;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
@@ -36,13 +41,35 @@ public interface ApiOpenApi {
     @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri")))
     RestResponse<Void> save(@Valid ApiPOST api, @Context UriInfo uriInfo);
 
-    @POST
-    @Path("/{apiId}/credentials")
-    @Operation(summary = "Adds a credential to the given Api (and to the subscription via its key)")
-    @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri")))
-    RestResponse<Void> addCredential(@RestPath Long apiId, @Valid ApiCredentialPOST credential, @Context UriInfo uriInfo);
+    @PUT
+    @Path("/{apiId}")
+    @Operation(summary = "Updates the given Api")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
+    })
+    ApiUPDATE update(@RestPath Long apiId, @Valid ApiUPDATE api);
 
     @GET
     @Operation(summary = "Returns all Apis sorted by its owner")
     List<Api> findAll();
+
+    @POST
+    @Path("/{apiId}/credentials")
+    @Operation(summary = "Adds a credential to the given Api")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri"))),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription or api is not found")
+    })
+    void addCredential(@RestPath Long apiId, @Valid ApiCredential credential);
+
+    @PUT
+    @Path("/{apiId}/credentials")
+    @JsonView(Views.AllFields.class)
+    @Operation(summary = "Updates the given credential")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
+    })
+    ApiCredential updateCredential(Long apiId, @Valid ApiCredential credential);
 }

@@ -14,16 +14,18 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Random;
 
-public final class AESGcmCryptoUtil {
+public final class CryptoUtil {
 
+    private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final String AES_GCM_NOPADDING = "AES/GCM/NoPadding";
     private static final String AES = "AES";
     private static final int AES_KEY_SIZE = 128;
     private static final int GCM_TAG_LENGTH = 16;
     private static final int GCM_IV_LENGTH = 12;
 
-    private AESGcmCryptoUtil() {
+    private CryptoUtil() {
         super();
     }
 
@@ -100,6 +102,20 @@ public final class AESGcmCryptoUtil {
             throw new RuntimeException(e);
         }
         return result;
+    }
+
+    public static String createRandomKey(int length) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("length must be positive");
+        }
+
+        var rnd = new Random();
+        var result = new StringBuffer(length);
+
+        for (int i = 0; i < length; i++) {
+            result.append(CHARS.charAt(rnd.nextInt(CHARS.length())));
+        }
+        return result.toString();
     }
 
     private static SecretKeySpec getKey(char[] secret, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {

@@ -1,15 +1,21 @@
 package nl.probot.api.management.entities;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import java.io.Serializable;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Embeddable
 public class CompositeApiId implements Serializable {
 
-    @Column(name = "api_id")
-    public long apiId;
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "api_id", updatable = false, insertable = false)
+    public ApiEntity api;
 
-    public long subscriptionId;
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "sub_id", updatable = false, insertable = false)
+    public SubscriptionEntity subscription;
 }
