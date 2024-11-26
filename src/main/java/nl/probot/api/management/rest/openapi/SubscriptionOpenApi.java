@@ -1,6 +1,5 @@
 package nl.probot.api.management.rest.openapi;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.GET;
@@ -11,7 +10,6 @@ import jakarta.ws.rs.core.UriInfo;
 import nl.probot.api.management.rest.dto.Subscription;
 import nl.probot.api.management.rest.dto.SubscriptionAll;
 import nl.probot.api.management.rest.dto.SubscriptionPOST;
-import nl.probot.api.management.rest.dto.Views;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -47,7 +45,6 @@ public interface SubscriptionOpenApi {
 
     @GET
     @Path("/{key}")
-    @JsonView(Views.PublicFields.class)
     @Operation(summary = "Returns the Subscription and its Api's for the given key")
     @APIResponses(value = {
             @APIResponse(name = "OK", responseCode = "200"),
@@ -57,7 +54,6 @@ public interface SubscriptionOpenApi {
 
     @POST
     @Path("/{key}/apis")
-    @JsonView(Views.PublicFields.class)
     @Operation(summary = "Adds the Apis for the given Subscription")
     @APIResponses(value = {
             @APIResponse(name = "OK", responseCode = "200"),

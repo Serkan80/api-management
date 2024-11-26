@@ -1,5 +1,6 @@
 package nl.probot.api.management.rest;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.security.Authenticated;
@@ -14,6 +15,7 @@ import nl.probot.api.management.rest.dto.Api;
 import nl.probot.api.management.rest.dto.ApiCredential;
 import nl.probot.api.management.rest.dto.ApiPOST;
 import nl.probot.api.management.rest.dto.ApiUPDATE;
+import nl.probot.api.management.rest.dto.Views;
 import nl.probot.api.management.rest.openapi.ApiOpenApi;
 import nl.probot.api.management.utils.CacheManager;
 import nl.probot.api.management.utils.PanacheDyanmicQueryHelper;
@@ -84,6 +86,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
+    @JsonView(Views.AllFields.class)
     public RestResponse<Void> updateCredential(Long apiId, ApiCredential credential) {
         var subId = SubscriptionEntity.getByNaturalId(credential.subscriptionKey()).id;
         var helper = new PanacheDyanmicQueryHelper();

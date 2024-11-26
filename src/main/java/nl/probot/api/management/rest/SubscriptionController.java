@@ -1,5 +1,6 @@
 package nl.probot.api.management.rest;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,6 +15,7 @@ import nl.probot.api.management.entities.SubscriptionEntity;
 import nl.probot.api.management.rest.dto.Subscription;
 import nl.probot.api.management.rest.dto.SubscriptionAll;
 import nl.probot.api.management.rest.dto.SubscriptionPOST;
+import nl.probot.api.management.rest.dto.Views;
 import nl.probot.api.management.rest.openapi.SubscriptionOpenApi;
 import nl.probot.api.management.utils.CacheManager;
 import org.jboss.resteasy.reactive.RestPath;
@@ -51,12 +53,14 @@ public class SubscriptionController implements SubscriptionOpenApi {
     }
 
     @Override
+    @JsonView(Views.PublicFields.class)
     public SubscriptionAll findByKey(@RestPath String key) {
         return SubscriptionAll.toDto(SubscriptionEntity.findByKey(key));
     }
 
     @Override
     @Transactional
+    @JsonView(Views.PublicFields.class)
     public RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds) {
         var sub = SubscriptionEntity.findByKey(key);
         var apis = ApiEntity.findByIds(apiIds);

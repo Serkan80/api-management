@@ -1,6 +1,5 @@
 package nl.probot.api.management.rest.openapi;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -12,7 +11,6 @@ import nl.probot.api.management.rest.dto.Api;
 import nl.probot.api.management.rest.dto.ApiCredential;
 import nl.probot.api.management.rest.dto.ApiPOST;
 import nl.probot.api.management.rest.dto.ApiUPDATE;
-import nl.probot.api.management.rest.dto.Views;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -66,7 +64,6 @@ public interface ApiOpenApi {
 
     @PUT
     @Path("/{apiId}/credentials")
-    @JsonView(Views.AllFields.class)
     @Operation(summary = "Updates the given credential")
     @APIResponses({
             @APIResponse(name = "OK", responseCode = "200"),
