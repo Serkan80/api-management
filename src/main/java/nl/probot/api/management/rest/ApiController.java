@@ -9,9 +9,6 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.api.management.entities.ApiCredentialEntity;
 import nl.probot.api.management.entities.ApiEntity;
-import nl.probot.api.management.entities.PanacheDyanmicQueryHelper;
-import nl.probot.api.management.entities.PanacheDyanmicQueryHelper.StaticStatement;
-import nl.probot.api.management.entities.PanacheDyanmicQueryHelper.WhereStatement;
 import nl.probot.api.management.entities.SubscriptionEntity;
 import nl.probot.api.management.rest.dto.Api;
 import nl.probot.api.management.rest.dto.ApiCredential;
@@ -19,6 +16,9 @@ import nl.probot.api.management.rest.dto.ApiPOST;
 import nl.probot.api.management.rest.dto.ApiUPDATE;
 import nl.probot.api.management.rest.openapi.ApiOpenApi;
 import nl.probot.api.management.utils.CacheManager;
+import nl.probot.api.management.utils.PanacheDyanmicQueryHelper;
+import nl.probot.api.management.utils.PanacheDyanmicQueryHelper.StaticStatement;
+import nl.probot.api.management.utils.PanacheDyanmicQueryHelper.WhereStatement;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.net.URI;
@@ -49,7 +49,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
-    public ApiUPDATE update(Long apiId, ApiUPDATE api) {
+    public RestResponse<Void> update(Long apiId, ApiUPDATE api) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("proxyPath", api.proxyPath()),
@@ -61,8 +61,12 @@ public class ApiController implements ApiOpenApi {
                 new StaticStatement("authenticationType", api.authenticationType())
         ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
 
-        ApiEntity.update(query, helper.values());
-        return api;
+        var count = ApiEntity.update(query, helper.values());
+        if (count > 0) {
+            Log.infof("Api(id=%d) updated with %d records", apiId, count);
+            return RestResponse.ok();
+        }
+        return RestResponse.noContent();
     }
 
     @Override
@@ -75,12 +79,12 @@ public class ApiController implements ApiOpenApi {
         credentialEntity.id.subscription = subscriptionEntity;
         credentialEntity.persist();
         this.cacheManager.invalidate(credential.subscriptionKey());
-        Log.infof("ApiCredential(apiId=%d, subKey=%s) created", apiEntity.id, credential.subscriptionKey());
+        Log.infof("ApiCredential(apiId=%d, subKey=%s) added", apiEntity.id, credential.subscriptionKey());
     }
 
     @Override
     @Transactional
-    public ApiCredential updateCredential(Long apiId, ApiCredential credential) {
+    public RestResponse<Void> updateCredential(Long apiId, ApiCredential credential) {
         var subId = SubscriptionEntity.getByNaturalId(credential.subscriptionKey()).id;
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
@@ -95,11 +99,14 @@ public class ApiController implements ApiOpenApi {
                 new StaticStatement("apiKeyHeaderOutsideAuthorization", credential.apiKeyHeaderOutsideAuthorization())
         ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
 
-        ApiCredentialEntity.update(query, helper.values());
+        var count = ApiCredentialEntity.update(query, helper.values());
         this.cacheManager.invalidate(credential.subscriptionKey());
 
-        Log.infof("ApiCredential(apiId=%d, subKey=%s) updated", apiId, credential.subscriptionKey());
-        return credential;
+        if (count > 0) {
+            Log.infof("ApiCredential(apiId=%d, subKey=%s) updated with %d record(s)", apiId, credential.subscriptionKey(), count);
+            return RestResponse.ok();
+        }
+        return RestResponse.noContent();
     }
 
     @Override

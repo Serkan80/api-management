@@ -46,9 +46,10 @@ public interface ApiOpenApi {
     @Operation(summary = "Updates the given Api")
     @APIResponses({
             @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not updated", responseCode = "204", description = "When the api is not updated"),
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
     })
-    ApiUPDATE update(@RestPath Long apiId, @Valid ApiUPDATE api);
+    RestResponse<Void> update(@RestPath Long apiId, @Valid ApiUPDATE api);
 
     @GET
     @Operation(summary = "Returns all Apis sorted by its owner")
@@ -69,7 +70,8 @@ public interface ApiOpenApi {
     @Operation(summary = "Updates the given credential")
     @APIResponses({
             @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Updated", responseCode = "204", description = "When the credential is not updated"),
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
     })
-    ApiCredential updateCredential(Long apiId, @Valid ApiCredential credential);
+    RestResponse<Void> updateCredential(Long apiId, @Valid ApiCredential credential);
 }
