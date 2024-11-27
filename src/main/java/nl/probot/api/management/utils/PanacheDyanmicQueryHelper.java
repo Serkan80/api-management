@@ -5,6 +5,7 @@ import io.quarkus.logging.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -29,25 +30,45 @@ public class PanacheDyanmicQueryHelper {
     public static final String OR = " or ";
     public static final String COMMA = ", ";
 
+    boolean allowBlankValues = false;
     List<Statement> statements = new ArrayList<>();
+
+    /**
+     * Allows setting of empty values. Mostly useful for the update query.
+     */
+    public PanacheDyanmicQueryHelper allowBlankValues() {
+        this.allowBlankValues = true;
+        return this;
+    }
 
     public PanacheDyanmicQueryHelper statements(Statement... statements) {
         Arrays.stream(statements)
-                .filter(st -> !st.getClass().equals(WhereStatement.class))
-                .filter(st -> isNotNull(st.param()))
+                .filter(stmt -> !stmt.getClass().equals(WhereStatement.class))
+                .filter(stmt -> isNotNull(stmt.param()))
                 .forEach(this.statements::add);
 
         return this;
     }
 
+    /**
+     * @return will return something like: p1 = ?1 and p2 = ?2 ...
+     */
     public String buildWhereStatement() {
         return buildWhereStatement(AND);
     }
 
+    /**
+     * @param separator can be: AND, OR
+     * @see PanacheDyanmicQueryHelper#buildWhereStatement()
+     */
     public String buildWhereStatement(String separator) {
         return buildQuery(separator, Optional.empty(), Optional.empty());
     }
 
+    /**
+     * @param whereStatement optionally a where statement in the form of: w1 = :w1 and w2 = :w2 ...
+     * @return will return something like: set p1 = ?1, p2 = ?2, ... (where w1 = ?n ... )
+     */
     public String buildUpdateStatement(WhereStatement whereStatement) {
         if (whereStatement != null && isNotNull(whereStatement.param())) {
             this.statements.add(whereStatement);
@@ -57,8 +78,8 @@ public class PanacheDyanmicQueryHelper {
                 COMMA,
                 Optional.of("set "),
                 Optional.ofNullable(whereStatement)
-                        .filter(stmt -> isNotNull(stmt.param()))
-                        .map(stmt -> " where %s".formatted(stmt.statement())));
+                        .filter(where -> isNotNull(where.param()))
+                        .map(where -> " where %s".formatted(where.statement())));
     }
 
     public Object[] values() {
@@ -111,7 +132,11 @@ public class PanacheDyanmicQueryHelper {
         return !(this.statements.isEmpty() || this.statements.get(0).getClass().equals(WhereStatement.class));
     }
 
-    private static boolean isNotNull(Object value) {
+    private boolean isNotNull(Object value) {
+        if (this.allowBlankValues) {
+            return Objects.nonNull(value);
+        }
+
         return switch (value) {
             case null -> false;
             case String s -> !s.isBlank();

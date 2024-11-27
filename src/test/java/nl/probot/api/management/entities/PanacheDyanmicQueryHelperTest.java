@@ -5,6 +5,7 @@ import nl.probot.api.management.utils.PanacheDyanmicQueryHelper.DynamicStatement
 import nl.probot.api.management.utils.PanacheDyanmicQueryHelper.Statement;
 import nl.probot.api.management.utils.PanacheDyanmicQueryHelper.StaticStatement;
 import nl.probot.api.management.utils.PanacheDyanmicQueryHelper.WhereStatement;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -26,10 +27,28 @@ class PanacheDyanmicQueryHelperTest {
 
         assertThat(query1).isBlank();
         assertThat(query2).isBlank();
-        assertThat(helper.values()).hasSize(0);
+        assertThat(helper.values()).isEmpty();
     }
 
     @Test
+    void allowBlankValues() {
+        var helper = new PanacheDyanmicQueryHelper()
+                .allowBlankValues()
+                .statements(new StaticStatement("p1", ""), new StaticStatement("p2", null), new StaticStatement("p3", "hello"));
+
+        assertThat(helper.buildWhereStatement()).isEqualTo("p1 = ?1 and p3 = ?2");
+        assertThat(helper.buildUpdateStatement(null)).isEqualTo("set p1 = ?1, p3 = ?2");
+        assertThat(helper.buildUpdateStatement(new WhereStatement("w1 = :w1", null))).isEqualTo("set p1 = ?1, p3 = ?2");
+        assertThat(helper.values()).hasSize(2).contains("", "hello");
+        assertThat(helper.buildUpdateStatement(new WhereStatement("w1 = :w1", ""))).isEqualTo("set p1 = ?1, p3 = ?2 where w1 = ?3");
+        assertThat(helper.values()).hasSize(3).contains("", "hello");
+    }
+
+    @Test
+    @DisplayName("""
+                Where statement is not allowed in .statements(..) and there should only be 1 where statement. 
+                It is only allowed within the .buildXyz(..) method.
+            """)
     void shouldNotContainWhereStmt() {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper

@@ -1,5 +1,6 @@
 package nl.probot.api.management.camel;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
@@ -16,6 +17,9 @@ public class GatewayRoute extends EndpointRouteBuilder {
     @Inject
     SubscriptionProcessor subscriptionProcessor;
 
+    @Inject
+    MeterRegistry meterRegistry;
+
     @Override
     public void configure() {
         onException(Throwable.class)
@@ -27,8 +31,7 @@ public class GatewayRoute extends EndpointRouteBuilder {
         //@formatter:off
         from(platformHttp("/gateway").matchOnUriPrefix(true))
                 .id("gatewayRoute")
-                .to("micrometer:timer:gateway-metrics?action=start")
-                .process(CamelUtils::validateUser)
+                .process(exchange -> CamelUtils.timer(exchange, this.meterRegistry, true))
                 .process(this.subscriptionProcessor)
                 .choice()
                     .when(exchangeProperty(THROTTLING_ENABLED).isEqualTo(true))
@@ -43,7 +46,7 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .to("http://ifconfig.me")
                 .setHeader("X-Forward-For", body().convertToString())
                 .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=false&followRedirects=true&connectionClose=true&copyHeaders=true${exchangeProperty.clientAuth}")
-                .to("micrometer:timer:gateway-metrics?action=stop");
+                .process(exchange -> CamelUtils.timer(exchange, this.meterRegistry, false));
         //@formatter:on
 
         from("direct:throttling")

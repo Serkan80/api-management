@@ -19,7 +19,7 @@ public class CacheManager {
         var timedValue = this.cache.get(key);
         if (timedValue == null) {
             var result = supplier.get();
-            var size = cache.size();
+            var size = this.cache.size();
 
             if (size >= MAX_AMOUNT) {
                 Log.debugf("Removing stale date from cache, size: %d", size);
@@ -38,6 +38,11 @@ public class CacheManager {
     public void invalidate(String key) {
         this.cache.remove(key);
         Log.debugf("Cache invalidated for key %s", key);
+    }
+
+    public void clearAll() {
+        this.cache.clear();
+        Log.debugf("Cache cleared");
     }
 
     record TimedValue(Object value, long timestamp) {

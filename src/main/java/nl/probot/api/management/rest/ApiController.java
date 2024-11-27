@@ -1,6 +1,5 @@
 package nl.probot.api.management.rest;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.security.Authenticated;
@@ -15,7 +14,6 @@ import nl.probot.api.management.rest.dto.Api;
 import nl.probot.api.management.rest.dto.ApiCredential;
 import nl.probot.api.management.rest.dto.ApiPOST;
 import nl.probot.api.management.rest.dto.ApiUPDATE;
-import nl.probot.api.management.rest.dto.Views;
 import nl.probot.api.management.rest.openapi.ApiOpenApi;
 import nl.probot.api.management.utils.CacheManager;
 import nl.probot.api.management.utils.PanacheDyanmicQueryHelper;
@@ -65,6 +63,8 @@ public class ApiController implements ApiOpenApi {
 
         var count = ApiEntity.update(query, helper.values());
         if (count > 0) {
+            // many subscribers can have this api, so just clear all for simplicity
+            this.cacheManager.clearAll();
             Log.infof("Api(id=%d) updated with %d records", apiId, count);
             return RestResponse.ok();
         }
@@ -86,7 +86,6 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
-    @JsonView(Views.AllFields.class)
     public RestResponse<Void> updateCredential(Long apiId, ApiCredential credential) {
         var subId = SubscriptionEntity.getByNaturalId(credential.subscriptionKey()).id;
         var helper = new PanacheDyanmicQueryHelper();
@@ -103,9 +102,8 @@ public class ApiController implements ApiOpenApi {
         ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
 
         var count = ApiCredentialEntity.update(query, helper.values());
-        this.cacheManager.invalidate(credential.subscriptionKey());
-
         if (count > 0) {
+            this.cacheManager.invalidate(credential.subscriptionKey());
             Log.infof("ApiCredential(apiId=%d, subKey=%s) updated with %d record(s)", apiId, credential.subscriptionKey(), count);
             return RestResponse.ok();
         }

@@ -1,11 +1,15 @@
 package nl.probot.api.management.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import nl.probot.api.management.entities.AuthenticationType;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.hibernate.validator.constraints.URL;
+
+import static io.micrometer.common.util.StringUtils.isNotBlank;
 
 public record ApiUPDATE(
 
@@ -35,4 +39,16 @@ public record ApiUPDATE(
         Integer maxRequests,
         AuthenticationType authenticationType
 ) {
+
+    @JsonIgnore
+    @AssertTrue(message = "At least one update parameter must be specified")
+    public boolean isNotEmpty() {
+        return isNotBlank(this.proxyPath)
+               || isNotBlank(this.proxyUrl)
+               || isNotBlank(this.owner)
+               || isNotBlank(this.openApiUrl)
+               || isNotBlank(this.description)
+               || this.maxRequests != null
+               || this.authenticationType != null;
+    }
 }

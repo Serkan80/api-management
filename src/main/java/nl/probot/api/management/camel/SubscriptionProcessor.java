@@ -22,7 +22,7 @@ public class SubscriptionProcessor implements Processor {
 
     public static final String SUBSCRIPTION_KEY = "subscription-key";
     public static final String SUBSCRIPTION = "subscription";
-    public static final String THROTTLING_ENABLED = "throttle_enabled";
+    public static final String THROTTLING_ENABLED = "throttling_enabled";
     public static final String THROTTLING_MAX_REQUESTS = "throttling_maxRequests";
 
     @Inject
@@ -36,14 +36,15 @@ public class SubscriptionProcessor implements Processor {
         var subscriptionKey = in.getHeader(SUBSCRIPTION_KEY, String.class);
         var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findByKey(subscriptionKey));
         var api = subscription.findApiBy(extractProxyName(incomingRequest).proxyName(), Function.identity());
-        var credential = subscription.findApiCredential(api.id);
 
-        switch (api.authenticationType) {
-            case BASIC -> basicAuth(exchange, credential.username, credential.password);
-            case API_KEY -> apiTokenAuth(exchange, credential);
-            case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);
-            case NONE -> in.removeHeader(AUTHORIZATION);
-        }
+        subscription.findApiCredential(api.id).ifPresent(credential -> {
+            switch (api.authenticationType) {
+                case BASIC -> basicAuth(exchange, credential.username, credential.password);
+                case API_KEY -> apiTokenAuth(exchange, credential);
+                case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);
+                case NONE -> in.removeHeader(AUTHORIZATION);
+            }
+        });
 
         if (api.maxRequests != null) {
             exchange.setProperty(THROTTLING_ENABLED, true);

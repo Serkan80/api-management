@@ -1,9 +1,11 @@
 package nl.probot.api.management.camel;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Timer.Sample;
 import io.quarkus.logging.Log;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.UnauthorizedException;
-import io.quarkus.vertx.http.runtime.security.QuarkusHttpUser;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
@@ -22,6 +24,7 @@ import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.api.management.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
+import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.apache.camel.Exchange.EXCEPTION_CAUGHT;
 import static org.apache.camel.Exchange.FAILURE_ENDPOINT;
 import static org.apache.camel.Exchange.HTTP_PATH;
@@ -36,18 +39,10 @@ public final class CamelUtils {
         super();
     }
 
-    public static void validateUser(Exchange exchange) {
-        var user = exchange.getIn().getHeader(AUTHENTICATED_USER, QuarkusHttpUser.class);
-        if (user == null || user.principal().getString("username").isBlank()) {
-            throw new AuthenticationFailedException("User not authenticated");
-        }
-    }
-
     public static void multiPartProcessor(Exchange exchange) {
         var body = (Map<String, Object>) exchange.getIn().getBody(Map.class);
         var message = exchange.getIn(AttachmentMessage.class);
         var attachments = message.getAttachments();
-
         var multiPartBuilder = MultipartEntityBuilder.create();
 
         // text part of multipart
@@ -115,7 +110,7 @@ public final class CamelUtils {
 
         var message = exchange.getMessage();
         message.setHeader(HTTP_RESPONSE_CODE, status);
-        message.setHeader(Exchange.CONTENT_TYPE, APPLICATION_JSON);
+        message.setHeader(CONTENT_TYPE, APPLICATION_JSON);
         message.setBody(JsonObject.of(
                 "routeId", exchange.getProperty(FAILURE_ROUTE_ID),
                 "exception", exception.getClass(),
@@ -161,6 +156,21 @@ public final class CamelUtils {
                 .formatted(credential.clientId, credential.clientSecret, credential.clientUrl);
         oauthParams += credential.clientScope != null ? "&oauth2Scope=%s".formatted(credential.clientScope) : "";
         exchange.setProperty("clientAuth", oauthParams);
+    }
+
+    public static void timer(Exchange exchange, MeterRegistry registry, boolean start) {
+        if (start) {
+            var sample = Timer.start(registry);
+            exchange.setProperty("timer", sample);
+            exchange.setProperty(SUBSCRIPTION_KEY, exchange.getIn().getHeader(SUBSCRIPTION_KEY));
+            exchange.setProperty("proxyPath", extractProxyName(exchange.getIn().getHeader(HTTP_URI, String.class)).proxyName());
+        } else {
+            var timer = exchange.getProperty("timer", Sample.class);
+            timer.stop(registry.timer(
+                    "gateway_metrics",
+                    "proxyPath", exchange.getProperty("proxyPath", String.class),
+                    "subKey", exchange.getProperty(SUBSCRIPTION_KEY, String.class)));
+        }
     }
 
     private static String apiKey(ApiCredentialEntity credential) {
