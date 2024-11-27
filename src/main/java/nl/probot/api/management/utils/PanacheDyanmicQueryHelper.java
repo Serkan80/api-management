@@ -129,7 +129,7 @@ public class PanacheDyanmicQueryHelper {
     }
 
     private boolean containsStatements(String statement) {
-        return !(this.statements.isEmpty() || this.statements.get(0).getClass().equals(WhereStatement.class));
+        return !(this.statements.isEmpty() || this.statements.getFirst().getClass().equals(WhereStatement.class));
     }
 
     private boolean isNotNull(Object value) {

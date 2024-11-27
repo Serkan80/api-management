@@ -66,13 +66,12 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public Optional<ApiCredentialEntity> findApiCredential(Long apiId) {
         return this.apiCredentials.stream()
-                .filter(api -> api.id.api.id == apiId)
+                .filter(credential -> credential.id.api.id.equals(apiId))
                 .findFirst();
     }
 
     public static SubscriptionEntity getByNaturalId(String subscriptionKey) {
-        return SubscriptionEntity.getEntityManager()
-                .unwrap(Session.class)
+        return SubscriptionEntity.getEntityManager().unwrap(Session.class)
                 .bySimpleNaturalId(SubscriptionEntity.class)
                 .load(subscriptionKey);
     }
