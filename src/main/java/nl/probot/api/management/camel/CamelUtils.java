@@ -32,6 +32,7 @@ import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
 import static org.apache.camel.Exchange.HTTP_URI;
 import static org.apache.camel.ExchangePropertyKey.FAILURE_ROUTE_ID;
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.AUTHENTICATED_USER;
+import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.REMOTE_ADDRESS;
 
 public final class CamelUtils {
 
@@ -72,6 +73,7 @@ public final class CamelUtils {
         Log.debugf("proxyName: %s, proxyUrl: %s, proxyPath: %s\n", proxyName, proxyUrl, proxyPath);
 
         exchange.setProperty("forwardUrl", "%s%s".formatted(proxyUrl, proxyPath));
+        exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
     }
 
     public static Result extractProxyName(String incomingRequestPath) {

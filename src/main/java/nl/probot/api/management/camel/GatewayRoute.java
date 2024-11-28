@@ -43,8 +43,6 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .end()
                 .process(CamelUtils::forwardUrlProcessor)
                 .process(CamelUtils::cleanUpHeaders)
-                .to("http://ifconfig.me")
-                .setHeader("X-Forward-For", body().convertToString())
                 .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=false&followRedirects=true&connectionClose=true&copyHeaders=true${exchangeProperty.clientAuth}")
                 .process(exchange -> CamelUtils.timer(exchange, this.meterRegistry, false));
         //@formatter:on

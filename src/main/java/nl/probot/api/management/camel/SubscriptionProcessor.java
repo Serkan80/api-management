@@ -3,6 +3,7 @@ package nl.probot.api.management.camel;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.WebApplicationException;
 import nl.probot.api.management.entities.SubscriptionEntity;
 import nl.probot.api.management.utils.CacheManager;
 import org.apache.camel.Exchange;
@@ -15,6 +16,7 @@ import static nl.probot.api.management.camel.CamelUtils.apiTokenAuth;
 import static nl.probot.api.management.camel.CamelUtils.basicAuth;
 import static nl.probot.api.management.camel.CamelUtils.clientCredentialsAuth;
 import static nl.probot.api.management.camel.CamelUtils.extractProxyName;
+import static nl.probot.api.management.entities.AuthenticationType.NONE;
 import static org.apache.camel.Exchange.HTTP_URI;
 
 @Singleton
@@ -37,12 +39,18 @@ public class SubscriptionProcessor implements Processor {
         var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findByKey(subscriptionKey));
         var api = subscription.findApiBy(extractProxyName(incomingRequest).proxyName(), Function.identity());
 
-        subscription.findApiCredential(api.id).ifPresent(credential -> {
+        subscription.findApiCredential(api.id).ifPresentOrElse(credential -> {
             switch (api.authenticationType) {
                 case BASIC -> basicAuth(exchange, credential.username, credential.password);
                 case API_KEY -> apiTokenAuth(exchange, credential);
                 case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);
                 case NONE -> in.removeHeader(AUTHORIZATION);
+            }
+        }, () -> {
+            if (api.authenticationType != null && api.authenticationType != NONE) {
+                throw new WebApplicationException(
+                        "Api requires %s authentication and no credentials were found for this Api".formatted(api.authenticationType),
+                        400);
             }
         });
 
