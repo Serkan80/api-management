@@ -1,4 +1,4 @@
-package nl.probot.apim.utils;
+package nl.probot.apim.commons.jpa;
 
 import io.quarkus.logging.Log;
 
@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static io.micrometer.common.util.StringUtils.isNotBlank;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -140,7 +139,7 @@ public class PanacheDyanmicQueryHelper {
         return switch (value) {
             case null -> false;
             case String s -> !s.isBlank();
-            case List l -> !l.isEmpty() && l.stream().allMatch(e -> nonNull(e) && isNotBlank(e.toString()));
+            case List l -> !l.isEmpty() && l.stream().allMatch(e -> nonNull(e) && !e.toString().isBlank());
             default -> !value.toString().isBlank();
         };
     }

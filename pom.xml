@@ -24,6 +24,10 @@
 
     <modules>
         <module>apim-core</module>
+        <module>apim-auth-file-properties</module>
+        <module>apim-application</module>
+        <module>apim-auth-jpa</module>
+        <module>apim-commons</module>
     </modules>
 
     <dependencyManagement>
@@ -41,6 +45,26 @@
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>nl.probot.apimanagement</groupId>
+                <artifactId>apim-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>nl.probot.apimanagement</groupId>
+                <artifactId>apim-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>nl.probot.apimanagement</groupId>
+                <artifactId>apim-auth-file-properties</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>nl.probot.apimanagement</groupId>
+                <artifactId>apim-auth-jpa</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

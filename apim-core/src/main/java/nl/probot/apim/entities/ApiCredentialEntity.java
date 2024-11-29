@@ -5,7 +5,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import nl.probot.apim.entities.converters.EncryptionConverter;
+import nl.probot.apim.commons.jpa.EncryptionConverter;
 
 @Entity
 @Table(name = "api_credential")

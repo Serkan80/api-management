@@ -1,4 +1,4 @@
-package nl.probot.apim.utils;
+package nl.probot.apim.commons.crypto;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;

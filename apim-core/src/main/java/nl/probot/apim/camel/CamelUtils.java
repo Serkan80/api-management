@@ -169,7 +169,7 @@ public final class CamelUtils {
         } else {
             var timer = exchange.getProperty("timer", Sample.class);
             timer.stop(registry.timer(
-                    "gateway_metrics",
+                    "apim_metrics",
                     "proxyPath", exchange.getProperty("proxyPath", String.class),
                     "subKey", exchange.getProperty(SUBSCRIPTION_KEY, String.class)));
         }

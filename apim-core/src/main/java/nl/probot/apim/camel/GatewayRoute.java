@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static nl.probot.apim.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static nl.probot.apim.camel.SubscriptionProcessor.THROTTLING_ENABLED;
@@ -13,6 +14,9 @@ import static org.apache.hc.core5.http.ContentType.MULTIPART_FORM_DATA;
 
 @ApplicationScoped
 public class GatewayRoute extends EndpointRouteBuilder {
+
+    @ConfigProperty(name = "apim.context-root")
+    String apimPath;
 
     @Inject
     SubscriptionProcessor subscriptionProcessor;
@@ -29,8 +33,8 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .end();
 
         //@formatter:off
-        from(platformHttp("/gateway").matchOnUriPrefix(true))
-                .id("gatewayRoute")
+        from(platformHttp(this.apimPath).matchOnUriPrefix(true))
+                .id("apimRoute")
                 .process(exchange -> CamelUtils.timer(exchange, this.meterRegistry, true))
                 .process(this.subscriptionProcessor)
                 .choice()

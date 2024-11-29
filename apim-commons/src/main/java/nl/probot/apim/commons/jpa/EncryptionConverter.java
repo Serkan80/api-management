@@ -1,7 +1,7 @@
-package nl.probot.apim.entities.converters;
+package nl.probot.apim.commons.jpa;
 
 import jakarta.persistence.AttributeConverter;
-import nl.probot.apim.utils.CryptoUtil;
+import nl.probot.apim.commons.crypto.CryptoUtil;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import java.util.Base64;
