@@ -2,13 +2,9 @@ package nl.probot.apim.auth.jpa;
 
 import io.quarkus.logging.Log;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.WebApplicationException;
 import nl.probot.apim.auth.jpa.dto.ChangePassword;
 import nl.probot.apim.auth.jpa.dto.User;
@@ -17,8 +13,6 @@ import nl.probot.apim.auth.jpa.dto.UserPUT;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
-import org.jboss.resteasy.reactive.RestPath;
-import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.net.URI;
@@ -27,11 +21,11 @@ import java.util.UUID;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
-@Path("/users")
+@ApplicationScoped
 @RolesAllowed("${apim.roles.user.mgmt}")
-public class UserController {
+public class UserController implements UserOpenApi {
 
-    @POST
+    @Override
     @Transactional
     public RestResponse<Void> save(@Valid UserPOST user) {
         var entity = UserEntity.add(user.username(), user.password().toCharArray(), user.email(), user.joinRoles());
@@ -39,9 +33,8 @@ public class UserController {
         return RestResponse.created(URI.create(entity.id));
     }
 
-    @PUT
+    @Override
     @Transactional
-    @Path("/password")
     public void changePassword(@Valid ChangePassword request) {
         var username = request.username();
         var user = UserEntity.findByUsername(username);
@@ -59,10 +52,9 @@ public class UserController {
         Log.infof("User(username=%s****) password updated", username.substring(0, 3));
     }
 
-    @PUT
-    @Path("/{id}")
+    @Override
     @Transactional
-    public RestResponse<Void> update(@RestPath UUID id, @Valid UserPUT user) {
+    public RestResponse<Void> update(UUID id, @Valid UserPUT user) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("roles", user.roles()),
@@ -77,15 +69,14 @@ public class UserController {
         return RestResponse.notFound();
     }
 
-    @POST
+    @Override
     @Transactional
-    @Path("/{id}/activate")
-    public void activate(@RestPath UUID id, @RestQuery @NotNull Boolean enable) {
+    public void activate(UUID id, Boolean enable) {
         UserEntity.activate(id.toString(), enable);
         Log.infof("User(id=%s***, enabled=%b) updated", id.toString().substring(0, 3), enable);
     }
 
-    @GET
+    @Override
     public List<User> findAll() {
         return UserEntity.findAll()
                 .withHint(HINT_READONLY, true)
