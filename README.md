@@ -6,8 +6,9 @@ functionalities:
 - support for proxying REST & GraphQl,
 - support for managing Apis & Subscriptions,
 - support for metrics (showing per subscription the API calls's duration and amount),
+- support for rate limiting,
 - support for downstream Basic Auth, Client Credentials and token based authentication,
-- support for OAuth/OIDC, custom JWT, LDAP authentication for the APIM
+- support for OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM
 
 ## Terminology
 
