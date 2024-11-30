@@ -4,7 +4,6 @@ import io.quarkus.logging.Log;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.WebApplicationException;
 import nl.probot.apim.auth.jpa.dto.ChangePassword;
 import nl.probot.apim.auth.jpa.dto.User;
@@ -27,7 +26,7 @@ public class UserController implements UserOpenApi {
 
     @Override
     @Transactional
-    public RestResponse<Void> save(@Valid UserPOST user) {
+    public RestResponse<Void> save(UserPOST user) {
         var entity = UserEntity.add(user.username(), user.password().toCharArray(), user.email(), user.joinRoles());
 
         return RestResponse.created(URI.create(entity.id));
@@ -35,9 +34,10 @@ public class UserController implements UserOpenApi {
 
     @Override
     @Transactional
-    public void changePassword(@Valid ChangePassword request) {
+    public void changePassword(ChangePassword request) {
         var username = request.username();
         var user = UserEntity.findByUsername(username);
+
         if (Boolean.FALSE.equals(user.enabled)) {
             throw new WebApplicationException("User %s is blocked".formatted(username), 400);
         }
@@ -54,7 +54,7 @@ public class UserController implements UserOpenApi {
 
     @Override
     @Transactional
-    public RestResponse<Void> update(UUID id, @Valid UserPUT user) {
+    public RestResponse<Void> update(UUID id, UserPUT user) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("roles", user.roles()),

@@ -28,4 +28,10 @@ public record ChangePassword(
     public boolean isPasswordSame() {
         return this.newPassword.equals(this.newPasswordRepeat);
     }
+
+    @JsonIgnore
+    @AssertTrue(message = "New password should not be the same as old password")
+    public boolean isPasswordSameAsOld() {
+        return this.newPassword.equals(this.oldPassword);
+    }
 }

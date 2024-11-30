@@ -2,14 +2,10 @@ package nl.probot.apim.auth.jpa;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.validation.Validation;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Scanner;
+
+import static nl.probot.apim.commons.crypto.CryptoUtil.randomNonce;
 
 /**
  * This class is intended to be used to create the first user for the database.
@@ -18,45 +14,58 @@ import java.util.Scanner;
 public class UserCreationUtil {
 
     public static void main(String[] args) {
-        var console = new Scanner(System.in);
+//        var console = new Scanner(System.in);
+        var console = System.console();
 
         System.out.println("Provide username: ");
-        var username = console.nextLine();
+        var username = console.readLine();
 
-        System.out.println("Provide newPassword: ");
-        var password = console.nextLine();
+        System.out.println("\nProvide password: ");
+        var password = new String(console.readPassword());
 
-        System.out.println("Repeat newPassword: ");
-        var passwordRepeat = console.nextLine();
+        System.out.println("\nRepeat password: ");
+        var passwordRepeat = new String(console.readPassword());
 
-        if (!password.equals(passwordRepeat)) {
-            System.err.println("Passwords are not the same");
-            System.exit(-1);
+        while (!password.equals(passwordRepeat)) {
+            System.err.println("\nPasswords are not the same, repeat password: ");
+            passwordRepeat = new String(console.readPassword());
         }
 
-        System.out.println("Provide email: ");
-        var email = console.nextLine();
+        System.out.println("\nProvide email: ");
+        var email = console.readLine();
 
-        System.out.println("Provide role(s), comma separated for multiple roles: ");
-        var roles = console.nextLine();
+        System.out.println("\nProvide role(s), comma separated for multiple roles: ");
+        var roles = console.readLine();
 
         var user = createUser(username, password.toCharArray(), email, roles);
         var errors = Validation.buildDefaultValidatorFactory().getValidator().validate(user);
 
         if (!errors.isEmpty()) {
-            System.err.println("Provided parameters are not valid: ");
-            errors.forEach(err -> System.err.println("\t\t" + err.getMessage()));
+            System.err.println("\n\n\033[0;31mProvided parameters are not valid: ");
+            errors.forEach(err -> System.err.printf("\t- %s: %s\n", err.getPropertyPath().toString(), err.getMessage()));
             System.exit(-1);
         }
 
         var query = """
-                INSERT INTO user(id, username, newPassword, salt, email, roles, enabled)   
+                INSERT INTO user(id, username, password, salt, email, roles, enabled)   
                 VALUES(gen_random_uuid(), '%s', '%s', '%s', '%s', '%s', true);
                 """.formatted(username, user.password, user.salt, email, user.roles);
 
-        System.out.println("Run this query inside your db: ");
+        System.out.println("\n\n\n\033[0;32mRun this query inside your db: ");
         System.out.println(query);
         System.exit(0);
+    }
+
+    private static UserEntity createUser(String username, char[] password, String email, String roles) {
+        var credentials = createCredentials(password);
+        var user = new UserEntity();
+        user.username = username;
+        user.email = email;
+        user.roles = roles;
+        user.enabled = true;
+        user.password = credentials.password();
+        user.salt = credentials.salt();
+        return user;
     }
 
     static Credentials createCredentials(char[] password) {
@@ -66,51 +75,6 @@ public class UserCreationUtil {
         return new Credentials(salt, hashedPass);
     }
 
-    private static byte[] randomNonce(int length) {
-        var result = new byte[length];
-        try {
-            SecureRandom.getInstanceStrong().nextBytes(result);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        return result;
-    }
-
-    private static User createUser(String username, char[] password, String email, String roles) {
-        var credentials = createCredentials(password);
-        return new User(
-                username,
-                credentials.password(),
-                credentials.salt(),
-                email,
-                roles,
-                true);
-    }
-
     public record Credentials(String salt, String password) {
-    }
-
-    public record User(
-            @NotBlank
-            @Size(min = 8, max = 50)
-            String username,
-
-            @NotBlank
-            @Size(min = 8, max = 500)
-
-            String password,
-
-            @NotBlank
-            String salt,
-
-            @Email
-            @NotBlank
-            String email,
-
-            @NotBlank
-            String roles,
-
-            Boolean enabled
-    ) {
     }
 }

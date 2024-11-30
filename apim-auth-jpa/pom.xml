@@ -57,6 +57,30 @@
 
     <build>
         <plugins>
+            <!-- Use this plugin to create the first user in the db -->
+            <!-- Execute: mvn exec:java from the commandline -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <includePluginDependencies>true</includePluginDependencies>
+                    <mainClass>nl.probot.apim.auth.jpa.UserCreationUtil</mainClass>
+                    <classpathScope>compile</classpathScope>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.quarkus</groupId>
+                        <artifactId>quarkus-hibernate-validator</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>jakarta.validation</groupId>
+                        <artifactId>jakarta.validation-api</artifactId>
+                        <version>3.1.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
