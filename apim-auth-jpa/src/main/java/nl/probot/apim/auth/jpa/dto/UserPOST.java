@@ -1,7 +1,6 @@
 package nl.probot.apim.auth.jpa.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.security.jpa.Roles;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -28,7 +27,6 @@ public record UserPOST(
         @NotBlank
         String email,
 
-        @Roles
         @NotNull
         @Size(min = 1, max = 10)
         Set<String> roles

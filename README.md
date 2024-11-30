@@ -85,5 +85,10 @@ Now call httpbin via the gateway. This will forward your requests to httpbin wit
 
 ## Important urls
 
+Start the application from `apim-application` with:
+> mvn clean compile quarkus:dev
+
+Then you can access the following urls:
+
 - [Swagger UI](http://localhost:8080/q/swagger-ui)
 - [Quarkus Development Dashboard](http://localhost:8080/q/dev-ui)

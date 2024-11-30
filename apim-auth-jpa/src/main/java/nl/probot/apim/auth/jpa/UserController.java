@@ -9,6 +9,7 @@ import nl.probot.apim.auth.jpa.dto.ChangePassword;
 import nl.probot.apim.auth.jpa.dto.User;
 import nl.probot.apim.auth.jpa.dto.UserPOST;
 import nl.probot.apim.auth.jpa.dto.UserPUT;
+import nl.probot.apim.auth.jpa.entities.UserEntity;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
@@ -46,9 +47,7 @@ public class UserController implements UserOpenApi {
             throw new WebApplicationException("Username and/or newPassword incorrect: %s".formatted(username), 400);
         }
 
-        var credentials = UserCreationUtil.createCredentials(request.newPassword().toCharArray());
-        user.salt = credentials.salt();
-        user.password = credentials.password();
+        UserEntity.setCredentials(user, request.newPassword().toCharArray());
         Log.infof("User(username=%s****) password updated", username.substring(0, 3));
     }
 

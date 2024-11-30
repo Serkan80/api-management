@@ -10,6 +10,7 @@ import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import jakarta.annotation.Priority;
 import jakarta.inject.Singleton;
 import jakarta.persistence.EntityManager;
+import nl.probot.apim.auth.jpa.entities.UserEntity;
 
 import java.time.OffsetDateTime;
 

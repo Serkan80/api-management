@@ -23,9 +23,21 @@
             <groupId>nl.probot.apimanagement</groupId>
             <artifactId>apim-core</artifactId>
         </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>nl.probot.apimanagement</groupId>-->
+        <!--            <artifactId>apim-auth-file-properties</artifactId>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>nl.probot.apimanagement</groupId>-->
+        <!--            <artifactId>apim-auth-jpa</artifactId>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>nl.probot.apimanagement</groupId>-->
+        <!--            <artifactId>apim-auth-jwt</artifactId>-->
+        <!--        </dependency>-->
         <dependency>
-            <groupId>nl.probot.apimanagement</groupId>
-            <artifactId>apim-auth-file-properties</artifactId>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
     </dependencies>
 
