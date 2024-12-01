@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.NewCookie.SameSite;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.Claims;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -69,31 +70,12 @@ public class AuthenticationController implements AuthenticationOpenApi {
     @Authenticated
     public Response accessToken() {
         var username = this.identity.getPrincipal().getName();
-        var email = this.identity.getAttribute("email").toString();
         var roles = this.identity.getRoles();
 
         return Response
-                .ok(createUserInfo(username, email, roles))
-                .cookie(cookie("access_token", generateAccessToken()), cookie("refresh_token", generateRefreshToken(username, email, roles)))
+                .ok(createUserInfo(username, roles))
+                .cookie(cookie("access_token", generateAccessToken()), cookie("refresh_token", generateRefreshToken(username, roles)))
                 .build();
-    }
-
-    @Override
-    @PermitAll
-    public Response refreshToken(@NotBlank String refreshToken) {
-        try {
-            var rt = this.jwtParser.verify(refreshToken, this.keystore.getCertificate("rt").getPublicKey());
-            var username = rt.getClaim("upn").toString();
-            var email = rt.getClaim("email").toString();
-            var roles = (Set) rt.getClaim("groups");
-
-            return Response
-                    .ok(createUserInfo(username, email, roles))
-                    .cookie(cookie("access_token", generateAccessToken()), cookie("refresh_token", generateRefreshToken(username, email, roles)))
-                    .build();
-        } catch (ParseException | GeneralSecurityException e) {
-            throw new WebApplicationException("Invalid or expired refreshToken", e, 401);
-        }
     }
 
     @Override
@@ -104,6 +86,23 @@ public class AuthenticationController implements AuthenticationOpenApi {
                 "expires_in", this.expirationAT,
                 "type", "bearer"
         );
+    }
+
+    @Override
+    @PermitAll
+    public Response refreshToken(@NotBlank String refreshToken) {
+        try {
+            var rt = this.jwtParser.verify(refreshToken, this.keystore.getCertificate("rt").getPublicKey());
+            var username = (String) rt.getClaim(Claims.upn);
+            var roles = rt.getGroups();
+
+            return Response
+                    .ok(createUserInfo(username, roles))
+                    .cookie(cookie("access_token", generateAccessToken()), cookie("refresh_token", generateRefreshToken(username, roles)))
+                    .build();
+        } catch (ParseException | GeneralSecurityException e) {
+            throw new WebApplicationException("Invalid or expired refreshToken", e, 401);
+        }
     }
 
     @Override
@@ -121,7 +120,7 @@ public class AuthenticationController implements AuthenticationOpenApi {
 
     private NewCookie cookie(String name, String value) {
         return new NewCookie.Builder(name)
-//              .secure(true)
+                .secure(true)
                 .sameSite(SameSite.STRICT)
                 .httpOnly(true)
                 .path("/")
@@ -139,12 +138,11 @@ public class AuthenticationController implements AuthenticationOpenApi {
                 .sign();
     }
 
-    private String generateRefreshToken(String username, String email, Set<String> roles) {
+    private String generateRefreshToken(String username, Set<String> roles) {
         try {
             var privateKey = (PrivateKey) this.keystore.getKey("rt", this.keystorePassword.toCharArray());
             return Jwt.upn(username)
                     .groups(roles)
-                    .claim("email", email)
                     .expiresAt(OffsetDateTime.now().plusDays(this.expirationDays).toInstant())
                     .sign(privateKey);
         } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
@@ -152,10 +150,9 @@ public class AuthenticationController implements AuthenticationOpenApi {
         }
     }
 
-    private Map<String, Object> createUserInfo(String username, String email, Set<String> roles) {
+    private Map<String, Object> createUserInfo(String username, Set<String> roles) {
         return Map.of(
                 "username", username,
-                "roles", roles,
-                "email", email);
+                "roles", roles);
     }
 }

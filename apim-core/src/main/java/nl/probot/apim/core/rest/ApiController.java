@@ -51,15 +51,17 @@ public class ApiController implements ApiOpenApi {
     @Transactional
     public RestResponse<Void> update(Long apiId, ApiUPDATE api) {
         var helper = new PanacheDyanmicQueryHelper();
-        var query = helper.statements(
-                new StaticStatement("proxyPath", api.proxyPath()),
-                new StaticStatement("proxyUrl", api.proxyUrl()),
-                new StaticStatement("owner", api.owner()),
-                new StaticStatement("openApiUrl", api.openApiUrl()),
-                new StaticStatement("description", api.description()),
-                new StaticStatement("maxRequests", api.maxRequests()),
-                new StaticStatement("authenticationType", api.authenticationType())
-        ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
+        var query = helper
+                .allowBlankValues()
+                .statements(
+                        new StaticStatement("proxyPath", api.proxyPath()),
+                        new StaticStatement("proxyUrl", api.proxyUrl()),
+                        new StaticStatement("owner", api.owner()),
+                        new StaticStatement("openApiUrl", api.openApiUrl()),
+                        new StaticStatement("description", api.description()),
+                        new StaticStatement("maxRequests", api.maxRequests()),
+                        new StaticStatement("authenticationType", api.authenticationType())
+                ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
 
         var count = ApiEntity.update(query, helper.values());
         if (count > 0) {

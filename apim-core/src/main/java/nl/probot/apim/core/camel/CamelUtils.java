@@ -13,11 +13,11 @@ import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 import org.apache.camel.Exchange;
 import org.apache.camel.attachment.AttachmentMessage;
-import org.apache.camel.component.http.HttpCredentialsHelper;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
@@ -31,6 +31,7 @@ import static org.apache.camel.Exchange.HTTP_PATH;
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
 import static org.apache.camel.Exchange.HTTP_URI;
 import static org.apache.camel.ExchangePropertyKey.FAILURE_ROUTE_ID;
+import static org.apache.camel.component.http.HttpCredentialsHelper.generateBasicAuthHeader;
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.AUTHENTICATED_USER;
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.REMOTE_ADDRESS;
 
@@ -143,16 +144,27 @@ public final class CamelUtils {
     }
 
     public static void basicAuth(Exchange exchange, String username, String password) {
+        Objects.requireNonNull(username);
+        Objects.requireNonNull(password);
+
         exchange.getIn().removeHeader(AUTHORIZATION);
-        exchange.getIn().setHeader(AUTHORIZATION, HttpCredentialsHelper.generateBasicAuthHeader(username, password));
+        exchange.getIn().setHeader(AUTHORIZATION, generateBasicAuthHeader(username, password));
     }
 
     public static void apiTokenAuth(Exchange exchange, ApiCredentialEntity credential) {
+        Objects.requireNonNull(credential.apiKey);
+        Objects.requireNonNull(credential.apiKeyHeader);
+        Objects.requireNonNull(credential.apiKeyHeaderOutsideAuthorization);
+
         exchange.getIn().removeHeader(AUTHORIZATION);
         exchange.getIn().setHeader(credential.apiKeyHeaderOutsideAuthorization ? credential.apiKeyHeader : AUTHORIZATION, apiKey(credential));
     }
 
     public static void clientCredentialsAuth(Exchange exchange, ApiCredentialEntity credential) {
+        Objects.requireNonNull(credential.clientId);
+        Objects.requireNonNull(credential.clientSecret);
+        Objects.requireNonNull(credential.clientUrl);
+
         exchange.getIn().removeHeader(AUTHORIZATION);
         var oauthParams = "&oauth2ClientId=%s&oauth2ClientSecret=%s&oauth2TokenEndpoint=%s"
                 .formatted(credential.clientId, credential.clientSecret, credential.clientUrl);

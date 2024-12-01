@@ -147,7 +147,7 @@ public class PanacheDyanmicQueryHelper {
     public sealed interface Statement permits StaticStatement, DynamicStatement, WhereStatement {
 
         /**
-         * the query statement, example: p1 = :p1 and p2 > :start or p3 <= :p3.
+         * the query statement, example: p1 = :p1 and (p2 > :p2 or p3 <= :p3).
          */
         String statement();
 

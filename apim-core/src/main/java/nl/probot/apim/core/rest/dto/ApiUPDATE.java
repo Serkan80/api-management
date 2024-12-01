@@ -46,8 +46,8 @@ public record ApiUPDATE(
         return isNotBlank(this.proxyPath)
                || isNotBlank(this.proxyUrl)
                || isNotBlank(this.owner)
-               || isNotBlank(this.openApiUrl)
-               || isNotBlank(this.description)
+               || this.description != null
+               || this.openApiUrl != null
                || this.maxRequests != null
                || this.authenticationType != null;
     }
