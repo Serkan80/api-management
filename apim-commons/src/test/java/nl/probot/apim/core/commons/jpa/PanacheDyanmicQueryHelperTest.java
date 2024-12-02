@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.OR;
+import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PanacheDyanmicQueryHelperTest {

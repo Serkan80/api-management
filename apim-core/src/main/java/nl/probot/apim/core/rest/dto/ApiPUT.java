@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import nl.probot.apim.core.entities.AuthenticationType;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -11,10 +12,11 @@ import org.hibernate.validator.constraints.URL;
 
 import static io.micrometer.common.util.StringUtils.isNotBlank;
 
-public record ApiUPDATE(
+public record ApiPUT(
 
         @Size(max = 100)
         @Schema(example = "/jp")
+        @Pattern(regexp = "^/.*+", message = "Proxy path should start with a slash (/)")
         String proxyPath,
 
         @URL

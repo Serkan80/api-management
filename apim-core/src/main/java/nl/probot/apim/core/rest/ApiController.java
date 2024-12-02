@@ -6,6 +6,7 @@ import io.quarkus.security.Authenticated;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
@@ -15,8 +16,9 @@ import nl.probot.apim.core.entities.ApiEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.rest.dto.Api;
 import nl.probot.apim.core.rest.dto.ApiCredential;
+import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.ApiPOST;
-import nl.probot.apim.core.rest.dto.ApiUPDATE;
+import nl.probot.apim.core.rest.dto.ApiPUT;
 import nl.probot.apim.core.rest.openapi.ApiOpenApi;
 import nl.probot.apim.core.utils.CacheManager;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -44,12 +46,12 @@ public class ApiController implements ApiOpenApi {
         if (credential != null) {
             addCredential(apiEntity.id, credential);
         }
-        return RestResponse.created(URI.create(uriInfo.getPath()));
+        return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), apiEntity.id)));
     }
 
     @Override
     @Transactional
-    public RestResponse<Void> update(Long apiId, ApiUPDATE api) {
+    public RestResponse<Void> update(Long apiId, ApiPUT api) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper
                 .allowBlankValues()
@@ -74,6 +76,24 @@ public class ApiController implements ApiOpenApi {
     }
 
     @Override
+    public List<Api> findAll() {
+        return ApiEntity.findAll(Sort.ascending("owner"))
+                .withHint(HINT_READONLY, true)
+                .project(Api.class)
+                .list();
+    }
+
+    @Override
+    public Api findById(Long id) {
+        return ApiEntity.find("id", id)
+                .withHint(HINT_READONLY, true)
+                .project(Api.class)
+                .singleResultOptional()
+                .orElseThrow(() -> new NotFoundException("Api(id=%d) not found".formatted(id)));
+
+    }
+
+    @Override
     @Transactional
     public void addCredential(Long apiId, ApiCredential credential) {
         var subscriptionEntity = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
@@ -83,13 +103,15 @@ public class ApiController implements ApiOpenApi {
         credentialEntity.id.subscription = subscriptionEntity;
         credentialEntity.persist();
         this.cacheManager.invalidate(credential.subscriptionKey());
-        Log.infof("ApiCredential(apiId=%d, subKey=%s) added", apiEntity.id, credential.subscriptionKey());
+        Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.subject);
     }
 
     @Override
     @Transactional
-    public RestResponse<Void> updateCredential(Long apiId, ApiCredential credential) {
-        var subId = SubscriptionEntity.getByNaturalId(credential.subscriptionKey()).id;
+    public RestResponse<Void> updateCredential(Long apiId, ApiCredentialPUT credential) {
+        var sub = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
+        var subId = sub.id;
+        
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("username", credential.username()),
@@ -106,17 +128,9 @@ public class ApiController implements ApiOpenApi {
         var count = ApiCredentialEntity.update(query, helper.values());
         if (count > 0) {
             this.cacheManager.invalidate(credential.subscriptionKey());
-            Log.infof("ApiCredential(apiId=%d, subKey=%s) updated with %d record(s)", apiId, credential.subscriptionKey(), count);
+            Log.infof("ApiCredential(apiId=%d, sub='%s') updated with %d record(s)", apiId, sub.subject, count);
             return RestResponse.ok();
         }
         return RestResponse.noContent();
-    }
-
-    @Override
-    public List<Api> findAll() {
-        return ApiEntity.findAll(Sort.ascending("owner"))
-                .withHint(HINT_READONLY, true)
-                .project(Api.class)
-                .list();
     }
 }

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import nl.probot.apim.core.entities.ApiEntity;
 import nl.probot.apim.core.entities.AuthenticationType;
@@ -14,6 +15,7 @@ public record ApiPOST(
 
         @NotBlank
         @Size(max = 100)
+        @Pattern(regexp = "^/.*+", message = "Proxy path should start with a slash (/)")
         @Schema(example = "/jp")
         String proxyPath,
 

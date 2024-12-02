@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
+import static nl.probot.apim.commons.jpa.QuerySeparator.AND;
+import static nl.probot.apim.commons.jpa.QuerySeparator.COMMA;
 
 /***
  * Helps writing dynamic queries when parameters are optional.
@@ -25,10 +27,7 @@ import static java.util.stream.Collectors.joining;
  */
 public class PanacheDyanmicQueryHelper {
 
-    public static final String AND = " and ";
-    public static final String OR = " or ";
-    public static final String COMMA = ", ";
-
+    QuerySeparator separator;
     boolean allowBlankValues = false;
     List<Statement> statements = new ArrayList<>();
 
@@ -57,11 +56,11 @@ public class PanacheDyanmicQueryHelper {
     }
 
     /**
-     * @param separator can be: AND, OR
+     * @param separator can be: PanacheDyanmicQueryHelper.AND, PanacheDyanmicQueryHelper.OR
      * @see PanacheDyanmicQueryHelper#buildWhereStatement()
      */
-    public String buildWhereStatement(String separator) {
-        return buildQuery(separator, Optional.empty(), Optional.empty());
+    public String buildWhereStatement(QuerySeparator separator) {
+        return buildQuery(separator.value, Optional.empty(), Optional.empty());
     }
 
     /**
@@ -74,7 +73,7 @@ public class PanacheDyanmicQueryHelper {
         }
 
         return buildQuery(
-                COMMA,
+                COMMA.value,
                 Optional.of("set "),
                 Optional.ofNullable(whereStatement)
                         .filter(where -> isNotNull(where.param()))

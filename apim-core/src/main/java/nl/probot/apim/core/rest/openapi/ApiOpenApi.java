@@ -9,8 +9,9 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.rest.dto.Api;
 import nl.probot.apim.core.rest.dto.ApiCredential;
+import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.ApiPOST;
-import nl.probot.apim.core.rest.dto.ApiUPDATE;
+import nl.probot.apim.core.rest.dto.ApiPUT;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -47,11 +48,20 @@ public interface ApiOpenApi {
             @APIResponse(name = "Not updated", responseCode = "204", description = "When the api is not updated"),
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
     })
-    RestResponse<Void> update(@RestPath Long apiId, @Valid ApiUPDATE api);
+    RestResponse<Void> update(@RestPath Long apiId, @Valid ApiPUT api);
 
     @GET
     @Operation(summary = "Returns all Apis sorted by its owner")
     List<Api> findAll();
+
+    @GET
+    @Path("/{id}")
+    @Operation(summary = "Returns the Api for the given id")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "Not found")
+    })
+    Api findById(@RestPath Long id);
 
     @POST
     @Path("/{apiId}/credentials")
@@ -70,5 +80,5 @@ public interface ApiOpenApi {
             @APIResponse(name = "Not Updated", responseCode = "204", description = "When the credential is not updated"),
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
     })
-    RestResponse<Void> updateCredential(Long apiId, @Valid ApiCredential credential);
+    RestResponse<Void> updateCredential(Long apiId, @Valid ApiCredentialPUT credential);
 }
