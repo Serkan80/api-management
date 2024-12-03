@@ -84,7 +84,7 @@ public class AuthenticationController implements AuthenticationOpenApi {
         return Map.of(
                 "access_token", generateAccessToken(),
                 "expires_in", this.expirationAT,
-                "type", "bearer"
+                "token_type", "Bearer"
         );
     }
 

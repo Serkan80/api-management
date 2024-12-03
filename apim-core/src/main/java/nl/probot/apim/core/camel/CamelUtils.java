@@ -65,15 +65,12 @@ public final class CamelUtils {
 
     public static void forwardUrlProcessor(Exchange exchange) {
         var incomingRequestPath = exchange.getIn().getHeader(HTTP_URI, String.class);
-        var extractedProxy = extractProxyName(incomingRequestPath);
-
-        var proxyName = extractedProxy.proxyName;
-        var proxyPath = incomingRequestPath.substring(extractedProxy.indexEnd);
         var subscription = exchange.getIn().getHeader(SUBSCRIPTION, SubscriptionEntity.class);
-        var proxyUrl = subscription.findApiBy(proxyName, api -> api.proxyUrl);
-        Log.debugf("proxyName: %s, proxyUrl: %s, proxyPath: %s\n", proxyName, proxyUrl, proxyPath);
+        var api = subscription.findApiBy(incomingRequestPath);
+        var forwardUrl = api.proxyUrl + incomingRequestPath.substring(incomingRequestPath.indexOf('/', 1)).replace(api.proxyPath, "");
 
-        exchange.setProperty("forwardUrl", "%s%s".formatted(proxyUrl, proxyPath));
+        Log.debugf("forward url: %s", forwardUrl);
+        exchange.setProperty("forwardUrl", forwardUrl);
         exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
     }
 

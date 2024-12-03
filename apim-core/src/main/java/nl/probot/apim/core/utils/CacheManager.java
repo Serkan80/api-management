@@ -5,6 +5,7 @@ import jakarta.inject.Singleton;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -54,7 +55,7 @@ public class CacheManager {
     record TimedValue(Object value, long timestamp) {
 
         public TimedValue(Object value) {
-            this(value, System.currentTimeMillis());
+            this(Objects.requireNonNull(value), System.currentTimeMillis());
         }
 
         public boolean isStale() {

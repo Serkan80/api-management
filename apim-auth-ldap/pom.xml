@@ -23,6 +23,4 @@
             <artifactId>quarkus-elytron-security-ldap</artifactId>
         </dependency>
     </dependencies>
-
-
 </project>

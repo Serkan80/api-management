@@ -65,7 +65,7 @@ public class PanacheDyanmicQueryHelper {
 
     /**
      * @param whereStatement optionally a where statement in the form of: w1 = :w1 and w2 = :w2 ...
-     * @return will return something like: set p1 = ?1, p2 = ?2, ... (where w1 = ?n ... )
+     * @return will return something like: set p1 = ?1, p2 = ?2, ... (where w1 = ?n and ... )
      */
     public String buildUpdateStatement(WhereStatement whereStatement) {
         if (whereStatement != null && isNotNull(whereStatement.param())) {

@@ -10,13 +10,10 @@ import nl.probot.apim.core.utils.CacheManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
-import java.util.function.Function;
-
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static nl.probot.apim.core.camel.CamelUtils.apiTokenAuth;
 import static nl.probot.apim.core.camel.CamelUtils.basicAuth;
 import static nl.probot.apim.core.camel.CamelUtils.clientCredentialsAuth;
-import static nl.probot.apim.core.camel.CamelUtils.extractProxyName;
 import static nl.probot.apim.core.entities.AuthenticationType.NONE;
 import static nl.probot.apim.core.entities.AuthenticationType.PASSTHROUGH;
 import static org.apache.camel.Exchange.HTTP_URI;
@@ -39,7 +36,7 @@ public class SubscriptionProcessor implements Processor {
         var incomingRequest = in.getHeader(HTTP_URI, String.class);
         var subscriptionKey = in.getHeader(SUBSCRIPTION_KEY, String.class);
         var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findByKey(subscriptionKey));
-        var api = subscription.findApiBy(extractProxyName(incomingRequest).proxyName(), Function.identity());
+        var api = subscription.findApiBy(incomingRequest);
 
         checkApiCredentials(exchange, subscription, api);
         checkThrottling(exchange, api);

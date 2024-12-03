@@ -28,6 +28,7 @@ public class GatewayRoute extends EndpointRouteBuilder {
     public void configure() {
         onException(Throwable.class)
                 .handled(true)
+                .process(exchange -> CamelUtils.timer(exchange, this.meterRegistry, false))
                 .process(CamelUtils::cleanUpHeaders)
                 .process(CamelUtils::setErrorMessage)
                 .end();

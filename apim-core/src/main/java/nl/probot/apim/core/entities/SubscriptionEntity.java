@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
@@ -55,13 +54,13 @@ public class SubscriptionEntity extends PanacheEntity {
         api.subscriptions.add(this);
     }
 
-    public <T> T findApiBy(String proxyPath, Function<ApiEntity, T> mapper) {
+    public ApiEntity findApiBy(String incomingRequestPath) {
+        var path = incomingRequestPath.substring(incomingRequestPath.indexOf('/', 1));
         return this.apis.stream()
                 .filter(api -> api.enabled)
-                .filter(api -> api.proxyPath.equals(proxyPath))
-                .map(mapper::apply)
+                .filter(api -> path.startsWith(api.proxyPath))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Api(proxyPath=%s) not found or was not enabled".formatted(proxyPath)));
+                .orElseThrow(() -> new NotFoundException("Api(proxyPath=%s) not found or was not enabled".formatted(path)));
     }
 
     public Optional<ApiCredentialEntity> findApiCredential(Long apiId) {
