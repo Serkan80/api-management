@@ -111,7 +111,7 @@ public class ApiController implements ApiOpenApi {
     public RestResponse<Void> updateCredential(Long apiId, ApiCredentialPUT credential) {
         var sub = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
         var subId = sub.id;
-        
+
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("username", credential.username()),
@@ -122,7 +122,7 @@ public class ApiController implements ApiOpenApi {
                 new StaticStatement("clientScope", credential.clientScope()),
                 new StaticStatement("apiKey", credential.apiKey()),
                 new StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
-                new StaticStatement("apiKeyHeaderOutsideAuthorization", credential.apiKeyHeaderOutsideAuthorization())
+                new StaticStatement("apiKeyLocation", credential.apiKeyLocation())
         ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
 
         var count = ApiCredentialEntity.update(query, helper.values());

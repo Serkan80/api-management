@@ -10,6 +10,8 @@ import nl.probot.apim.core.utils.CacheManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
+import java.util.List;
+
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static nl.probot.apim.core.camel.CamelUtils.apiTokenAuth;
 import static nl.probot.apim.core.camel.CamelUtils.basicAuth;
@@ -36,7 +38,7 @@ public class SubscriptionProcessor implements Processor {
         var incomingRequest = in.getHeader(HTTP_URI, String.class);
         var subscriptionKey = in.getHeader(SUBSCRIPTION_KEY, String.class);
         var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findByKey(subscriptionKey));
-        var api = subscription.findApiBy(incomingRequest);
+        var api = subscription.findApi(incomingRequest);
 
         checkApiCredentials(exchange, subscription, api);
         checkThrottling(exchange, api);
@@ -44,14 +46,15 @@ public class SubscriptionProcessor implements Processor {
     }
 
     private static void checkApiCredentials(Exchange exchange, SubscriptionEntity subscription, ApiEntity api) {
-        if (api.authenticationType == NONE) {
-            exchange.getIn().removeHeader(AUTHORIZATION);
-        } else if (api.authenticationType != null && api.authenticationType != PASSTHROUGH) {
+        exchange.getIn().removeHeader(AUTHORIZATION);
+        var authType = api.authenticationType;
+
+        if (authType != null && !List.of(NONE, PASSTHROUGH).contains(authType)) {
             var credential = subscription.findApiCredential(api.id).orElseThrow(() -> new WebApplicationException(
-                    "Api requires %s authentication but no credentials were found for this Api".formatted(api.authenticationType),
+                    "Api requires %s authentication but no credentials were found for this Api".formatted(authType),
                     400));
 
-            switch (api.authenticationType) {
+            switch (authType) {
                 case BASIC -> basicAuth(exchange, credential.username, credential.password);
                 case API_KEY -> apiTokenAuth(exchange, credential);
                 case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);

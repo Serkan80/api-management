@@ -31,5 +31,5 @@ public class ApiCredentialEntity extends PanacheEntityBase {
     @Convert(converter = EncryptionConverter.class)
     public String apiKey;
     public String apiKeyHeader;
-    public Boolean apiKeyHeaderOutsideAuthorization;
+    public ApiKeyLocation apiKeyLocation;
 }

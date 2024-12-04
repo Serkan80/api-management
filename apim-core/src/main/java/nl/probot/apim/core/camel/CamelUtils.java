@@ -28,6 +28,7 @@ import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.apache.camel.Exchange.EXCEPTION_CAUGHT;
 import static org.apache.camel.Exchange.FAILURE_ENDPOINT;
 import static org.apache.camel.Exchange.HTTP_PATH;
+import static org.apache.camel.Exchange.HTTP_QUERY;
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
 import static org.apache.camel.Exchange.HTTP_URI;
 import static org.apache.camel.ExchangePropertyKey.FAILURE_ROUTE_ID;
@@ -66,7 +67,7 @@ public final class CamelUtils {
     public static void forwardUrlProcessor(Exchange exchange) {
         var incomingRequestPath = exchange.getIn().getHeader(HTTP_URI, String.class);
         var subscription = exchange.getIn().getHeader(SUBSCRIPTION, SubscriptionEntity.class);
-        var api = subscription.findApiBy(incomingRequestPath);
+        var api = subscription.findApi(incomingRequestPath);
         var forwardUrl = api.proxyUrl + incomingRequestPath.substring(incomingRequestPath.indexOf('/', 1)).replace(api.proxyPath, "");
 
         Log.debugf("forward url: %s", forwardUrl);
@@ -120,41 +121,22 @@ public final class CamelUtils {
         exchange.setRouteStop(true);
     }
 
-    public static String requireNonBlankElse(String original, String orElse) {
-        if (isNullOrEmpty(original) || "{}".equals(original)) {
-            return orElse;
-        }
-
-        return original;
-    }
-
-    public static String trimOptions(String url) {
-        if (url == null || url.isBlank()) {
-            return "no url was available, probably due an error";
-        }
-
-        var optionsIndex = url.indexOf('?');
-        if (optionsIndex == -1) {
-            return url;
-        }
-        return url.substring(0, optionsIndex);
-    }
-
     public static void basicAuth(Exchange exchange, String username, String password) {
         Objects.requireNonNull(username);
         Objects.requireNonNull(password);
 
-        exchange.getIn().removeHeader(AUTHORIZATION);
         exchange.getIn().setHeader(AUTHORIZATION, generateBasicAuthHeader(username, password));
     }
 
     public static void apiTokenAuth(Exchange exchange, ApiCredentialEntity credential) {
         Objects.requireNonNull(credential.apiKey);
+        Objects.requireNonNull(credential.apiKeyLocation);
         Objects.requireNonNull(credential.apiKeyHeader);
-        Objects.requireNonNull(credential.apiKeyHeaderOutsideAuthorization);
 
-        exchange.getIn().removeHeader(AUTHORIZATION);
-        exchange.getIn().setHeader(credential.apiKeyHeaderOutsideAuthorization ? credential.apiKeyHeader : AUTHORIZATION, apiKey(credential));
+        switch (credential.apiKeyLocation) {
+            case QUERY -> exchange.getIn().setHeader(HTTP_QUERY, apiKeyValue(credential));
+            case HEADER -> exchange.getIn().setHeader(credential.apiKeyHeader, apiKeyValue(credential));
+        }
     }
 
     public static void clientCredentialsAuth(Exchange exchange, ApiCredentialEntity credential) {
@@ -162,7 +144,6 @@ public final class CamelUtils {
         Objects.requireNonNull(credential.clientSecret);
         Objects.requireNonNull(credential.clientUrl);
 
-        exchange.getIn().removeHeader(AUTHORIZATION);
         var oauthParams = "&oauth2ClientId=%s&oauth2ClientSecret=%s&oauth2TokenEndpoint=%s"
                 .formatted(credential.clientId, credential.clientSecret, credential.clientUrl);
         oauthParams += credential.clientScope != null ? "&oauth2Scope=%s".formatted(credential.clientScope) : "";
@@ -184,12 +165,31 @@ public final class CamelUtils {
         }
     }
 
-    private static String apiKey(ApiCredentialEntity credential) {
-        if (credential.apiKeyHeaderOutsideAuthorization) {
-            return credential.apiKey;
+    private static String apiKeyValue(ApiCredentialEntity credential) {
+        return switch (credential.apiKeyLocation) {
+            case HEADER -> credential.apiKey;
+            case QUERY -> "%s=%s".formatted(credential.apiKeyHeader, credential.apiKey).stripTrailing();
+        };
+    }
+
+    private static String trimOptions(String url) {
+        if (url == null || url.isBlank()) {
+            return "no url was available, probably due an error";
         }
 
-        return "%s %s".formatted(credential.apiKeyHeader, credential.apiKey);
+        var optionsIndex = url.indexOf('?');
+        if (optionsIndex == -1) {
+            return url;
+        }
+        return url.substring(0, optionsIndex);
+    }
+
+    private static String requireNonBlankElse(String original, String orElse) {
+        if (isNullOrEmpty(original) || "{}".equals(original)) {
+            return orElse;
+        }
+
+        return original;
     }
 
     record Result(String proxyName, int indexEnd) {

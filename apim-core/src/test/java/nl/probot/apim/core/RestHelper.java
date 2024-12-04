@@ -1,6 +1,7 @@
 package nl.probot.apim.core;
 
 import nl.probot.apim.core.rest.dto.Api;
+import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiPOST;
 import nl.probot.apim.core.rest.dto.SubscriptionAll;
 
@@ -47,11 +48,11 @@ public final class RestHelper {
                         .accept(APPLICATION_JSON)
                         .contentType(APPLICATION_JSON)
                         .body(request)
-                        .log().all()
+//                        .log().all()
                 .when()
                         .post(getUrl(url))
                 .then()
-                        .log().all()
+//                        .log().all()
                         .statusCode(status)
                         .extract().header(LOCATION);
         //@formatter:on
@@ -85,6 +86,10 @@ public final class RestHelper {
         }
 
         return Optional.empty();
+    }
+
+    public static void addCredential(String apiId, ApiCredential request, int status, URL url) {
+        given().contentType(APPLICATION_JSON).body(request).when().post(getUrl(url) + "/{apiId}/credentials", apiId).then().statusCode(status);
     }
 
     public static String extractId(String location) {

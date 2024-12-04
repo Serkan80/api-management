@@ -54,7 +54,7 @@ public class SubscriptionEntity extends PanacheEntity {
         api.subscriptions.add(this);
     }
 
-    public ApiEntity findApiBy(String incomingRequestPath) {
+    public ApiEntity findApi(String incomingRequestPath) {
         var path = incomingRequestPath.substring(incomingRequestPath.indexOf('/', 1));
         return this.apis.stream()
                 .filter(api -> api.enabled)
@@ -77,12 +77,12 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public static SubscriptionEntity findByKey(String key) {
         return find("""
-                select s 
-                from SubscriptionEntity s 
-                left join fetch s.apis a
-                left join fetch s.apiCredentials ac 
-                where subscriptionKey = ?1 and s.enabled = true
-                """, key)
+                            select s 
+                            from SubscriptionEntity s 
+                            left join fetch s.apis a
+                            left join fetch s.apiCredentials ac 
+                            where subscriptionKey = ?1 and s.enabled = true
+                            """, key)
                 .<SubscriptionEntity>singleResultOptional()
                 .orElseThrow(() -> new NotFoundException("Subscription with given key not found"));
     }

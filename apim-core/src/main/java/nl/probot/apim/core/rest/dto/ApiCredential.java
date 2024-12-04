@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
+import nl.probot.apim.core.entities.ApiKeyLocation;
 import nl.probot.apim.core.entities.CompositeApiId;
 import org.hibernate.validator.constraints.URL;
 
@@ -28,15 +29,15 @@ public record ApiCredential(
         String clientScope,
         String apiKey,
         String apiKeyHeader,
-        Boolean apiKeyHeaderOutsideAuthorization
+        ApiKeyLocation apiKeyLocation
 ) {
 
     @JsonIgnore
-    @AssertTrue(message = "No credentials were provided")
+    @AssertTrue(message = "No or incorrect credentials were provided")
     public boolean isCredentialsValid() {
-        return (isNotBlank(this.apiKey) && isNotBlank(this.apiKeyHeader) && this.apiKeyHeaderOutsideAuthorization != null)
-               || (isNotBlank(this.clientId) && isNotBlank(this.clientSecret) && isNotBlank(this.clientUrl))
-               || (isNotBlank(this.username) && isNotBlank(this.password));
+        return (isNotBlank(this.apiKey) && isNotBlank(this.apiKeyHeader) && this.apiKeyLocation != null)
+                || (isNotBlank(this.clientId) && isNotBlank(this.clientSecret) && isNotBlank(this.clientUrl))
+                || (isNotBlank(this.username) && isNotBlank(this.password));
     }
 
     public ApiCredentialEntity toEntity() {
@@ -50,7 +51,7 @@ public record ApiCredential(
         result.clientScope = this.clientScope;
         result.apiKey = this.apiKey;
         result.apiKeyHeader = this.apiKeyHeader;
-        result.apiKeyHeaderOutsideAuthorization = this.apiKeyHeaderOutsideAuthorization;
+        result.apiKeyLocation = this.apiKeyLocation;
         return result;
     }
 
@@ -65,7 +66,7 @@ public record ApiCredential(
                 entity.clientScope,
                 entity.apiKey,
                 entity.apiKeyHeader,
-                entity.apiKeyHeaderOutsideAuthorization
+                entity.apiKeyLocation
         );
     }
 }
