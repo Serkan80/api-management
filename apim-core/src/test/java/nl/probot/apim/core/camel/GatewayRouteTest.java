@@ -76,7 +76,7 @@ class GatewayRouteTest {
     @BeforeEach
     @Transactional
     @TestSecurity(user = "bob", authMechanism = "basic")
-    public void init() {
+    void init() {
         if (this.mainSubKey == null) {
             this.mainSubKey = createSubscription("Main Test Subscription", this.subscriptionsUrl);
             this.mainSubId = SubscriptionEntity.getByNaturalId(this.mainSubKey).id;
@@ -173,12 +173,12 @@ class GatewayRouteTest {
             var resp = makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH, 200);
             if (location == HEADER) {
                 if (AUTHORIZATION.equals(apiKeyHeader)) {
-                    resp.body("headers.Authorization", is(apiKey));
+                    resp.body("headers.Authorization", equalTo(apiKey));
                 } else {
-                    resp.header(apiKeyHeader, is(apiKey));
+                    resp.header(apiKeyHeader, equalTo(apiKey));
                 }
             } else {
-                resp.body("url", is("/mock/methods?ApiKey=token-12345"));
+                resp.body("url", equalTo("/mock/methods?ApiKey=token-12345"));
             }
         }
     }
