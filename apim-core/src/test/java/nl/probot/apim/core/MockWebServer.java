@@ -18,6 +18,11 @@ import static org.junit.platform.commons.util.StringUtils.isNotBlank;
 @RouteBase(path = "/mock", produces = APPLICATION_JSON)
 public class MockWebServer {
 
+    /**
+     * Mocked client credentials authentication endpoint.
+     *
+     * @param exchange
+     */
     @Route(path = "/auth", methods = POST, consumes = APPLICATION_FORM_URLENCODED)
     public void token(RoutingExchange exchange) {
         var request = exchange.request();
@@ -30,6 +35,11 @@ public class MockWebServer {
         }
     }
 
+    /**
+     * Catches all http requests, except the ones defined in the regex.
+     *
+     * Returns the method, url & the headers in the response body.
+     */
     @Route(regex = "/(?!(subscriptions|apis|gateway|mock/auth)).*")
     public void methods(RoutingExchange exchange) {
         var request = exchange.request();

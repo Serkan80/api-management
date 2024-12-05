@@ -103,7 +103,7 @@ class GatewayRouteTest {
     void checkSubscriptions(boolean subscriptionExists) {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", ""));
         if (subscriptionExists) {
-            makeApiCall(this.mainSubKey, "get", PROXY_PATH, 200);
+            makeApiCall(this.mainSubKey, "get", PROXY_PATH);
         } else {
             makeApiCall("nonExistingKey", "get", PROXY_PATH, 404);
         }
@@ -114,7 +114,7 @@ class GatewayRouteTest {
     @TestSecurity(user = "bob", authMechanism = "basic")
     void checkHttpMethods(HttpMethods method) {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", ""));
-        var response = makeApiCall(this.mainSubKey, method.name(), PROXY_PATH, 200);
+        var response = makeApiCall(this.mainSubKey, method.name(), PROXY_PATH);
 
         response
                 .header("Authorization", nullValue())
@@ -135,7 +135,7 @@ class GatewayRouteTest {
     void checkAuthententicationTypes(AuthenticationType type) {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", type != null ? type.name() : ""));
 
-        var response = makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH, 200);
+        var response = makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH);
         if (type == null) {
             response.header("Authorization", nullValue());
         } else {
@@ -170,7 +170,7 @@ class GatewayRouteTest {
         QuarkusTransaction.commit();
 
         if (status == 200) {
-            var resp = makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH, 200);
+            var resp = makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH);
             if (location == HEADER) {
                 if (AUTHORIZATION.equals(apiKeyHeader)) {
                     resp.body("headers.Authorization", equalTo(apiKey));
@@ -183,6 +183,10 @@ class GatewayRouteTest {
         }
     }
 
+    private ValidatableResponse makeApiCall(String subKey, String method, String path) {
+        return makeApiCall(subKey, method, path, 200);
+    }
+
     private ValidatableResponse makeApiCall(String subKey, String method, String path, int status) {
         return
                 //@formatter:off
@@ -193,7 +197,7 @@ class GatewayRouteTest {
             .when()
                     .request(method, "%s%s%s".formatted(serverUrl(), this.apimContextRoot, path))
             .then()
-                    .log().all()
+//                    .log().all()
                     .statusCode(status);
            //@formatter:on
     }
