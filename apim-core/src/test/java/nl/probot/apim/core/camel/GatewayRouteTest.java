@@ -5,6 +5,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
+import io.restassured.builder.MultiPartSpecBuilder;
 import io.restassured.response.ValidatableResponse;
 import jakarta.transaction.Transactional;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
@@ -19,6 +20,8 @@ import org.apache.camel.http.common.HttpMethods;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -26,6 +29,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 
@@ -43,6 +47,7 @@ import static nl.probot.apim.core.entities.AuthenticationType.API_KEY;
 import static org.apache.camel.http.common.HttpMethods.GET;
 import static org.apache.camel.http.common.HttpMethods.HEAD;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -78,23 +83,18 @@ class GatewayRouteTest {
     @TestSecurity(user = "bob", authMechanism = "basic")
     void init() {
         if (this.mainSubKey == null) {
-            this.mainSubKey = createSubscription("Main Test Subscription", this.subscriptionsUrl);
-            this.mainSubId = SubscriptionEntity.getByNaturalId(this.mainSubKey).id;
-            var request = Instancio.of(apiModel)
-                    .set(field(ApiPOST::proxyPath), PROXY_PATH)
-                    .set(field(ApiPOST::proxyUrl), "%s/mock/methods".formatted(serverUrl()))
-                    .set(field(ApiPOST::authenticationType), null)
-                    .set(field(ApiPOST::maxRequests), 100)
-                    .create();
-
-            this.apiId = createApi(request, this.apisUrl);
-            addApi(this.mainSubKey, this.apiId, 200, this.subscriptionsUrl);
-            addCredential(
-                    this.apiId,
-                    new ApiCredential(this.mainSubKey, "bob", "password", "clientId", "12345", serverUrl() + "/mock/auth", null, "token-12345", "ApiKey", HEADER),
-                    200,
-                    this.apisUrl);
+            var response = createSubscriptionWithApi("Main Test Subscription", PROXY_PATH);
+            this.mainSubKey = response.subKey;
+            this.mainSubId = response.subId;
+            this.apiId = response.apiId;
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/gateway/mock/path", "/subscriptions", "/apis"})
+    @DisplayName("These paths should not be accessable without authentication, even when you provide a subscription-key")
+    void unauthorizedAccess(String paths) {
+        makeApiCall(this.mainSubKey, GET.name(), paths, 401);
     }
 
     @ParameterizedTest
@@ -103,9 +103,9 @@ class GatewayRouteTest {
     void checkSubscriptions(boolean subscriptionExists) {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", ""));
         if (subscriptionExists) {
-            makeApiCall(this.mainSubKey, "get", PROXY_PATH);
+            makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH);
         } else {
-            makeApiCall("nonExistingKey", "get", PROXY_PATH, 404);
+            makeApiCall("nonExistingKey", GET.name(), PROXY_PATH, 404);
         }
     }
 
@@ -183,6 +183,58 @@ class GatewayRouteTest {
         }
     }
 
+    @Test
+    @TestSecurity(user = "bob", authMechanism = "basic")
+    void notLinkedApiShouldNotBeAccessable() {
+        createApi(Instancio.of(apiModel).set(field(ApiPOST::proxyPath), "/forbidden").create(), this.apisUrl);
+        makeApiCall(this.mainSubKey, GET.name(), "/forbidden", 400);
+    }
+
+    @Test
+    @TestSecurity(user = "bob", authMechanism = "basic")
+    void rateLimit() {
+        updateApi(this.apiId, 200, this.apisUrl, Map.of("maxRequests", "1"));
+        triggerRateLimit(PROXY_PATH, 1)
+                .body("exception", equalTo("org.apache.camel.processor.ThrottlerRejectedExecutionException"))
+                .body("message", equalTo("Exceeded the max throttle rate of 1 within 60000ms"));
+
+        // another subscription should be able to call the same api without being blocked
+        var response = createSubscriptionWithApi("Another sub", "/some/path");
+        addApi(response.subKey, this.apiId, 200, this.subscriptionsUrl);
+        makeApiCall(response.subKey, GET.name(), PROXY_PATH);
+
+        // undo rate limit
+        updateApi(this.apiId, 200, this.apisUrl, Map.of("maxRequests", "1000"));
+    }
+
+    @Test
+    @TestSecurity(user = "bob", authMechanism = "basic")
+    void multipart() {
+        var picture = getClass().getClassLoader().getResourceAsStream("picture.png");
+        var request = Instancio.of(apiModel)
+                .set(field(ApiPOST::proxyPath), "/multipart")
+                .set(field(ApiPOST::proxyUrl), serverUrl() + "/multipart")
+                .ignore(field(ApiPOST::authenticationType))
+                .create();
+
+        var multiPartApiId = createApi(request, this.apisUrl);
+        addApi(this.mainSubKey, multiPartApiId, 200, this.subscriptionsUrl);
+
+        makeMultipartCall(this.mainSubKey, "picture", picture)
+                .rootPath("[0]")
+                .body("name", equalTo("pic"))
+                .body("size", greaterThan(1));
+    }
+
+    private ValidatableResponse triggerRateLimit(String path, int maxRequests) {
+        for (int i = 0; i < maxRequests; i++) {
+            makeApiCall(this.mainSubKey, GET.name(), path);
+        }
+
+        // +1 call should trigger rate limit max
+        return makeApiCall(this.mainSubKey, GET.name(), path, 500);
+    }
+
     private ValidatableResponse makeApiCall(String subKey, String method, String path) {
         return makeApiCall(subKey, method, path, 200);
     }
@@ -202,8 +254,46 @@ class GatewayRouteTest {
            //@formatter:on
     }
 
+    private ValidatableResponse makeMultipartCall(String subKey, String filename, InputStream data) {
+        return
+                //@formatter:off
+                given()
+                        .header("subscription-key", subKey)
+                        .multiPart(new MultiPartSpecBuilder(data).fileName(filename).controlName("pic").mimeType("image/png").build())
+                        .log().all()
+                .when()
+                        .post("%s%s%s".formatted(serverUrl(), this.apimContextRoot, "/multipart"))
+                .then()
+                        .log().all()
+                        .statusCode(200);
+        //@formatter:on
+    }
+
+    private SubscriptionResponse createSubscriptionWithApi(String subject, String proxyPath) {
+        var subKey = createSubscription(subject, this.subscriptionsUrl);
+        var subId = SubscriptionEntity.getByNaturalId(subKey).id;
+        var request = Instancio.of(apiModel)
+                .set(field(ApiPOST::proxyPath), proxyPath)
+                .set(field(ApiPOST::proxyUrl), "%s/mock/methods".formatted(serverUrl()))
+                .set(field(ApiPOST::authenticationType), null)
+                .set(field(ApiPOST::maxRequests), 100)
+                .create();
+
+        var apiId = createApi(request, this.apisUrl);
+        addApi(subKey, apiId, 200, this.subscriptionsUrl);
+        addCredential(
+                apiId,
+                new ApiCredential(subKey, "bob", "password", "clientId", "12345", serverUrl() + "/mock/auth", null, "token-12345", "ApiKey", HEADER),
+                200,
+                this.apisUrl);
+
+        return new SubscriptionResponse(subKey, subId, apiId);
+    }
+
     private String serverUrl() {
         // remove last slash
         return this.serverUrl.substring(0, this.serverUrl.length() - 1);
     }
+
+    private record SubscriptionResponse(String subKey, Long subId, String apiId) {}
 }

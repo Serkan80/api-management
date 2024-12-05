@@ -5,6 +5,7 @@ import io.quarkus.vertx.web.Route;
 import io.quarkus.vertx.web.RouteBase;
 import io.quarkus.vertx.web.RoutingExchange;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import static io.quarkus.vertx.web.Route.HttpMethod.POST;
@@ -26,7 +27,7 @@ public class MockWebServer {
     @Route(path = "/auth", methods = POST, consumes = APPLICATION_FORM_URLENCODED)
     public void token(RoutingExchange exchange) {
         var request = exchange.request();
-        Log.debugf("path: %s, params: %s, query: %s\n", request.path(), request.params(), request.query());
+        Log.debugf("path: %s, params: %s, query: %s", request.path(), request.params(), request.query());
 
         if (request.getFormAttribute("grant_type").equals("client_credentials")) {
             exchange.response().end(JsonObject.of("access_token", "123456", "token_type", "Bearer", "expires_in", "3600").encode());
@@ -40,23 +41,25 @@ public class MockWebServer {
      *
      * Returns the method, url & the headers in the response body.
      */
-    @Route(regex = "/(?!(subscriptions|apis|gateway|mock/auth)).*")
-    public void methods(RoutingExchange exchange) {
-        var request = exchange.request();
-        Log.debugf("method: %s, path: %s, params: %s, query: %s\n", request.method(), request.path(), request.params(), request.query());
+    @Route(regex = "/(?!(subscriptions|apis|gateway|mock/auth|multipart)).*")
+    public void methods(RoutingContext context) {
+        var request = context.request();
+        Log.debugf("method: %s, path: %s, query: %s", request.method(), request.path(), request.query());
 
-        var response = exchange.response();
+        var response = context.response();
         var headers = new JsonObject();
         request.headers().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
+        Log.debugf("headers: \n%s", headers.encodePrettily());
 
         var query = requireNonNullElse(request.query(), "");
         var querySeparator = isNotBlank(query) ? "?" : "";
+
         var body = JsonObject.of(
                 "method", request.method().name(),
                 "url", "%s%s%s".formatted(request.path(), querySeparator, query),
                 "headers", headers
-        ).encode();
+        );
 
-        response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(body);
+        response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(body.encode());
     }
 }
