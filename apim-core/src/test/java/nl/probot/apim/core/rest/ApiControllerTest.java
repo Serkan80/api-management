@@ -4,11 +4,17 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
+import jakarta.transaction.Transactional;
+import nl.probot.apim.core.entities.ApiCredentialEntity;
+import nl.probot.apim.core.entities.ApiEntity;
+import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.rest.dto.Api;
 import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiPOST;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -23,18 +29,30 @@ import static nl.probot.apim.core.RestHelper.createApi;
 import static nl.probot.apim.core.RestHelper.createSubscription;
 import static nl.probot.apim.core.RestHelper.getApiById;
 import static nl.probot.apim.core.RestHelper.getSubscription;
+import static nl.probot.apim.core.RestHelper.updateApi;
+import static nl.probot.apim.core.RestHelper.updateCredential;
 import static nl.probot.apim.core.entities.AuthenticationType.BASIC;
 import static nl.probot.apim.core.entities.AuthenticationType.PASSTHROUGH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.instancio.Select.field;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 @QuarkusTest
+@TestInstance(PER_CLASS)
 @TestHTTPEndpoint(ApiController.class)
 class ApiControllerTest {
 
     @TestHTTPResource
     @TestHTTPEndpoint(SubscriptionController.class)
     URL subscriptionsUrl;
+
+    @BeforeAll
+    @Transactional
+    public void cleanup() {
+        ApiCredentialEntity.deleteAll();
+        ApiEntity.deleteAll();
+        SubscriptionEntity.deleteAll();
+    }
 
     @Test
     @TestSecurity(user = "bob", authMechanism = "basic")
@@ -80,7 +98,7 @@ class ApiControllerTest {
         var request = Instancio.of(apiModel).create();
         var apiId = createApi(request, null);
 
-        updateApi(apiId, 200, Map.of("proxyPath", "/bin", "description", "", "authenticationType", ""));
+        updateApi(apiId, 200, null, Map.of("proxyPath", "/bin", "description", "", "authenticationType", ""));
 
         var api = getApiById(apiId);
         assertThat(api.proxyPath()).isEqualTo("/bin");
@@ -88,7 +106,7 @@ class ApiControllerTest {
         assertThat(api.authenticationType()).isEqualTo(PASSTHROUGH);
 
         // update non existing api
-        updateApi("1000", 204, Map.of("proxyPath", "/bin/v2"));
+        updateApi("1000", 204, null, Map.of("proxyPath", "/bin/v2"));
     }
 
     @Test
@@ -114,19 +132,11 @@ class ApiControllerTest {
         assertThat(subscription.credentials()).hasSize(1).element(0).extracting(ApiCredential::password).isEqualTo("password");
 
         // update the credential
-        updateCredential(apiId, Map.of("subscriptionKey", subKey, "password", "password2"));
+        updateCredential(apiId, null, Map.of("subscriptionKey", subKey, "password", "password2"));
 
         // validate the update
         subscription = getSubscription(subKey, this.subscriptionsUrl);
         assertThat(subscription.credentials()).hasSize(1);
         assertThat(subscription.credentials().get(0).password()).isEqualTo("password2");
-    }
-
-    private static void updateApi(String apiId, int status, Map<String, String> updateRequest) {
-        given().contentType(APPLICATION_JSON).body(updateRequest).put(apiId).then().statusCode(status);
-    }
-
-    private void updateCredential(String apiId, Map<String, Object> request) {
-        given().contentType(APPLICATION_JSON).body(request).when().put("/{apiId}/credentials", apiId).then().statusCode(200);
     }
 }

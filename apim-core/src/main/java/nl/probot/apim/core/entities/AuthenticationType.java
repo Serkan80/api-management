@@ -6,8 +6,7 @@ public enum AuthenticationType {
     BASIC,
     CLIENT_CREDENTIALS,
     API_KEY,
-    PASSTHROUGH,
-    NONE;
+    PASSTHROUGH;
 
     @JsonCreator
     public static AuthenticationType fromValue(String value) {

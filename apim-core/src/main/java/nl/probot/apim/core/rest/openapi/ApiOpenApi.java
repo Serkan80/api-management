@@ -67,10 +67,10 @@ public interface ApiOpenApi {
     @Path("/{apiId}/credentials")
     @Operation(summary = "Adds a credential to the given Api")
     @APIResponses({
-            @APIResponse(name = "OK", responseCode = "204"),
+            @APIResponse(name = "OK", responseCode = "200"),
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription or api is not found")
     })
-    void addCredential(@RestPath Long apiId, @Valid ApiCredential credential);
+    RestResponse<Void> addCredential(@RestPath Long apiId, @Valid ApiCredential credential);
 
     @PUT
     @Path("/{apiId}/credentials")

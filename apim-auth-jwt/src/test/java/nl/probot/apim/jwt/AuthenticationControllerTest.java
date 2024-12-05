@@ -95,7 +95,7 @@ class AuthenticationControllerTest {
         bearerLogin()
                 .body("access_token", notNullValue())
                 .body("expires_in", is(3600))
-                .body("type", is("bearer"))
+                .body("token_type", is("Bearer"))
                 .body("refresh_token", nullValue());
     }
 
@@ -104,15 +104,15 @@ class AuthenticationControllerTest {
         var publicKey = given().when().get("/public-key").then().extract().asString();
 
         assertThat(publicKey).isNotBlank().isEqualToIgnoringWhitespace("""
-                -----BEGIN PUBLIC KEY-----
-                MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAySoM3I2FA/BetdrS6lhJvTYKk6x71BSw
-                QX1VDP3PR6c6rKmr0VAI/QijmlNY9nC9NLkBjVE8OUd6LVrNAEIG7DqXSXNOGDA1GFx68SLGNJ4O
-                tz7Tt1T7lzeyu4ArSlT1uBnWroA+07xrtW5ILhbf1Uxyg0DL37Kf8KyC6x5Vaj4whR+pLip7ZoQG
-                cOPPDeWlfDVnFj+YWtpVe6hzef5swJ5UIvr87DshSXrySxXKLow03VOyyL0Y4R06Q7ErARGmu19C
-                pCerAJzzpDcz/J09DWfkrKmd7BCCEpJ2Wj55J9fhrTnrZPDldEqJ9JmV43tKZqYqKZpcOMfdhJug
-                WBdzJQIDAQAB
-                -----END PUBLIC KEY-----
-                """
+                                                                               -----BEGIN PUBLIC KEY-----
+                                                                               MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAySoM3I2FA/BetdrS6lhJvTYKk6x71BSw
+                                                                               QX1VDP3PR6c6rKmr0VAI/QijmlNY9nC9NLkBjVE8OUd6LVrNAEIG7DqXSXNOGDA1GFx68SLGNJ4O
+                                                                               tz7Tt1T7lzeyu4ArSlT1uBnWroA+07xrtW5ILhbf1Uxyg0DL37Kf8KyC6x5Vaj4whR+pLip7ZoQG
+                                                                               cOPPDeWlfDVnFj+YWtpVe6hzef5swJ5UIvr87DshSXrySxXKLow03VOyyL0Y4R06Q7ErARGmu19C
+                                                                               pCerAJzzpDcz/J09DWfkrKmd7BCCEpJ2Wj55J9fhrTnrZPDldEqJ9JmV43tKZqYqKZpcOMfdhJug
+                                                                               WBdzJQIDAQAB
+                                                                               -----END PUBLIC KEY-----
+                                                                               """
         );
     }
 
@@ -142,7 +142,7 @@ class AuthenticationControllerTest {
         return builder.when()
                 .post(path)
                 .then()
-                .log().all()
+//                .log().all()
                 .statusCode(expectedStatus);
     }
 }

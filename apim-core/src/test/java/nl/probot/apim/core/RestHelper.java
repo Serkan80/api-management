@@ -88,8 +88,16 @@ public final class RestHelper {
         return Optional.empty();
     }
 
+    public static void updateApi(String apiId, int status, URL url, Map<String, String> updateRequest) {
+        given().contentType(APPLICATION_JSON).body(updateRequest).put(getUrl(url) + "/{apiId}", apiId).then().statusCode(status);
+    }
+
     public static void addCredential(String apiId, ApiCredential request, int status, URL url) {
         given().contentType(APPLICATION_JSON).body(request).when().post(getUrl(url) + "/{apiId}/credentials", apiId).then().statusCode(status);
+    }
+
+    public static void updateCredential(String apiId, URL url, Map<String, Object> request) {
+        given().contentType(APPLICATION_JSON).body(request).when().put(getUrl(url) + "/{apiId}/credentials", apiId).then().statusCode(200);
     }
 
     public static String extractId(String location) {

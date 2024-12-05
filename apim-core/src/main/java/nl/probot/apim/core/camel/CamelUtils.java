@@ -17,11 +17,11 @@ import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 
 import java.util.Map;
-import java.util.Objects;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static java.util.Objects.requireNonNull;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
@@ -122,16 +122,16 @@ public final class CamelUtils {
     }
 
     public static void basicAuth(Exchange exchange, String username, String password) {
-        Objects.requireNonNull(username);
-        Objects.requireNonNull(password);
+        requireNonNull(username, "No Username was provided for Basic authentication");
+        requireNonNull(password, "No Password was provided for Basic authentication");
 
         exchange.getIn().setHeader(AUTHORIZATION, generateBasicAuthHeader(username, password));
     }
 
     public static void apiTokenAuth(Exchange exchange, ApiCredentialEntity credential) {
-        Objects.requireNonNull(credential.apiKey);
-        Objects.requireNonNull(credential.apiKeyLocation);
-        Objects.requireNonNull(credential.apiKeyHeader);
+        requireNonNull(credential.apiKey, "No ApiKey was provided for authentication");
+        requireNonNull(credential.apiKeyLocation, "No ApiKeyLocation was provided for authentication");
+        requireNonNull(credential.apiKeyHeader, "No ApiKeyHeader was provided for authentication");
 
         switch (credential.apiKeyLocation) {
             case QUERY -> exchange.getIn().setHeader(HTTP_QUERY, apiKeyValue(credential));
@@ -140,9 +140,9 @@ public final class CamelUtils {
     }
 
     public static void clientCredentialsAuth(Exchange exchange, ApiCredentialEntity credential) {
-        Objects.requireNonNull(credential.clientId);
-        Objects.requireNonNull(credential.clientSecret);
-        Objects.requireNonNull(credential.clientUrl);
+        requireNonNull(credential.clientId, "No ClientId was provided for authentication");
+        requireNonNull(credential.clientSecret, "No ClientSecret was provided for authentication");
+        requireNonNull(credential.clientUrl, "No ClientUrl was provided for authentication");
 
         var oauthParams = "&oauth2ClientId=%s&oauth2ClientSecret=%s&oauth2TokenEndpoint=%s"
                 .formatted(credential.clientId, credential.clientSecret, credential.clientUrl);

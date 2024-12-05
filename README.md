@@ -3,7 +3,7 @@
 This project contains an api-management (APIM) system built with Quarkus and Apache Camel and has the following
 functionalities:
 
-- support for proxying REST & GraphQl,
+- support for proxying REST & GraphQL,
 - support for managing Apis & Subscriptions,
 - support for metrics (showing per subscription the API calls's duration and amount),
 - support for rate limiting,
@@ -32,8 +32,7 @@ classDiagram
   - client credentials
   - token based
   - passthrough, this is default behaviour and it will passthrough anything from the original request to the Api/Backend
-    services.
-  - none, this will strip out any authentication to the Api
+    services, except the Authorization header.
 
 
 ### Example flow

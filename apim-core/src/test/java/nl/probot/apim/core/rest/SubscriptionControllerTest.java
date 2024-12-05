@@ -4,8 +4,12 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
+import jakarta.transaction.Transactional;
+import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.rest.dto.Subscription;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -18,14 +22,22 @@ import static nl.probot.apim.core.RestHelper.addApi;
 import static nl.probot.apim.core.RestHelper.createApi;
 import static nl.probot.apim.core.RestHelper.createSubscription;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 @QuarkusTest
+@TestInstance(PER_CLASS)
 @TestHTTPEndpoint(SubscriptionController.class)
 class SubscriptionControllerTest {
 
     @TestHTTPResource
     @TestHTTPEndpoint(ApiController.class)
     URL apisUrl;
+
+    @BeforeAll
+    @Transactional
+    public void cleanup() {
+        SubscriptionEntity.deleteAll();
+    }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})

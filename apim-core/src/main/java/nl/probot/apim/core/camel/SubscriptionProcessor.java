@@ -10,13 +10,10 @@ import nl.probot.apim.core.utils.CacheManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
-import java.util.List;
-
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static nl.probot.apim.core.camel.CamelUtils.apiTokenAuth;
 import static nl.probot.apim.core.camel.CamelUtils.basicAuth;
 import static nl.probot.apim.core.camel.CamelUtils.clientCredentialsAuth;
-import static nl.probot.apim.core.entities.AuthenticationType.NONE;
 import static nl.probot.apim.core.entities.AuthenticationType.PASSTHROUGH;
 import static org.apache.camel.Exchange.HTTP_URI;
 
@@ -49,7 +46,7 @@ public class SubscriptionProcessor implements Processor {
         exchange.getIn().removeHeader(AUTHORIZATION);
         var authType = api.authenticationType;
 
-        if (authType != null && !List.of(NONE, PASSTHROUGH).contains(authType)) {
+        if (authType != null && authType != PASSTHROUGH) {
             var credential = subscription.findApiCredential(api.id).orElseThrow(() -> new WebApplicationException(
                     "Api requires %s authentication but no credentials were found for this Api".formatted(authType),
                     400));

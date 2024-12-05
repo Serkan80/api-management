@@ -95,7 +95,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
-    public void addCredential(Long apiId, ApiCredential credential) {
+    public RestResponse<Void> addCredential(Long apiId, ApiCredential credential) {
         var subscriptionEntity = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
         var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, apiId);
         var credentialEntity = credential.toEntity();
@@ -104,6 +104,8 @@ public class ApiController implements ApiOpenApi {
         credentialEntity.persist();
         this.cacheManager.invalidate(credential.subscriptionKey());
         Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.subject);
+
+        return RestResponse.ok();
     }
 
     @Override
