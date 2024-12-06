@@ -3,11 +3,12 @@
 This project contains an api-management (APIM) system built with Quarkus and Apache Camel and has the following
 functionalities:
 
-- support for proxying REST & GraphQl,
+- support for proxying REST & GraphQL,
 - support for managing Apis & Subscriptions,
 - support for metrics (showing per subscription the API calls's duration and amount),
+- support for rate limiting,
 - support for downstream Basic Auth, Client Credentials and token based authentication,
-- support for OAuth/OIDC, custom JWT, LDAP authentication for the APIM
+- support for OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM
 
 ## Terminology
 
@@ -31,8 +32,7 @@ classDiagram
   - client credentials
   - token based
   - passthrough, this is default behaviour and it will passthrough anything from the original request to the Api/Backend
-    services.
-  - none, this will strip out any authentication to the Api
+    services, except the Authorization header.
 
 
 ### Example flow
@@ -84,6 +84,11 @@ Now call httpbin via the gateway. This will forward your requests to httpbin wit
 > http -A bearer -a $JWT_TOKEN post :8080/gateway/bin/post subscription-key:N89GERY08JL91R022M5KOBF924XYRPKW
 
 ## Important urls
+
+Start the application from `apim-application` with:
+> mvn clean compile quarkus:dev
+
+Then you can access the following urls:
 
 - [Swagger UI](http://localhost:8080/q/swagger-ui)
 - [Quarkus Development Dashboard](http://localhost:8080/q/dev-ui)
