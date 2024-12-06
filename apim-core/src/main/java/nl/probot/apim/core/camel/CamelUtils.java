@@ -170,7 +170,7 @@ public final class CamelUtils {
     private static String sanitize(String url) {
         var result = trimOptions(url);
         if (result.charAt(result.length() - 1) == '/') {
-            result = result.substring(0, result.length() - 2);
+            result = result.substring(0, result.length() - 1);
         }
         return result;
     }
