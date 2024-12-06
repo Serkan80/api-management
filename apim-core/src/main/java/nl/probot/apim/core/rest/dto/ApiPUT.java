@@ -39,6 +39,7 @@ public record ApiPUT(
         @Max(1_000_000)
         @Schema(description = "max amount of requests per minute")
         Integer maxRequests,
+        Boolean enabled,
         AuthenticationType authenticationType
 ) {
 
@@ -46,11 +47,12 @@ public record ApiPUT(
     @AssertTrue(message = "At least one update parameter must be specified")
     public boolean isNotEmpty() {
         return isNotBlank(this.proxyPath)
-               || isNotBlank(this.proxyUrl)
-               || isNotBlank(this.owner)
-               || this.description != null
-               || this.openApiUrl != null
-               || this.maxRequests != null
-               || this.authenticationType != null;
+                || isNotBlank(this.proxyUrl)
+                || isNotBlank(this.owner)
+                || this.description != null
+                || this.openApiUrl != null
+                || this.maxRequests != null
+                || this.enabled != null
+                || this.authenticationType != null;
     }
 }

@@ -27,8 +27,7 @@ public class CompositeApiId implements Serializable {
         }
 
         if (obj instanceof CompositeApiId id) {
-            return Objects.equals(id.api.id, this.api.id)
-                   && Objects.equals(id.subscription.id, this.subscription.id);
+            return Objects.equals(id.api.id, this.api.id) && Objects.equals(id.subscription.id, this.subscription.id);
         }
         return false;
     }

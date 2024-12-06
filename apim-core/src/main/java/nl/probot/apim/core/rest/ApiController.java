@@ -62,6 +62,7 @@ public class ApiController implements ApiOpenApi {
                         new StaticStatement("openApiUrl", api.openApiUrl()),
                         new StaticStatement("description", api.description()),
                         new StaticStatement("maxRequests", api.maxRequests()),
+                        new StaticStatement("enabled", api.enabled()),
                         new StaticStatement("authenticationType", api.authenticationType())
                 ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
 

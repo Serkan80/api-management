@@ -29,7 +29,7 @@ public class MockWebServer {
         var request = exchange.request();
         Log.debugf("path: %s, params: %s, query: %s", request.path(), request.params(), request.query());
 
-        if (request.getFormAttribute("grant_type").equals("client_credentials")) {
+        if ("client_credentials".equals(request.getFormAttribute("grant_type"))) {
             exchange.response().end(JsonObject.of("access_token", "123456", "token_type", "Bearer", "expires_in", "3600").encode());
         } else {
             exchange.response().setStatusCode(401).end();

@@ -34,7 +34,7 @@ public final class RestHelper {
     }
 
     public static SubscriptionAll getSubscription(String subKey, URL url) {
-        return given().contentType(APPLICATION_JSON).get(getUrl(url) + "/{key}", subKey).then().statusCode(200).extract().as(SubscriptionAll.class);
+        return given().contentType(APPLICATION_JSON).get(getUrl(url) + "/{key}", subKey).then().statusCode(200).log().all().extract().as(SubscriptionAll.class);
     }
 
     public static String createApi(ApiPOST request, URL url) {

@@ -5,10 +5,11 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import nl.probot.apim.commons.jpa.EncryptionConverter;
 
 @Entity
-@Table(name = "api_credential")
+@Table(name = "api_credential", uniqueConstraints = @UniqueConstraint(name = "sub_api_unique", columnNames = {"sub_id", "api_id"}))
 public class ApiCredentialEntity extends PanacheEntityBase {
 
     @EmbeddedId
