@@ -2,7 +2,7 @@ package nl.probot.apim.core.rest;
 
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
-import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -28,7 +28,6 @@ import java.util.List;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
-@Authenticated
 @ApplicationScoped
 public class ApiController implements ApiOpenApi {
 
@@ -37,6 +36,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
+    @RolesAllowed("${apim.roles.manager}")
     public RestResponse<Void> save(ApiPOST api, UriInfo uriInfo) {
         var apiEntity = api.toEntity();
         apiEntity.persist();
@@ -51,6 +51,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
+    @RolesAllowed("${apim.roles.manager}")
     public RestResponse<Void> update(Long apiId, ApiPUT api) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper
@@ -77,6 +78,7 @@ public class ApiController implements ApiOpenApi {
     }
 
     @Override
+    @RolesAllowed({"${apim.roles.manager}", "${apim.roles.viewer}"})
     public List<Api> findAll() {
         return ApiEntity.findAll(Sort.ascending("owner"))
                 .withHint(HINT_READONLY, true)
@@ -85,6 +87,7 @@ public class ApiController implements ApiOpenApi {
     }
 
     @Override
+    @RolesAllowed({"${apim.roles.manager}", "${apim.roles.viewer}"})
     public Api findById(Long id) {
         return ApiEntity.find("id", id)
                 .withHint(HINT_READONLY, true)
@@ -96,6 +99,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
+    @RolesAllowed({"${apim.roles.manager}"})
     public RestResponse<Void> addCredential(Long apiId, ApiCredential credential) {
         var subscriptionEntity = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
         var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, apiId);
@@ -111,6 +115,7 @@ public class ApiController implements ApiOpenApi {
 
     @Override
     @Transactional
+    @RolesAllowed({"${apim.roles.manager}"})
     public RestResponse<Void> updateCredential(Long apiId, ApiCredentialPUT credential) {
         var sub = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
         var subId = sub.id;

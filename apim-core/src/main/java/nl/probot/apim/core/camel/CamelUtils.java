@@ -155,11 +155,12 @@ public final class CamelUtils {
             var sample = Timer.start(registry);
             exchange.setProperty("timer", sample);
             exchange.setProperty(SUBSCRIPTION_KEY, exchange.getIn().getHeader(SUBSCRIPTION_KEY));
-            exchange.setProperty("proxyPath", extractProxyName(exchange.getIn().getHeader(HTTP_URI, String.class)).proxyName());
+            exchange.setProperty("proxyPath", trimOptions(exchange.getIn().getHeader(HTTP_URI, String.class)));
         } else {
             var timer = exchange.getProperty("timer", Sample.class);
             timer.stop(registry.timer(
                     "apim_metrics",
+                    "status", exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class),
                     "proxyPath", exchange.getProperty("proxyPath", String.class),
                     "subKey", exchange.getProperty(SUBSCRIPTION_KEY, String.class)));
         }

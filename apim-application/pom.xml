@@ -27,13 +27,13 @@
             <groupId>nl.probot.apimanagement</groupId>
             <artifactId>apim-auth-file-properties</artifactId>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>nl.probot.apimanagement</groupId>-->
-        <!--            <artifactId>apim-auth-jpa</artifactId>-->
-        <!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>nl.probot.apimanagement</groupId>-->
+<!--            <artifactId>apim-auth-jwt</artifactId>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>nl.probot.apimanagement</groupId>
-            <artifactId>apim-auth-jwt</artifactId>
+            <groupId>nl.probot</groupId>
+            <artifactId>apim-prometheus-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

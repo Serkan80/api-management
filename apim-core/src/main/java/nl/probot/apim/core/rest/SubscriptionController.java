@@ -2,7 +2,7 @@ package nl.probot.apim.core.rest;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.quarkus.logging.Log;
-import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -27,7 +27,6 @@ import java.util.Set;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
-@Authenticated
 @ApplicationScoped
 public class SubscriptionController implements SubscriptionOpenApi {
 
@@ -36,6 +35,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
 
     @Override
     @Transactional
+    @RolesAllowed("${apim.roles.manager}")
     public RestResponse<Void> save(@Valid SubscriptionPOST sub, @Context UriInfo uriInfo) {
         var entity = SubscriptionEntity.toEntity(sub.subject());
         entity.persist();
@@ -45,6 +45,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
     }
 
     @Override
+    @RolesAllowed("${apim.roles.manager}")
     public List<Subscription> findAll() {
         return SubscriptionEntity.findAll()
                 .withHint(HINT_READONLY, true)
@@ -54,6 +55,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
 
     @Override
     @JsonView(Views.PublicFields.class)
+    @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
     public SubscriptionAll findByKey(@RestPath String key) {
         return SubscriptionAll.toDto(SubscriptionEntity.findByKey(key));
     }
@@ -61,6 +63,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @Transactional
     @JsonView(Views.PublicFields.class)
+    @RolesAllowed("${apim.roles.manager}")
     public RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds) {
         var sub = SubscriptionEntity.findByKey(key);
         var apis = ApiEntity.findByIds(apiIds);

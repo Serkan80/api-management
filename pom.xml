@@ -30,6 +30,7 @@
         <module>apim-auth-jpa</module>
         <module>apim-auth-jwt</module>
         <module>apim-auth-ldap</module>
+        <module>apim-prometheus-client</module>
     </modules>
 
     <dependencyManagement>
@@ -71,6 +72,11 @@
             <dependency>
                 <groupId>nl.probot.apimanagement</groupId>
                 <artifactId>apim-auth-jwt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>nl.probot</groupId>
+                <artifactId>apim-prometheus-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

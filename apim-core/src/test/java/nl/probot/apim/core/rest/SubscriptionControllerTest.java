@@ -41,7 +41,7 @@ class SubscriptionControllerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void addApis(boolean addExistingApi) {
         var subKey = createSubscription("Organization v1 - %b".formatted(addExistingApi), null);
         var status = addExistingApi ? 200 : 204;

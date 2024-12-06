@@ -55,7 +55,7 @@ class ApiControllerTest {
     }
 
     @Test
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void save() {
         var request = Instancio.of(apiModel).create();
         var apiId = createApi(request, null);
@@ -80,7 +80,7 @@ class ApiControllerTest {
             jp, 400, 2
             , 400, 2
             """)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void saveEdgeCases(String proxyPath, int expectedStatus, int totalApis) {
         var request = Instancio.of(apiModel)
                 .set(field(ApiPOST::proxyPath), proxyPath)
@@ -93,7 +93,7 @@ class ApiControllerTest {
     }
 
     @Test
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void update() {
         var request = Instancio.of(apiModel).create();
         var apiId = createApi(request, null);
@@ -110,7 +110,7 @@ class ApiControllerTest {
     }
 
     @Test
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void addCredential() {
         // create subscription first
         var subKey = createSubscription("APIM Corporation", this.subscriptionsUrl);

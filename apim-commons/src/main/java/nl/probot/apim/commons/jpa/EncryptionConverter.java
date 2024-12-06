@@ -27,6 +27,6 @@ public class EncryptionConverter implements AttributeConverter<String, String> {
     }
 
     private static char[] getSecret() {
-        return ConfigProvider.getConfig().getValue("encryption.key", String.class).toCharArray();
+        return ConfigProvider.getConfig().getValue("apim.encryption.key", String.class).toCharArray();
     }
 }

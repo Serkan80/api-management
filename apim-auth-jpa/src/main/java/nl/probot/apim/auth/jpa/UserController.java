@@ -22,7 +22,7 @@ import java.util.UUID;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @ApplicationScoped
-@RolesAllowed("${apim.roles.user.mgmt}")
+@RolesAllowed("${apim.roles.manager}")
 public class UserController implements UserOpenApi {
 
     @Override
