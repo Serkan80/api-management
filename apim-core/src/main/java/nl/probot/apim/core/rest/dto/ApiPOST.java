@@ -15,7 +15,7 @@ public record ApiPOST(
 
         @NotBlank
         @Size(max = 100)
-        @Pattern(regexp = "^/.*+", message = "Proxy path should start with a slash (/)")
+        @Pattern(regexp = "^/.+", message = "Proxy path should start with a slash (/)")
         @Schema(example = "/jp")
         String proxyPath,
 
