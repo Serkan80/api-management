@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static io.restassured.matcher.RestAssuredMatchers.detailedCookie;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -35,12 +36,12 @@ class AuthenticationControllerTest {
     JWTParser jwtParser;
 
     @Test
-    @TestSecurity(user = "bob", roles = "admin", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void checkWebLogin() throws ParseException {
         var response = webLogin()
                 .body("username", is("bob"))
                 .body("roles", hasSize(1))
-                .body("roles", hasItem("admin"))
+                .body("roles", hasItem("manager"))
                 .cookie("access_token", detailedCookie().sameSite("Strict").httpOnly(true).path("/").value(notNullValue()))
                 .cookie("refresh_token", detailedCookie().sameSite("Strict").httpOnly(true).path("/").value(notNullValue()));
 
@@ -50,12 +51,12 @@ class AuthenticationControllerTest {
         assertThat(AT.getSubject()).isEqualTo("bob");
         assertThat(AT.getIssuer()).isEqualTo("apim-internal");
         assertThat(AT.getAudience()).containsExactly("apim-external");
-        assertThat(AT.getGroups()).containsExactly("admin");
+        assertThat(AT.getGroups()).containsExactly("manager");
 
         assertThat((String) RT.getClaim(Claims.upn)).isEqualTo("bob");
         assertThat(RT.getIssuer()).isEqualTo("apim-internal");
         assertThat(RT.getAudience()).containsExactly("apim-external");
-        assertThat(RT.getGroups()).containsExactly("admin");
+        assertThat(RT.getGroups()).containsExactly("manager");
     }
 
     @ParameterizedTest
@@ -65,7 +66,7 @@ class AuthenticationControllerTest {
             rt_expired.txt,401
             empty,400
             """)
-    @TestSecurity(user = "bob", roles = "admin", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void refreshToken(String file, int expectedStatus) throws IOException {
         String body;
         if (file.startsWith("rt_ok")) {
@@ -83,14 +84,14 @@ class AuthenticationControllerTest {
                     .log().all()
                     .body("username", is("bob"))
                     .body("roles", hasSize(1))
-                    .body("roles", hasItem("admin"))
+                    .body("roles", hasItem("manager"))
                     .cookie("access_token", detailedCookie().sameSite("Strict").httpOnly(true).path("/").value(notNullValue()))
                     .cookie("refresh_token", detailedCookie().sameSite("Strict").httpOnly(true).path("/").value(not(is(body))));
         }
     }
 
     @Test
-    @TestSecurity(user = "bob", roles = "admin", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void bearerToken() {
         bearerLogin()
                 .body("access_token", notNullValue())
@@ -101,19 +102,22 @@ class AuthenticationControllerTest {
 
     @Test
     void publicKey() {
-        var publicKey = given().when().get("/public-key").then().extract().asString();
+        var publicKey = get("/public-key").then().extract().asString();
 
-        assertThat(publicKey).isNotBlank().isEqualToIgnoringWhitespace("""
-                                                                               -----BEGIN PUBLIC KEY-----
-                                                                               MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAySoM3I2FA/BetdrS6lhJvTYKk6x71BSw
-                                                                               QX1VDP3PR6c6rKmr0VAI/QijmlNY9nC9NLkBjVE8OUd6LVrNAEIG7DqXSXNOGDA1GFx68SLGNJ4O
-                                                                               tz7Tt1T7lzeyu4ArSlT1uBnWroA+07xrtW5ILhbf1Uxyg0DL37Kf8KyC6x5Vaj4whR+pLip7ZoQG
-                                                                               cOPPDeWlfDVnFj+YWtpVe6hzef5swJ5UIvr87DshSXrySxXKLow03VOyyL0Y4R06Q7ErARGmu19C
-                                                                               pCerAJzzpDcz/J09DWfkrKmd7BCCEpJ2Wj55J9fhrTnrZPDldEqJ9JmV43tKZqYqKZpcOMfdhJug
-                                                                               WBdzJQIDAQAB
-                                                                               -----END PUBLIC KEY-----
-                                                                               """
+        //@formatter:off
+        assertThat(publicKey).isNotBlank().isEqualToIgnoringWhitespace(
+                """
+                -----BEGIN PUBLIC KEY-----
+                MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAySoM3I2FA/BetdrS6lhJvTYKk6x71BSw
+                QX1VDP3PR6c6rKmr0VAI/QijmlNY9nC9NLkBjVE8OUd6LVrNAEIG7DqXSXNOGDA1GFx68SLGNJ4O
+                tz7Tt1T7lzeyu4ArSlT1uBnWroA+07xrtW5ILhbf1Uxyg0DL37Kf8KyC6x5Vaj4whR+pLip7ZoQG
+                cOPPDeWlfDVnFj+YWtpVe6hzef5swJ5UIvr87DshSXrySxXKLow03VOyyL0Y4R06Q7ErARGmu19C
+                pCerAJzzpDcz/J09DWfkrKmd7BCCEpJ2Wj55J9fhrTnrZPDldEqJ9JmV43tKZqYqKZpcOMfdhJug
+                WBdzJQIDAQAB
+                -----END PUBLIC KEY-----
+                """
         );
+        //@formatter:on
     }
 
     private static ValidatableResponse webLogin() {
@@ -129,7 +133,7 @@ class AuthenticationControllerTest {
     }
 
     private static ValidatableResponse doRequest(String path, Object body, boolean authDisabled, int expectedStatus) {
-        var builder = given().contentType(APPLICATION_JSON);
+        var builder = given().log().all().contentType(APPLICATION_JSON);
 
         if (authDisabled) {
             builder.auth().none();

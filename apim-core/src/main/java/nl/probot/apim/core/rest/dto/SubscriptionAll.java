@@ -11,7 +11,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @JsonInclude(NON_NULL)
 public record SubscriptionAll(
         String subscriptionKey,
-        String subject,
+        String name,
         boolean enabled,
         OffsetDateTime createdAt,
         List<ApiCredential> credentials,
@@ -23,7 +23,7 @@ public record SubscriptionAll(
 
         return new SubscriptionAll(
                 entity.subscriptionKey,
-                entity.subject,
+                entity.name,
                 entity.enabled,
                 entity.createdAt,
                 credentials,

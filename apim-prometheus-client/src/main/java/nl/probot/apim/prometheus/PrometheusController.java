@@ -1,6 +1,8 @@
 package nl.probot.apim.prometheus;
 
 import io.smallrye.mutiny.Multi;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.GET;
@@ -16,9 +18,11 @@ import java.util.List;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Path("/apim/prometheus")
+@RolesAllowed({"${apim.roles.manager}", "${apim.roles.viewer}"})
 public class PrometheusController {
 
     @Min(1000)
+    @Max(60_000)
     @ConfigProperty(name = "apim.prometheus.poll.rate", defaultValue = "5000")
     int pollRate;
 

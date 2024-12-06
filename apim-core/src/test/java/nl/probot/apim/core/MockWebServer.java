@@ -41,7 +41,7 @@ public class MockWebServer {
      *
      * Returns the method, url & the headers in the response body.
      */
-    @Route(regex = "/(?!(subscriptions|apis|gateway|mock/auth|multipart)).*")
+    @Route(regex = "/(?!(apim/core|gateway|mock/auth|multipart)).*")
     public void methods(RoutingContext context) {
         var request = context.request();
         Log.debugf("method: %s, path: %s, query: %s", request.method(), request.path(), request.query());

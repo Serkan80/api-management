@@ -108,7 +108,7 @@ public class ApiController implements ApiOpenApi {
         credentialEntity.id.subscription = subscriptionEntity;
         credentialEntity.persist();
         this.cacheManager.invalidate(credential.subscriptionKey());
-        Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.subject);
+        Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.name);
 
         return RestResponse.ok();
     }
@@ -136,7 +136,7 @@ public class ApiController implements ApiOpenApi {
         var count = ApiCredentialEntity.update(query, helper.values());
         if (count > 0) {
             this.cacheManager.invalidate(credential.subscriptionKey());
-            Log.infof("ApiCredential(apiId=%d, sub='%s') updated with %d record(s)", apiId, sub.subject, count);
+            Log.infof("ApiCredential(apiId=%d, sub='%s') updated with %d record(s)", apiId, sub.name, count);
             return RestResponse.ok();
         }
         return RestResponse.noContent();

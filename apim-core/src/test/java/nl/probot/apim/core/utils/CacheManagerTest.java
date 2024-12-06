@@ -2,7 +2,9 @@ package nl.probot.apim.core.utils;
 
 import nl.probot.apim.core.utils.CacheManager.TimedValue;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -13,10 +15,18 @@ import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
+@TestInstance(PER_CLASS)
 class CacheManagerTest {
 
     CacheManager cacheManager = new CacheManager();
+
+    @BeforeAll
+    public void init() {
+        this.cacheManager.maxAmount = 100;
+        this.cacheManager.keepTime = 300;
+    }
 
     @AfterEach
     public void clean() {

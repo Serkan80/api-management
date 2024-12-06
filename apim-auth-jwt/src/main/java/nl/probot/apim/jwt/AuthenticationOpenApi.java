@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType.HTTP;
 
-@Path("/auth")
+@Path("/apim/auth")
 @Tag(name = "Authentication Controller")
 @SecurityRequirement(name = "basic")
 @SecuritySchemes(@SecurityScheme(type = HTTP, scheme = "basic", securitySchemeName = "basic"))

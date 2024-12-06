@@ -5,6 +5,8 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import jakarta.transaction.Transactional;
+import nl.probot.apim.core.entities.ApiCredentialEntity;
+import nl.probot.apim.core.entities.ApiEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.rest.dto.Subscription;
 import org.instancio.Instancio;
@@ -36,6 +38,8 @@ class SubscriptionControllerTest {
     @BeforeAll
     @Transactional
     public void cleanup() {
+        ApiCredentialEntity.deleteAll();
+        ApiEntity.deleteAll();
         SubscriptionEntity.deleteAll();
     }
 

@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import static org.eclipse.microprofile.openapi.annotations.enums.SchemaType.STRING;
 
-@Path("/users")
+@Path("/apim/users")
 @Tag(name = "User Controller")
 public interface UserOpenApi {
 

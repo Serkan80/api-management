@@ -2,7 +2,10 @@ package nl.probot.apim.core.utils;
 
 import io.quarkus.logging.Log;
 import jakarta.inject.Singleton;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import nl.probot.apim.core.entities.SubscriptionEntity;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Map;
 import java.util.Objects;
@@ -17,10 +20,17 @@ import java.util.function.Supplier;
 @Singleton
 public class CacheManager {
 
-    static final int MAX_AMOUNT = 100;
-    // 5 minute
-    static final int OLD_DATA_CLEANUP_MILLIS = 300_000;
-    Map<String, TimedValue> cache = new ConcurrentHashMap<>(MAX_AMOUNT);
+    @Min(10)
+    @Max(500)
+    @ConfigProperty(name = "apim.cache.size", defaultValue = "100")
+    int maxAmount;
+
+    @Min(60)
+    @Max(3600)
+    @ConfigProperty(name = "apim.cache.max.keep.time", defaultValue = "300")
+    int keepTime;
+
+    Map<String, TimedValue> cache = new ConcurrentHashMap<>(100);
 
     public <T> T get(String key, Supplier<T> supplier) {
         var timedValue = this.cache.get(key);
@@ -28,9 +38,9 @@ public class CacheManager {
             var result = supplier.get();
             var size = this.cache.size();
 
-            if (size >= MAX_AMOUNT) {
+            if (size >= this.maxAmount) {
                 Log.debugf("Removing stale date from cache, size: %d", size);
-                this.cache.entrySet().removeIf(entry -> entry.getValue().isStale());
+                this.cache.entrySet().removeIf(entry -> entry.getValue().isStale(this.keepTime));
             }
 
             Log.debugf("Cache miss: %s", key);
@@ -58,8 +68,8 @@ public class CacheManager {
             this(Objects.requireNonNull(value), System.currentTimeMillis());
         }
 
-        public boolean isStale() {
-            return this.timestamp + OLD_DATA_CLEANUP_MILLIS < System.currentTimeMillis();
+        public boolean isStale(int keepTime) {
+            return this.timestamp + keepTime < System.currentTimeMillis();
         }
     }
 }

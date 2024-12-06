@@ -83,7 +83,7 @@ class GatewayRouteTest {
     String apiId;
 
     @BeforeEach
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void init() {
         if (isBlank(this.mainSubKey)) {
             var response = createSubscriptionWithApi("Main Test Subscription", PROXY_PATH);
@@ -95,7 +95,7 @@ class GatewayRouteTest {
 
     @Test
     @Order(0)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void rateLimit() {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("maxRequests", "1"));
         triggerRateLimit(PROXY_PATH, 1)
@@ -114,7 +114,7 @@ class GatewayRouteTest {
     @Order(1)
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void checkSubscriptionKey(boolean subscriptionExists) {
         if (subscriptionExists) {
             makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH);
@@ -126,7 +126,7 @@ class GatewayRouteTest {
     @Order(2)
     @ParameterizedTest
     @EnumSource(value = HttpMethods.class)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void checkHttpMethods(HttpMethods method) {
         var response = makeApiCall(this.mainSubKey, method.name(), PROXY_PATH);
 
@@ -144,7 +144,7 @@ class GatewayRouteTest {
 
     @Test
     @Order(3)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     public void disabledApiShouldNotBeAccessible() {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("enabled", "false"));
         makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH, 404);
@@ -153,7 +153,7 @@ class GatewayRouteTest {
 
     @Test
     @Order(4)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void notLinkedApiShouldNotBeAccessible() {
         createApi(Instancio.of(apiModel).set(field(ApiPOST::proxyPath), "/forbidden").create(), this.apisUrl);
         makeApiCall(this.mainSubKey, GET.name(), "/forbidden", 404)
@@ -163,7 +163,7 @@ class GatewayRouteTest {
 
     @Test
     @Order(500)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void multipart() {
         // add multipart api to this subscription
         var request = Instancio.of(apiModel)
@@ -190,7 +190,7 @@ class GatewayRouteTest {
             1, 413
             2, 413
             """)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void bigUploads(int sizeMB, int status) {
         var data = new ByteArrayInputStream(createDummyContent(sizeMB));
         makeMultipartCall(this.mainSubKey, "dummy", data).statusCode(status);
@@ -200,7 +200,7 @@ class GatewayRouteTest {
     @NullSource
     @ParameterizedTest
     @EnumSource(AuthenticationType.class)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void checkAuthententicationTypes(AuthenticationType type) {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", type != null ? type.name() : ""));
 
@@ -231,7 +231,7 @@ class GatewayRouteTest {
             QUERY, , token-12345, 500
             QUERY, , , 500
             """)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void checkApiKeyAuthententication(ApiKeyLocation location, String apiKeyHeader, String apiKey, int status) {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", API_KEY.name()));
         QuarkusTransaction.begin();
@@ -255,7 +255,7 @@ class GatewayRouteTest {
 
     @Test
     @Order(900)
-    @TestSecurity(user = "bob", authMechanism = "basic")
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     public void disabledSubscriptionNotAccessible() {
         QuarkusTransaction.begin();
         SubscriptionEntity.update("enabled = false where id = ?1", this.mainSubId);
@@ -293,11 +293,11 @@ class GatewayRouteTest {
             given()
                     .contentType(APPLICATION_JSON)
                     .header("subscription-key", subKey)
-                    .log().all()
+//                    .log().all()
             .when()
                     .request(method, "%s%s%s".formatted(serverUrl(), this.apimContextRoot, path))
             .then()
-                    .log().all()
+//                    .log().all()
                     .statusCode(status);
            //@formatter:on
     }
@@ -308,11 +308,11 @@ class GatewayRouteTest {
                 given()
                         .header("subscription-key", subKey)
                         .multiPart(new MultiPartSpecBuilder(data).fileName(filename).controlName(filename).build())
-                        .log().all()
+//                        .log().all()
                 .when()
                         .post("%s%s%s".formatted(serverUrl(), this.apimContextRoot, "/multipart"))
-                .then()
-                        .log().all();
+                .then();
+//                        .log().all();
         //@formatter:on
     }
 

@@ -17,11 +17,13 @@ import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
@@ -66,7 +68,7 @@ public final class CamelUtils {
 
     public static void forwardUrlProcessor(Exchange exchange) {
         var incomingRequestPath = exchange.getIn().getHeader(HTTP_URI, String.class);
-        var subscription = exchange.getIn().getHeader(SUBSCRIPTION, SubscriptionEntity.class);
+        var subscription = exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class);
         var api = subscription.findApi(incomingRequestPath);
         var forwardUrl = api.proxyUrl + incomingRequestPath.substring(incomingRequestPath.indexOf('/', 1)).replace(api.proxyPath, "");
 
@@ -75,20 +77,9 @@ public final class CamelUtils {
         exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
     }
 
-    public static Result extractProxyName(String incomingRequestPath) {
-        var proxyIndexStart = incomingRequestPath.indexOf('/', 1);
-        var proxyIndexEnd = incomingRequestPath.indexOf('/', proxyIndexStart + 1);
-
-        if (proxyIndexEnd == -1) {
-            proxyIndexEnd = incomingRequestPath.length();
-        }
-        return new Result(incomingRequestPath.substring(proxyIndexStart, proxyIndexEnd), proxyIndexEnd);
-    }
-
     public static void cleanUpHeaders(Exchange exchange) {
         exchange.getIn().removeHeader(HTTP_URI);
         exchange.getIn().removeHeader(HTTP_PATH);
-        exchange.getIn().removeHeader(SUBSCRIPTION);
         exchange.getIn().removeHeader(SUBSCRIPTION_KEY);
         exchange.getIn().removeHeader(AUTHENTICATED_USER);
     }
@@ -154,15 +145,18 @@ public final class CamelUtils {
         if (start) {
             var sample = Timer.start(registry);
             exchange.setProperty("timer", sample);
-            exchange.setProperty(SUBSCRIPTION_KEY, exchange.getIn().getHeader(SUBSCRIPTION_KEY));
-            exchange.setProperty("proxyPath", trimOptions(exchange.getIn().getHeader(HTTP_URI, String.class)));
+            exchange.setProperty("proxyPath", sanitize(exchange.getIn().getHeader(HTTP_URI, String.class)));
         } else {
             var timer = exchange.getProperty("timer", Sample.class);
+            var sub = Optional.ofNullable(exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class))
+                    .map(entity -> entity.name)
+                    .orElse("error: illegal call");
+
             timer.stop(registry.timer(
                     "apim_metrics",
-                    "status", exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class),
+                    "status", requireNonNullElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
                     "proxyPath", exchange.getProperty("proxyPath", String.class),
-                    "subKey", exchange.getProperty(SUBSCRIPTION_KEY, String.class)));
+                    "subscription", sub));
         }
     }
 
@@ -171,6 +165,14 @@ public final class CamelUtils {
             case HEADER -> credential.apiKey;
             case QUERY -> "%s=%s".formatted(credential.apiKeyHeader, credential.apiKey).stripTrailing();
         };
+    }
+
+    private static String sanitize(String url) {
+        var result = trimOptions(url);
+        if (result.charAt(result.length() - 1) == '/') {
+            result = result.substring(0, result.length() - 2);
+        }
+        return result;
     }
 
     private static String trimOptions(String url) {

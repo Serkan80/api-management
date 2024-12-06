@@ -28,7 +28,7 @@ import java.util.Set;
 import static org.eclipse.microprofile.openapi.annotations.enums.SchemaType.STRING;
 import static org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType.HTTP;
 
-@Path("/subscriptions")
+@Path("/apim/core/subscriptions")
 @Tag(name = "Subscription Controller")
 @SecurityRequirement(name = "basic")
 @SecuritySchemes(@SecurityScheme(type = HTTP, scheme = "basic", securitySchemeName = "basic"))

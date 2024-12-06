@@ -37,9 +37,9 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
     public RestResponse<Void> save(@Valid SubscriptionPOST sub, @Context UriInfo uriInfo) {
-        var entity = SubscriptionEntity.toEntity(sub.subject());
+        var entity = SubscriptionEntity.toEntity(sub.name());
         entity.persist();
-        Log.infof("Subscription(subject=%s) created", entity.subject);
+        Log.infof("Subscription(name=%s) created", entity.name);
 
         return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
     }
@@ -71,7 +71,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
         if (!apis.isEmpty()) {
             apis.forEach(api -> sub.addApi(api));
             this.cacheManager.invalidate(key);
-            Log.infof("New Api's for Subscription(subject=%s) added", sub.subject);
+            Log.infof("New Api's for Subscription(name=%s) added", sub.name);
             return RestResponse.ok(SubscriptionAll.toDto(sub));
         } else {
             Log.warn("No Api's found for the given ids");

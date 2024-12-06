@@ -39,7 +39,7 @@ public class SubscriptionProcessor implements Processor {
 
         checkApiCredentials(exchange, subscription, api);
         checkThrottling(exchange, api);
-        in.setHeader(SUBSCRIPTION, subscription);
+        exchange.setProperty(SUBSCRIPTION, subscription);
     }
 
     private static void checkApiCredentials(Exchange exchange, SubscriptionEntity subscription, ApiEntity api) {

@@ -36,7 +36,7 @@ public class SubscriptionEntity extends PanacheEntity {
     @NotBlank
     @Size(max = 50)
     @Column(unique = true)
-    public String subject;
+    public String name;
 
     @Column(name = "created_at")
     public OffsetDateTime createdAt;
@@ -89,7 +89,7 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public static SubscriptionEntity toEntity(String subject) {
         var result = new SubscriptionEntity();
-        result.subject = subject;
+        result.name = subject;
         result.enabled = true;
         result.subscriptionKey = createRandomKey(32);
         result.createdAt = OffsetDateTime.now(ZoneId.of("Europe/Amsterdam"));

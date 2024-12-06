@@ -17,13 +17,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public final class RestHelper {
 
-    public static String createSubscription(String subject, URL url) {
+    public static String createSubscription(String name, URL url) {
         //@formatter:off
         var location =
                 given()
                         .accept(APPLICATION_JSON)
                         .contentType(APPLICATION_JSON)
-                        .body(Map.of("subject", subject))
+                        .body(Map.of("name", name))
                 .when()
                         .post(getUrl(url))
                 .then()
@@ -48,11 +48,11 @@ public final class RestHelper {
                         .accept(APPLICATION_JSON)
                         .contentType(APPLICATION_JSON)
                         .body(request)
-//                        .log().all()
+                        .log().all()
                 .when()
                         .post(getUrl(url))
                 .then()
-//                        .log().all()
+                        .log().all()
                         .statusCode(status)
                         .extract().header(LOCATION);
         //@formatter:on
