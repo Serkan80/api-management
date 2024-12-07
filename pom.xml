@@ -27,6 +27,7 @@
         <module>apim-core</module>
         <module>apim-commons</module>
         <module>apim-auth-file-properties</module>
+        <module>apim-auth-oidc</module>
         <module>apim-auth-jpa</module>
         <module>apim-auth-jwt</module>
         <module>apim-auth-ldap</module>
