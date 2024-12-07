@@ -70,7 +70,7 @@ public class SubscriptionEntity extends PanacheEntity {
     }
 
     public static SubscriptionEntity getByNaturalId(String subscriptionKey) {
-        return SubscriptionEntity.getEntityManager().unwrap(Session.class)
+        return getEntityManager().unwrap(Session.class)
                 .bySimpleNaturalId(SubscriptionEntity.class)
                 .load(subscriptionKey);
     }
