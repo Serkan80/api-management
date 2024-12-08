@@ -9,9 +9,11 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.NotFoundException;
+import nl.probot.apim.core.rest.dto.SubscriptionPOST;
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -40,6 +42,9 @@ public class SubscriptionEntity extends PanacheEntity {
 
     @Column(name = "created_at")
     public OffsetDateTime createdAt;
+
+    @Column(name = "end_date")
+    public LocalDate endDate;
 
     public boolean enabled = true;
 
@@ -81,18 +86,19 @@ public class SubscriptionEntity extends PanacheEntity {
                             from SubscriptionEntity s 
                             left join fetch s.apis a
                             left join fetch s.apiCredentials ac 
-                            where subscriptionKey = ?1 and s.enabled = true
+                            where subscriptionKey = ?1 and s.enabled = true and (s.endDate is null or s.endDate > current_date)
                             """, key)
                 .<SubscriptionEntity>singleResultOptional()
-                .orElseThrow(() -> new NotFoundException("Subscription with given key not found"));
+                .orElseThrow(() -> new NotFoundException("Subscription with given key not found or is inactive"));
     }
 
-    public static SubscriptionEntity toEntity(String subject) {
+    public static SubscriptionEntity toEntity(SubscriptionPOST sub) {
         var result = new SubscriptionEntity();
-        result.name = subject;
+        result.name = sub.name();
         result.enabled = true;
         result.subscriptionKey = createRandomKey(32);
         result.createdAt = OffsetDateTime.now(ZoneId.of("Europe/Amsterdam"));
+        result.endDate = sub.endDate();
         return result;
     }
 

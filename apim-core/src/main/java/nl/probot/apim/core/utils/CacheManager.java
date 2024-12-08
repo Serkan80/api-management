@@ -43,23 +43,22 @@ public class CacheManager {
                 this.cache.entrySet().removeIf(entry -> entry.getValue().isStale(this.keepTime));
             }
 
-            Log.debugf("Cache miss: %s", key);
+            Log.trace("Cache miss");
             this.cache.put(key, new TimedValue(result));
             return result;
         }
 
-        Log.debugf("Cache hit: %s", key);
+        Log.trace("Cache hit");
         return (T) timedValue.value;
     }
 
     public void invalidate(String key) {
         this.cache.remove(key);
-        Log.debugf("Cache invalidated for key %s", key);
     }
 
     public void clearAll() {
         this.cache.clear();
-        Log.debugf("Cache cleared");
+        Log.trace("Cache cleared");
     }
 
     record TimedValue(Object value, long timestamp) {

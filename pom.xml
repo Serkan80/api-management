@@ -77,6 +77,11 @@
             </dependency>
             <dependency>
                 <groupId>nl.probot</groupId>
+                <artifactId>apim-auth-oidc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>nl.probot</groupId>
                 <artifactId>apim-prometheus-client</artifactId>
                 <version>${project.version}</version>
             </dependency>

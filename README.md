@@ -8,15 +8,15 @@ the core.
 
 The APIM provides the following features:
 
-- support for proxying REST & GraphQL protocols,
-- support for managing Apis & Subscriptions,
-- support for metrics (showing per subscription the API calls's duration and amount),
-- support for rate limiting,
-- support for multipart,
-- support for CORS,
-- support for TLS/SSL,
-- support for downstream Basic Auth, Client Credentials and token based authentication,
-- support for OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM.
+- proxying REST & GraphQL protocols,
+- managing Apis & Subscriptions,
+- metrics,
+- rate limiting,
+- multipart,
+- CORS,
+- TLS/SSL,
+- downstream Basic Auth, Client Credentials and token based authentication,
+- OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM.
 
 TODOS:
  - a dashboard for managing the APIM
@@ -50,7 +50,7 @@ To build and run this project locally, you need the following libraries and tool
 - Java 21 or greater
 - Maven 3.9.x or greater
 - Docker or Podman
-- A REST client library like Postman, Httpie, Curl, etc. In the examples below, I've used Httpie. 
+- A REST client tool like Postman, Httpie, Curl, etc. In the examples below, Httpie is used. 
 
 
 ## Terminology
@@ -62,21 +62,18 @@ classDiagram
     ApiCredential --> Api
 ```
 
-- _Subscription_: this is similar to a team or an organisation who wants to subscribe and gain access to the
-  api-management system. A Subscription can have many Apis.
-  After subscribing successfully, a subscription key will be generated. This is needed to gain access to the APIM.
+- _Subscription_: this is similar to a team or an organisation who wants to subscribe and gain access to the APIM. 
+  A Subscription can have many Apis. After subscribing successfully, a subscription key will be generated. This is needed to gain access to the APIM.
 - _Api_: this is the Api of the downstream service/backend that needs to be accessed via the APIM. An Api can be shared
   among many Subscriptions.
 - _ApiCredentials_: optional: you can add an authentication method to the Api, if this is needed. An ApiCredential
-  belongs to a Subscription and
-  it should not be shared with other Subscriptions, although this is not prohibited.    
+  belongs to a Subscription.    
   The supported authentication methods are:
     - basic auth
     - client credentials
     - token based
     - pass-through, this is default behaviour and it will passthrough anything from the original request to the
-      Api/Backend
-      services, except the Authorization header.
+      downstream services, except the Authorization header.
 
 ### An example flow
 

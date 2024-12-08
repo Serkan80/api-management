@@ -24,9 +24,13 @@
             <artifactId>apim-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>nl.probot.apimanagement</groupId>
-            <artifactId>apim-auth-file-properties</artifactId>
+            <groupId>nl.probot</groupId>
+            <artifactId>apim-auth-oidc</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>nl.probot.apimanagement</groupId>-->
+<!--            <artifactId>apim-auth-file-properties</artifactId>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>nl.probot.apimanagement</groupId>-->
 <!--            <artifactId>apim-auth-jwt</artifactId>-->

@@ -307,12 +307,11 @@ class GatewayRouteTest {
                 //@formatter:off
                 given()
                         .header("subscription-key", subKey)
-                        .multiPart(new MultiPartSpecBuilder(data).fileName(filename).controlName(filename).build())
-//                        .log().all()
+                        .multiPart(new MultiPartSpecBuilder(data).fileName(filename).mimeType("image/png").controlName(filename).build())
                 .when()
                         .post("%s%s%s".formatted(serverUrl(), this.apimContextRoot, "/multipart"))
                 .then();
-//                        .log().all();
+
         //@formatter:on
     }
 

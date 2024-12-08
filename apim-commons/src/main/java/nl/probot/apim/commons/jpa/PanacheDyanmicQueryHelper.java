@@ -68,7 +68,7 @@ public class PanacheDyanmicQueryHelper {
      * @return will return something like: set p1 = ?1, p2 = ?2, ... (where w1 = ?n and ... )
      */
     public String buildUpdateStatement(WhereStatement whereStatement) {
-        if (whereStatement != null && isNotNull(whereStatement.param())) {
+        if (whereStatement != null && isNotNull(whereStatement.param()) && statementsNotEmpty()) {
             this.statements.add(whereStatement);
         }
 
@@ -109,8 +109,11 @@ public class PanacheDyanmicQueryHelper {
                 .filter(st -> !st.isBlank())
                 .collect(joining(
                         separator,
-                        prefix.filter(this::containsStatements).orElse(""),
-                        suffix.map(stmt -> replaceQueryParams(new AtomicInteger(this.statements.size()), stmt)).orElse("")))
+                        prefix.filter(stmt -> statementsNotEmpty()).orElse(""),
+                        suffix
+                                .filter(stmt -> statementsNotEmpty())
+                                .map(stmt -> replaceQueryParams(new AtomicInteger(this.statements.size()), stmt))
+                                .orElse("")))
                 .trim();
 
         Log.debugf("Produced query: %s", result);
@@ -126,7 +129,7 @@ public class PanacheDyanmicQueryHelper {
         return result;
     }
 
-    private boolean containsStatements(String statement) {
+    private boolean statementsNotEmpty() {
         return !(this.statements.isEmpty() || this.statements.getFirst().getClass().equals(WhereStatement.class));
     }
 

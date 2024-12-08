@@ -26,11 +26,12 @@ public class ApiEntity extends PanacheEntity {
 
     @NotBlank
     @Size(max = 100)
-    @Column(unique = true)
+    @Column(name = "proxy_path", unique = true)
     public String proxyPath;
 
     @URL
     @NotBlank
+    @Column(name = "proxy_url")
     public String proxyUrl;
 
     @NotBlank
@@ -38,6 +39,7 @@ public class ApiEntity extends PanacheEntity {
     public String owner;
 
     @URL
+    @Column(name = "openapi_url")
     public String openApiUrl;
 
     @NotBlank
@@ -47,10 +49,12 @@ public class ApiEntity extends PanacheEntity {
     public boolean enabled = true;
 
     @Enumerated(STRING)
+    @Column(name = "authentication_type")
     public AuthenticationType authenticationType;
 
     @Min(1)
     @Max(1_000_000)
+    @Column(name = "max_requests")
     public Integer maxRequests;
 
     @ManyToMany(mappedBy = "apis")
@@ -77,8 +81,8 @@ public class ApiEntity extends PanacheEntity {
 
         if (obj instanceof ApiEntity api) {
             return Objects.equals(this.owner, api.owner)
-                   && Objects.equals(this.proxyPath, api.proxyPath)
-                   && Objects.equals(this.proxyUrl, api.proxyUrl);
+                    && Objects.equals(this.proxyPath, api.proxyPath)
+                    && Objects.equals(this.proxyUrl, api.proxyUrl);
         }
         return false;
     }

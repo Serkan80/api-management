@@ -16,18 +16,23 @@ import java.util.List;
 
 import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.platform.commons.util.StringUtils.isNotBlank;
 
 class PanacheDyanmicQueryHelperTest {
 
     @Test
     void empty() {
         var helper = new PanacheDyanmicQueryHelper();
+        var helper2 = new PanacheDyanmicQueryHelper();
         var query1 = helper.buildWhereStatement();
         var query2 = helper.buildUpdateStatement(null);
+        var query3 = helper2.buildUpdateStatement(new WhereStatement("w1 = :w1", 1));
 
         assertThat(query1).isBlank();
         assertThat(query2).isBlank();
+        assertThat(query3).isBlank();
         assertThat(helper.values()).isEmpty();
+        assertThat(helper2.values()).isEmpty();
     }
 
     @Test
@@ -98,8 +103,9 @@ class PanacheDyanmicQueryHelperTest {
                 .statements(statements.toArray(Statement[]::new))
                 .buildUpdateStatement(new WhereStatement("w1 = :w1 or w2 < :w2 and w3 = true", List.of(1, 2)));
 
-        assertThat(query).contains("%s where ".formatted(result).trim());
-        assertThat(helper.values()).hasSize(paramSize + 2);
+        // when there are no statements, then the where stmt should not be generated
+        assertThat(query).contains("%s %s ".formatted(result, isNotBlank(result) ? "where" : "").trim());
+        assertThat(helper.values()).hasSize(paramSize + (isNotBlank(result) ? 2 : 0));
     }
 
     private static List<Arguments> buildQueries() {

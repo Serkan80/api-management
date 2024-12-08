@@ -26,7 +26,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
-import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.apache.camel.Exchange.EXCEPTION_CAUGHT;
 import static org.apache.camel.Exchange.FAILURE_ENDPOINT;
 import static org.apache.camel.Exchange.HTTP_PATH;
@@ -102,7 +101,7 @@ public final class CamelUtils {
 
         var message = exchange.getMessage();
         message.setHeader(HTTP_RESPONSE_CODE, status);
-        message.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+        message.setHeader(Exchange.CONTENT_TYPE, APPLICATION_JSON);
         message.setBody(JsonObject.of(
                 "routeId", exchange.getProperty(FAILURE_ROUTE_ID),
                 "exception", exception.getClass(),
@@ -193,8 +192,5 @@ public final class CamelUtils {
         }
 
         return original;
-    }
-
-    record Result(String proxyName, int indexEnd) {
     }
 }

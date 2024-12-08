@@ -2,14 +2,17 @@ package nl.probot.apim.core.rest.openapi;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.rest.dto.Subscription;
 import nl.probot.apim.core.rest.dto.SubscriptionAll;
 import nl.probot.apim.core.rest.dto.SubscriptionPOST;
+import nl.probot.apim.core.rest.dto.SubscriptionPUT;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -39,6 +42,15 @@ public interface SubscriptionOpenApi {
     @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri")))
     RestResponse<Void> save(@Valid SubscriptionPOST sub, @Context UriInfo uriInfo);
 
+    @PUT
+    @Path("/{key}")
+    @Operation(summary = "Updates the given Subscription")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not updated", responseCode = "204", description = "When the subscription is not updated")
+    })
+    RestResponse<Void> update(@RestPath String key, @Valid SubscriptionPUT sub);
+
     @GET
     @Operation(summary = "Returns all Subscriptions without their Api's")
     List<Subscription> findAll();
@@ -61,4 +73,10 @@ public interface SubscriptionOpenApi {
             @APIResponse(name = "Subscription Not Found", responseCode = "404", description = "When the given Subscription is not found")
     })
     RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds);
+
+    @DELETE
+    @Path("/cleanup")
+    @Operation(summary = "Cleans up expired subscriptions")
+    @APIResponse(name = "OK", responseCode = "204")
+    RestResponse<Void> cleanupExpiredSubscriptions();
 }
