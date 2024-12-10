@@ -1,6 +1,5 @@
 package nl.probot.apim.core.rest.dto;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -43,10 +42,8 @@ public record ApiPOST(
         @Schema(description = "max amount of requests per minute")
         Integer maxRequests,
 
-        AuthenticationType authenticationType,
+        AuthenticationType authenticationType
 
-        @Valid
-        ApiCredential credential
 ) {
     public ApiEntity toEntity() {
         var result = new ApiEntity();

@@ -37,11 +37,11 @@ public final class RestHelper {
         return given().contentType(APPLICATION_JSON).get(getUrl(url) + "/{key}", subKey).then().statusCode(200).extract().as(SubscriptionAll.class);
     }
 
-    public static String createApi(ApiPOST request, URL url) {
+    public static long createApi(ApiPOST request, URL url) {
         return createApi(request, 201, url);
     }
 
-    public static String createApi(ApiPOST request, int status, URL url) {
+    public static long createApi(ApiPOST request, int status, URL url) {
         var location =
                 //@formatter:off
                 given()
@@ -55,24 +55,26 @@ public final class RestHelper {
                         .extract().header(LOCATION);
         //@formatter:on
 
-        var result = "";
+        var result = -1L;
         if (ValueRange.of(200, 204).isValidIntValue(status)) {
-            result = extractId(location);
-            assertThat(result).isNotBlank();
+            var id = extractId(location);
+            assertThat(id).isNotNull();
+
+            result = Long.valueOf(id);
         }
         return result;
     }
 
-    public static Api getApiById(String apiId) {
-        return given().contentType(APPLICATION_JSON).get(apiId).then().statusCode(200).extract().as(Api.class);
+    public static Api getApiById(Long apiId) {
+        return given().contentType(APPLICATION_JSON).get(String.valueOf(apiId)).then().statusCode(200).extract().as(Api.class);
     }
 
-    public static Optional<SubscriptionAll> addApi(String subKey, String apiId, int status, URL url) {
+    public static Optional<SubscriptionAll> addApi(String subKey, Long apiId, int status, URL url) {
         //@formatter:off
         var builder =
                 given()
                         .contentType(APPLICATION_JSON)
-                        .body("[%s]".formatted(apiId))
+                        .body("[%d]".formatted(apiId))
                 .when()
                         .post(getUrl(url) + "/{subKey}/apis", subKey)
                 .then()
@@ -86,16 +88,16 @@ public final class RestHelper {
         return Optional.empty();
     }
 
-    public static void updateApi(String apiId, int status, URL url, Map<String, String> updateRequest) {
+    public static void updateApi(Long apiId, int status, URL url, Map<String, String> updateRequest) {
         given().contentType(APPLICATION_JSON).body(updateRequest).put(getUrl(url) + "/{apiId}", apiId).then().statusCode(status);
     }
 
-    public static void addCredential(String apiId, ApiCredential request, int status, URL url) {
-        given().contentType(APPLICATION_JSON).body(request).when().post(getUrl(url) + "/{apiId}/credentials", apiId).then().statusCode(status);
+    public static void addCredential(ApiCredential request, int status, URL url) {
+        given().contentType(APPLICATION_JSON).body(request).when().post(getUrl(url) + "/credentials").then().statusCode(status);
     }
 
-    public static void updateCredential(String apiId, URL url, Map<String, Object> request) {
-        given().contentType(APPLICATION_JSON).body(request).when().put(getUrl(url) + "/{apiId}/credentials", apiId).then().statusCode(200);
+    public static void updateCredential(Map<String, Object> request, URL url) {
+        given().contentType(APPLICATION_JSON).body(request).when().put(getUrl(url) + "/credentials").then().statusCode(200);
     }
 
     public static String extractId(String location) {

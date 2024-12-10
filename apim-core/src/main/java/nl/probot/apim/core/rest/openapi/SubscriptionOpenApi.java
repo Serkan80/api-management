@@ -9,6 +9,8 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
+import nl.probot.apim.core.rest.dto.ApiCredential;
+import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
 import nl.probot.apim.core.rest.dto.SubscriptionAll;
 import nl.probot.apim.core.rest.dto.SubscriptionPOST;
@@ -73,6 +75,25 @@ public interface SubscriptionOpenApi {
             @APIResponse(name = "Subscription Not Found", responseCode = "404", description = "When the given Subscription is not found")
     })
     RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds);
+
+    @POST
+    @Path("/credentials")
+    @Operation(summary = "Adds a credential to the given Api")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription or api is not found")
+    })
+    RestResponse<Void> addCredential(@Valid ApiCredential credential);
+
+    @PUT
+    @Path("/credentials")
+    @Operation(summary = "Updates the given credential")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Updated", responseCode = "204", description = "When the credential is not updated"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
+    })
+    RestResponse<Void> updateCredential(@Valid ApiCredentialPUT credential);
 
     @DELETE
     @Path("/cleanup")

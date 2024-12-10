@@ -8,8 +8,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.rest.dto.Api;
-import nl.probot.apim.core.rest.dto.ApiCredential;
-import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.ApiPOST;
 import nl.probot.apim.core.rest.dto.ApiPUT;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -62,23 +60,4 @@ public interface ApiOpenApi {
             @APIResponse(name = "Not Found", responseCode = "404", description = "Not found")
     })
     Api findById(@RestPath Long id);
-
-    @POST
-    @Path("/{apiId}/credentials")
-    @Operation(summary = "Adds a credential to the given Api")
-    @APIResponses({
-            @APIResponse(name = "OK", responseCode = "200"),
-            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription or api is not found")
-    })
-    RestResponse<Void> addCredential(@RestPath Long apiId, @Valid ApiCredential credential);
-
-    @PUT
-    @Path("/{apiId}/credentials")
-    @Operation(summary = "Updates the given credential")
-    @APIResponses({
-            @APIResponse(name = "OK", responseCode = "200"),
-            @APIResponse(name = "Not Updated", responseCode = "204", description = "When the credential is not updated"),
-            @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
-    })
-    RestResponse<Void> updateCredential(Long apiId, @Valid ApiCredentialPUT credential);
 }

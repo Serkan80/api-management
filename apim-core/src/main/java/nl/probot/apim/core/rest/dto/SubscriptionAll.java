@@ -14,8 +14,8 @@ public record SubscriptionAll(
         String name,
         boolean enabled,
         OffsetDateTime createdAt,
-        List<ApiCredential> credentials,
-        List<Api> apis
+        List<Api> apis,
+        List<ApiCredential> credentials
 ) {
     public static SubscriptionAll toDto(SubscriptionEntity entity) {
         var apis = entity.apis.stream().map(Api::toDto).toList();
@@ -26,7 +26,7 @@ public record SubscriptionAll(
                 entity.name,
                 entity.enabled,
                 entity.createdAt,
-                credentials,
-                apis);
+                apis,
+                credentials);
     }
 }

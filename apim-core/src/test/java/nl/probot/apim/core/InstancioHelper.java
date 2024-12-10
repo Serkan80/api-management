@@ -14,7 +14,6 @@ public final class InstancioHelper {
 
     public static Model<ApiPOST> apiModel = Instancio.of(ApiPOST.class)
             .supply(field(ApiPOST::proxyPath), gen -> "/" + gen.alphanumeric(5))
-            .ignore(field(ApiPOST::credential))
             .withSettings(settings)
             .toModel();
 }

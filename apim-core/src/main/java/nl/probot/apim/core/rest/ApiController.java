@@ -11,12 +11,8 @@ import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
-import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.ApiEntity;
-import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.rest.dto.Api;
-import nl.probot.apim.core.rest.dto.ApiCredential;
-import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.ApiPOST;
 import nl.probot.apim.core.rest.dto.ApiPUT;
 import nl.probot.apim.core.rest.openapi.ApiOpenApi;
@@ -42,10 +38,6 @@ public class ApiController implements ApiOpenApi {
         apiEntity.persist();
         Log.infof("Api(id=%d, proxyPath=%s, proxyUrl=%s, owner=%s) created", apiEntity.id, api.proxyPath(), api.proxyUrl(), api.owner());
 
-        var credential = api.credential();
-        if (credential != null) {
-            addCredential(apiEntity.id, credential);
-        }
         return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), apiEntity.id)));
     }
 
@@ -95,50 +87,5 @@ public class ApiController implements ApiOpenApi {
                 .singleResultOptional()
                 .orElseThrow(() -> new NotFoundException("Api(id=%d) not found".formatted(id)));
 
-    }
-
-    @Override
-    @Transactional
-    @RolesAllowed({"${apim.roles.manager}"})
-    public RestResponse<Void> addCredential(Long apiId, ApiCredential credential) {
-        var subscriptionEntity = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
-        var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, apiId);
-        var credentialEntity = credential.toEntity();
-        credentialEntity.id.api = apiEntity;
-        credentialEntity.id.subscription = subscriptionEntity;
-        credentialEntity.persist();
-        this.cacheManager.invalidate(credential.subscriptionKey());
-        Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.name);
-
-        return RestResponse.ok();
-    }
-
-    @Override
-    @Transactional
-    @RolesAllowed({"${apim.roles.manager}"})
-    public RestResponse<Void> updateCredential(Long apiId, ApiCredentialPUT credential) {
-        var sub = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
-        var subId = sub.id;
-
-        var helper = new PanacheDyanmicQueryHelper();
-        var query = helper.statements(
-                new StaticStatement("username", credential.username()),
-                new StaticStatement("password", credential.password()),
-                new StaticStatement("clientId", credential.clientId()),
-                new StaticStatement("clientSecret", credential.clientSecret()),
-                new StaticStatement("clientUrl", credential.clientUrl()),
-                new StaticStatement("clientScope", credential.clientScope()),
-                new StaticStatement("apiKey", credential.apiKey()),
-                new StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
-                new StaticStatement("apiKeyLocation", credential.apiKeyLocation())
-        ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
-
-        var count = ApiCredentialEntity.update(query, helper.values());
-        if (count > 0) {
-            this.cacheManager.invalidate(credential.subscriptionKey());
-            Log.infof("ApiCredential(apiId=%d, sub='%s') updated with %d record(s)", apiId, sub.name, count);
-            return RestResponse.ok();
-        }
-        return RestResponse.noContent();
     }
 }

@@ -21,7 +21,6 @@ The APIM provides the following features:
 
 TODOS:
  - a dashboard for managing the APIM
- - proxying websockets
  - documentation on how to use in production
 
 ## Modules
@@ -44,6 +43,36 @@ These modules should be included in the `pom.xml` of `apim-application`. And one
 
 For more info on how to use these modules, refer to the `README.md` file in each module.
 
+
+### Architecture
+
+```mermaid
+        C4Container
+  Container_Ext(web_app, "<br/><br/>Web Application /<br/>SPA /<br/>Mobile", "", "")
+  Container_Ext(service, "Service", "", "")
+  
+  Container_Boundary(c1, "Api Management System") {
+    Component(apim-auth, "apim-auth-xyz", "Quarkus", "An authentication module.")
+    Component(apim, "apim-core", "Quarkus, Camel", "The core of APIM.")
+    ContainerDb(db, "Database", "PostgreSql Database", "Stores Subscriptions, Apis & Api Credentials.")
+    Component(dashboard, "apim-dashboard", "Html, Htmx, Qute", "The dashboard of APIM")
+    Component(apim-prom, "apim-prometheus", "Quarkus", "Queries & streams data from Prometheus")
+    ContainerDb(prom, "Prometheus", "", "Stores & scrapes metrics from APIM")
+  }
+
+  Rel(web_app, apim-auth, "", "")
+  Rel(service, apim-auth, "", "")
+  Rel(prom, apim, "", "")
+  Rel(apim-prom, prom, "", "")
+  Rel(apim-auth, apim, "", "")
+  Rel(apim, db, "", "")
+  Rel(dashboard, apim, "", "")
+  Rel(dashboard, apim-prom, "", "")
+  
+  UpdateRelStyle(dashboard, apim-prom, $textColor="red", $offsetX="0", $offsetY="140")
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+```
+
 ## Requisites
 
 To build and run this project locally, you need the following libraries and tools:
@@ -51,7 +80,7 @@ To build and run this project locally, you need the following libraries and tool
 - Java 21 or greater
 - Maven 3.9.x or greater
 - Docker or Podman
-- A REST client tool like Postman, Httpie, Curl, etc. In the examples below, Httpie is used. 
+- A REST client tool like Postman, Httpie, Curl, etc. In the examples below, Httpie is used.
 
 
 ## Terminology
@@ -94,7 +123,7 @@ Backend-->>-Api Managment:
 
 #### Usage in development mode
 
-First go to `apim-application` folder and edit `pom.xml` and choose the modules you want to use:
+First go to `apim-application` folder and edit `pom.xml` and choose the modules you want to use, then:
 > cd apim-application
 
 Note: in the examples below, I've used `apim-auth-jwt` together with `apim-auth-file-properties`.
@@ -102,16 +131,24 @@ Note: in the examples below, I've used `apim-auth-jwt` together with `apim-auth-
 Start the app in development mode:
 > mvn clean quarkus:dev
 
+We need to create a Subscription first and add some Apis. After that, we can call the APIM to access the Apis.  
+Note that without a Subscription, you can't access the APIM. See it as your account for APIM.
+
 1. Create a subscription first:
-> http -a bob:bob post :8080/subscriptions subject="My Organisation"  
+> http -a bob:bob post :8080/apim/core/subscriptions subject="My Organisation"  
 > Connection: close  
 > Content-Length: 0  
 > Location: http://localhost:8080/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW
 
 The response contain the subscription key (in the location header). This is later needed to access the APIM.
+Note that basic authentication is used (bob:bob). 
+
+If you want to create a (temporary) subscription with an end date:
+
+> http -a bob:bob post :8080/apim/core/subscriptions subject="My Organisation" endDate="2025-12-31"
 
 2. Add an Api to https://httpbin.org (it's a free site for testing REST endpoints):
-> http -a bob:bob post :8080/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One" authenticationType=BASIC
+> http -a bob:bob post :8080/apim/core/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One" authenticationType=BASIC
 > description="a proxy to httpbin"
  
 The `proxyPath` is the mapping to httpbin.org. So to call this Api from the APIM, it will be like this:
@@ -125,15 +162,18 @@ http://localhost:8080/gateway/bin/any/path/to/httpbin
 Furthermore, we specified that we want to protect this Api with Basic authentication, therefore we also need to add an `ApiCredential`.
 
 3. Create an ApiCredential with Basic Auth and link it to the subscription:
-> http -a bob:bob post :8080/apis/1/credentials subscriptionKey=N89GERY08JL91R022M5KOBF924XYRPKW username=admin password=12345
+> http -a bob:bob post :8080/apim/core/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW/credentials apiId=1 username=admin password=12345
 
 This will add an ApiCredential to Api with id=1 and to the subscription with the given key.
 
-4. Link Api (with id=1) to the subscription (you can link many Apis in an array):
-> echo "[1]" | http -a bob:bob post :8080/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW/apis
+This will cause the following:   
+Anytime a call to httpbin.org is made through the APIM, then also the credentials `admin & 12345` will be forwarded with the Authorization header.
+
+4. Add this Api (with id=1) to the subscription (you can add many Apis in an array):
+> echo "[1]" | http -a bob:bob post :8080/apim/core/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW/apis
 
 5. Then obtain a JWT token for accessing the gateway:
-> http -a bob:bob post :8080/auth/token  
+> http -a bob:bob post :8080/apim/auth/token  
 > { "access_token": "ej....." }
 
 Save the access token as a variable:

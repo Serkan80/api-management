@@ -78,9 +78,9 @@ class GatewayRouteTest {
     @TestHTTPEndpoint(SubscriptionController.class)
     URL subscriptionsUrl;
 
+    Long apiId;
     Long mainSubId;
     String mainSubKey;
-    String apiId;
 
     @BeforeEach
     @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
@@ -161,6 +161,30 @@ class GatewayRouteTest {
                 .body("message", equalTo("Api(proxyPath=/forbidden) not found or was not enabled"));
     }
 
+    @Order(5)
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
+    void apiWithWrongCredentialsShouldNotBeAccessible(boolean withCredential) {
+        var proxyPath = "/new-path-%b".formatted(withCredential);
+        var newApiId = createApi(Instancio.of(apiModel)
+                .set(field(ApiPOST::proxyPath), proxyPath)
+                .set(field(ApiPOST::authenticationType), API_KEY)
+                .create(), this.apisUrl);
+
+        addApi(this.mainSubKey, newApiId, 200, this.subscriptionsUrl);
+        if (withCredential) {
+            addCredential(new ApiCredential(this.mainSubKey, newApiId, "user", "pass", null, null, null, null, null, null, null), 200, this.subscriptionsUrl);
+        }
+
+        var response = makeApiCall(this.mainSubKey, GET.name(), proxyPath, withCredential ? 500 : 400);
+        if (withCredential) {
+            response.body("message", equalTo("No ApiKey was provided for authentication"));
+        } else {
+            response.body("message", equalTo("Api requires API_KEY authentication but no credentials were found for this Api"));
+        }
+    }
+
     @Test
     @Order(500)
     @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
@@ -185,7 +209,7 @@ class GatewayRouteTest {
                 .body("size", lessThan(1024 * 1024));
     }
 
-    @Order(502)
+    @Order(501)
     @ParameterizedTest
     @CsvSource(textBlock = """
             1, 413
@@ -329,10 +353,9 @@ class GatewayRouteTest {
         var apiId = createApi(request, this.apisUrl);
         addApi(subKey, apiId, 200, this.subscriptionsUrl);
         addCredential(
-                apiId,
-                new ApiCredential(subKey, "bob", "password", "clientId", "12345", serverUrl() + "/mock/auth", null, "token-12345", "ApiKey", HEADER),
+                new ApiCredential(subKey, apiId, "bob", "password", "clientId", "12345", serverUrl() + "/mock/auth", null, "token-12345", "ApiKey", HEADER),
                 200,
-                this.apisUrl);
+                this.subscriptionsUrl);
 
         return new SubscriptionResponse(subKey, subId, apiId);
     }
@@ -342,6 +365,6 @@ class GatewayRouteTest {
         return this.serverUrl.substring(0, this.serverUrl.length() - 1);
     }
 
-    private record SubscriptionResponse(String subKey, Long subId, String apiId) {
+    private record SubscriptionResponse(String subKey, Long subId, Long apiId) {
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.ApiKeyLocation;
 import nl.probot.apim.core.entities.CompositeApiId;
@@ -19,6 +20,9 @@ public record ApiCredential(
         @NotBlank
         @JsonView(Views.AllFields.class)
         String subscriptionKey,
+
+        @NotNull
+        Long apiId,
         String username,
         String password,
         String clientId,
@@ -36,8 +40,8 @@ public record ApiCredential(
     @AssertTrue(message = "No or incorrect credentials were provided")
     public boolean isCredentialsValid() {
         return (isNotBlank(this.apiKey) && isNotBlank(this.apiKeyHeader) && this.apiKeyLocation != null)
-                || (isNotBlank(this.clientId) && isNotBlank(this.clientSecret) && isNotBlank(this.clientUrl))
-                || (isNotBlank(this.username) && isNotBlank(this.password));
+               || (isNotBlank(this.clientId) && isNotBlank(this.clientSecret) && isNotBlank(this.clientUrl))
+               || (isNotBlank(this.username) && isNotBlank(this.password));
     }
 
     public ApiCredentialEntity toEntity() {
@@ -58,6 +62,7 @@ public record ApiCredential(
     public static ApiCredential toDto(String subKey, ApiCredentialEntity entity) {
         return new ApiCredential(
                 subKey,
+                entity.id.api.id,
                 entity.username,
                 entity.password,
                 entity.clientId,
