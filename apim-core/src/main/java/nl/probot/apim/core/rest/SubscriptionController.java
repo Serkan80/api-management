@@ -6,6 +6,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
@@ -27,6 +28,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
@@ -106,8 +108,10 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Transactional
     @RolesAllowed({"${apim.roles.manager}"})
     public RestResponse<Void> addCredential(ApiCredential credential) {
-        var subscriptionEntity = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
         var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, credential.apiId());
+        var subscriptionEntity = Optional.ofNullable(SubscriptionEntity.getByNaturalId(credential.subscriptionKey()))
+                .orElseThrow(() -> new NotFoundException("Subscription with the given not found"));
+
         var credentialEntity = credential.toEntity();
         credentialEntity.id.api = apiEntity;
         credentialEntity.id.subscription = subscriptionEntity;
