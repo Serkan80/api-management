@@ -49,7 +49,8 @@ For more info on how to use these modules, refer to the `README.md` file in each
 ```mermaid
         C4Container
   Container_Ext(web_app, "<br/><br/>Web Application /<br/>SPA /<br/>Mobile", "", "")
-  Container_Ext(service, "Service", "", "")
+  Container_Ext(service, "Application", "", "")
+  Container_Ext(backend, "Service", "", "Downstream service")
   
   Container_Boundary(c1, "Api Management System") {
     Component(apim-auth, "apim-auth-xyz", "Quarkus", "An authentication module.")
@@ -68,6 +69,7 @@ For more info on how to use these modules, refer to the `README.md` file in each
   Rel(apim, db, "", "")
   Rel(dashboard, apim, "", "")
   Rel(dashboard, apim-prom, "", "")
+  Rel(apim, backend, "", "")
   
   UpdateRelStyle(dashboard, apim-prom, $textColor="red", $offsetX="0", $offsetY="140")
   UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
