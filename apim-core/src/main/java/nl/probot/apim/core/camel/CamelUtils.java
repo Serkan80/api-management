@@ -27,7 +27,6 @@ import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.util.Objects.requireNonNull;
-import static java.util.Objects.requireNonNullElse;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
@@ -160,16 +159,16 @@ public final class CamelUtils {
             exchange.setProperty("proxyPath", sanitize(exchange.getIn().getHeader(HTTP_URI, String.class)));
         } else {
             var timer = exchange.getProperty("timer", Sample.class);
-            var sub = Optional.ofNullable(exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class))
+            var subName = Optional.ofNullable(exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class))
                     .map(entity -> entity.name)
                     .orElse("error: illegal call");
 
             timer.stop(registry.timer(
                     "apim_metrics",
-                    "status", requireNonNullElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
+                    "status", requireNonBlankElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
                     "proxyPath", exchange.getProperty("proxyPath", String.class),
                     "traceId", requireNonBlankElse(exchange.getIn().getHeader(TRACE_ID, String.class), ""),
-                    "subscription", sub));
+                    "subscription", subName));
         }
     }
 
