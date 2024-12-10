@@ -10,8 +10,9 @@ The APIM provides the following features:
 
 - proxying REST & GraphQL protocols,
 - managing Apis & Subscriptions,
-- metrics,
+- analytics: tracing, metrics & logging info about an Api,
 - rate limiting,
+- circuit breaker,
 - multipart,
 - CORS,
 - TLS/SSL,

@@ -53,6 +53,11 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- camel-quarkus -->
         <dependency>
@@ -68,9 +73,8 @@
             <artifactId>camel-quarkus-direct</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
-            <optional>true</optional>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-microprofile-fault-tolerance</artifactId>
         </dependency>
 
         <!-- test -->

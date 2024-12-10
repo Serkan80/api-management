@@ -15,17 +15,22 @@ import org.apache.camel.Exchange;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
+import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.apache.camel.Exchange.EXCEPTION_CAUGHT;
 import static org.apache.camel.Exchange.FAILURE_ENDPOINT;
 import static org.apache.camel.Exchange.HTTP_PATH;
@@ -38,6 +43,8 @@ import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpCo
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.REMOTE_ADDRESS;
 
 public final class CamelUtils {
+
+    public static final String TRACE_ID = "X-APIM-TRACE-ID";
 
     private CamelUtils() {
         super();
@@ -52,7 +59,12 @@ public final class CamelUtils {
         // text part of multipart
         if (body != null) {
             body.entrySet().forEach(entry -> {
-                multiPartBuilder.addTextBody(entry.getKey(), entry.getValue().toString());
+                if (exchange.getIn().getHeader(CONTENT_TYPE).equals(APPLICATION_FORM_URLENCODED)) {
+                    multiPartBuilder.setContentType(ContentType.APPLICATION_FORM_URLENCODED);
+                    multiPartBuilder.addParameter(new BasicNameValuePair(entry.getKey(), entry.getValue().toString()));
+                } else {
+                    multiPartBuilder.addTextBody(entry.getKey(), entry.getValue().toString());
+                }
                 exchange.getIn().getHeaders().remove(entry.getKey());
             });
         }
@@ -74,6 +86,7 @@ public final class CamelUtils {
         Log.debugf("forward url: %s", forwardUrl);
         exchange.setProperty("forwardUrl", forwardUrl);
         exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
+        exchange.getIn().setHeader(TRACE_ID, UUID.randomUUID());
     }
 
     public static void cleanUpHeaders(Exchange exchange) {
@@ -140,7 +153,7 @@ public final class CamelUtils {
         exchange.setProperty("clientAuth", oauthParams);
     }
 
-    public static void timer(Exchange exchange, MeterRegistry registry, boolean start) {
+    public static void metrics(Exchange exchange, MeterRegistry registry, boolean start) {
         if (start) {
             var sample = Timer.start(registry);
             exchange.setProperty("timer", sample);
@@ -155,6 +168,7 @@ public final class CamelUtils {
                     "apim_metrics",
                     "status", requireNonNullElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
                     "proxyPath", exchange.getProperty("proxyPath", String.class),
+                    "traceId", requireNonBlankElse(exchange.getIn().getHeader(TRACE_ID, String.class), ""),
                     "subscription", sub));
         }
     }

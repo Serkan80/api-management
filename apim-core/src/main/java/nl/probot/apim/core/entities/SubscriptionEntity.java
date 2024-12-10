@@ -82,12 +82,13 @@ public class SubscriptionEntity extends PanacheEntity {
 
     public static SubscriptionEntity findByKey(String key) {
         return find("""
-                            select s 
-                            from SubscriptionEntity s 
-                            left join fetch s.apis a
-                            left join fetch s.apiCredentials ac 
-                            where subscriptionKey = ?1 and s.enabled = true and (s.endDate is null or s.endDate > current_date)
-                            """, key)
+                select s 
+                from SubscriptionEntity s 
+                left join fetch s.apis a
+                left join fetch s.apiCredentials ac 
+                where subscriptionKey = ?1 and s.enabled = true 
+                and (s.endDate is null or s.endDate > current_date)
+                """, key)
                 .<SubscriptionEntity>singleResultOptional()
                 .orElseThrow(() -> new NotFoundException("Subscription with given key not found or is inactive"));
     }

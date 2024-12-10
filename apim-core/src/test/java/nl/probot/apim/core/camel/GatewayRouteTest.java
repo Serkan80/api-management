@@ -178,13 +178,14 @@ class GatewayRouteTest {
 
         var picture = getClass().getClassLoader().getResourceAsStream("picture.jpg");
         makeMultipartCall(this.mainSubKey, "picture", picture)
+                .log().all()
                 .statusCode(200)
                 .rootPath("[0]")
                 .body("name", equalTo("picture"))
                 .body("size", lessThan(1024 * 1024));
     }
 
-    @Order(501)
+    @Order(502)
     @ParameterizedTest
     @CsvSource(textBlock = """
             1, 413
@@ -236,7 +237,7 @@ class GatewayRouteTest {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", API_KEY.name()));
         QuarkusTransaction.begin();
         ApiCredentialEntity.update("apiKeyHeader = ?1, apiKey = ?2, apiKeyLocation = ?3 where id.subscription.id = ?4",
-                                   apiKeyHeader, apiKey, location, this.mainSubId);
+                apiKeyHeader, apiKey, location, this.mainSubId);
         QuarkusTransaction.commit();
 
         if (status == 200) {
@@ -341,5 +342,6 @@ class GatewayRouteTest {
         return this.serverUrl.substring(0, this.serverUrl.length() - 1);
     }
 
-    private record SubscriptionResponse(String subKey, Long subId, String apiId) {}
+    private record SubscriptionResponse(String subKey, Long subId, String apiId) {
+    }
 }
