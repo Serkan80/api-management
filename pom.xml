@@ -20,6 +20,8 @@
         <quarkus.platform.version>3.15.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.2</surefire-plugin.version>
+
+        <versions.qute>3.2.2</versions.qute>
     </properties>
 
     <modules>
@@ -32,10 +34,12 @@
         <module>apim-auth-jwt</module>
         <module>apim-auth-ldap</module>
         <module>apim-prometheus-client</module>
+        <module>apim-dashboard-qute-alpine</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <!-- quarkus -->
             <dependency>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -50,6 +54,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>io.quarkiverse.qute.web</groupId>
+                <artifactId>quarkus-qute-web</artifactId>
+                <version>${versions.qute}</version>
+            </dependency>
+
+            <!-- apim -->
             <dependency>
                 <groupId>nl.probot.apimanagement</groupId>
                 <artifactId>apim-commons</artifactId>
@@ -85,6 +96,8 @@
                 <artifactId>apim-prometheus-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- test -->
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
@@ -94,7 +107,7 @@
             <dependency>
                 <groupId>org.instancio</groupId>
                 <artifactId>instancio-junit</artifactId>
-                <version>5.1.0</version>
+                <version>5.2.1</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
