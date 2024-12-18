@@ -1,0 +1,37 @@
+<div x-data="fetchData('/apim/core/apis')" x-init="get">
+    <div class="card shadow mb-4" x-show="data">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>Enabled</th>
+                        <th>Proxy path</th>
+                        <th>Proxy url</th>
+                        <th>Owner</th>
+                        <th>Max requests/min</th>
+                        <th>OpenAPI URL</th>
+                        <th>Authentication Type</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="api in data" :key="api.id">
+                        <tr>
+                            <td x-text="api.enabled"></td>
+                            <td x-text="api.proxyPath"></td>
+                            <td x-text="api.proxyUrl"></td>
+                            <td x-text="api.owner"></td>
+                            <td x-text="api.maxRequests"></td>
+                            <td x-text="api.openApiUrl"></td>
+                            <td x-text="api.authenticationType"></td>
+                            <td x-text="api.description"></td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <p x-show="!data">No Apis available</p>
+</div>

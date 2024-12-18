@@ -34,7 +34,7 @@
         <module>apim-auth-jwt</module>
         <module>apim-auth-ldap</module>
         <module>apim-prometheus-client</module>
-        <module>apim-dashboard-qute-alpine</module>
+        <module>apim-dashboard-alpinejs</module>
     </modules>
 
     <dependencyManagement>

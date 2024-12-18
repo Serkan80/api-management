@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" x-data="spa()">
 
 <head>
 
@@ -12,17 +12,16 @@
     <title>APIM - Dashboard</title>
 
     <!-- Custom fonts for this template-->
-    <link href="../../META-INF/resources/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../META-INF/resources/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
 
     <!-- Custom styles for this template-->
-    <link href="../../META-INF/resources/css/sb-admin-2.min.css" rel="stylesheet">
-
+    <link href="../META-INF/resources/css/sb-admin-2.min.css" rel="stylesheet">
 </head>
 
-<body id="page-top">
+<body id="page-top" x-init="init()">
 
     <!-- Page Wrapper -->
     <div id="wrapper">
@@ -42,8 +41,8 @@
             <hr class="sidebar-divider my-0">
 
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item active">
-                <a class="nav-link" href="index.html">
+            <li class="nav-item" :class="{'active': currentRoute === '/subscription'}">
+                <a class="nav-link" href="#/subscription">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>My Subscription</span></a>
             </li>
@@ -66,31 +65,31 @@
                 <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Login Screens:</h6>
-                        <a class="collapse-item" href="startbootstrap-sb-admin-2-gh-pages/login.html">Login</a>
-                        <a class="collapse-item" href="startbootstrap-sb-admin-2-gh-pages/register.html">Register</a>
-                        <a class="collapse-item" href="startbootstrap-sb-admin-2-gh-pages/forgot-password.html">Forgot Password</a>
+                        <a class="collapse-item" href="../login.html">Login</a>
+                        <a class="collapse-item" href="../startbootstrap-sb-admin-2-gh-pages/register.html">Register</a>
+                        <a class="collapse-item" href="../startbootstrap-sb-admin-2-gh-pages/forgot-password.html">Forgot Password</a>
                         <div class="collapse-divider"></div>
                         <h6 class="collapse-header">Other Pages:</h6>
-                        <a class="collapse-item" href="startbootstrap-sb-admin-2-gh-pages/404.html">404 Page</a>
-                        <a class="collapse-item" href="startbootstrap-sb-admin-2-gh-pages/blank.html">Blank Page</a>
+                        <a class="collapse-item" href="../404.html">404 Page</a>
+                        <a class="collapse-item" href="../startbootstrap-sb-admin-2-gh-pages/blank.html">Blank Page</a>
                     </div>
                 </div>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="startbootstrap-sb-admin-2-gh-pages/charts.html">
+            <li class="nav-item" :class="{'active': currentRoute === '/apis'}">
+                <a class="nav-link" href="#/apis">
                     <i class="fas fa-fw fa-table"></i>
                     <span>APIs</span></a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="startbootstrap-sb-admin-2-gh-pages/tables.html">
+            <li class="nav-item" :class="{'active': currentRoute === '/subscriptions'}">
+                <a class="nav-link" href="#/subscriptions">
                     <i class="fas fa-fw fa-table"></i>
                     <span>Subscriptions</span></a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="startbootstrap-sb-admin-2-gh-pages/tables.html">
+            <li class="nav-item" :class="{'active': currentRoute === '/analytics'}">
+                <a class="nav-link" href="#/analytics">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Analytics</span></a>
             </li>
@@ -169,7 +168,7 @@
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">Douglas McGee</span>
                                 <img class="img-profile rounded-circle"
-                                    src="../../META-INF/resources/img/undraw_profile.svg">
+                                    src="../META-INF/resources/img/undraw_profile.svg">
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -202,15 +201,11 @@
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">{title}</h1>
+                        <h1 class="h3 mb-0 text-gray-800" x-text="title"></h1>
                     </div>
 
-                    <!-- Content Row -->
-                    <div class="row">
-                        {#insert title /}
-                    </div>
+                    <div class="row" x-html="currentPage"></div>
                 </div>
             </div>
             <!-- End of Main Content -->
@@ -250,28 +245,31 @@
                 <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="startbootstrap-sb-admin-2-gh-pages/login.html">Logout</a>
+                    <a class="btn btn-primary" href="../login.html">Logout</a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="../../META-INF/resources/vendor/jquery/jquery.min.js"></script>
-    <script src="../../META-INF/resources/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../META-INF/resources/vendor/jquery/jquery.min.js"></script>
+    <script src="../META-INF/resources/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
-    <script src="../../META-INF/resources/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../META-INF/resources/vendor/jquery-easing/jquery.easing.min.js"></script>
 
     <!-- Custom scripts for all pages-->
-    <script src="../../META-INF/resources/js/sb-admin-2.min.js"></script>
+    <script src="../META-INF/resources/js/sb-admin-2.min.js"></script>
 
     <!-- Page level plugins -->
-    <script src="../../META-INF/resources/vendor/chart.js/Chart.min.js"></script>
+<!--    <script src="../../META-INF/resources/vendor/chart.js/Chart.min.js"></script>-->
 
     <!-- Page level custom scripts -->
-    <script src="../../META-INF/resources/js/demo/chart-area-demo.js"></script>
-    <script src="../../META-INF/resources/js/demo/chart-pie-demo.js"></script>
+<!--    <script src="../../META-INF/resources/js/demo/chart-area-demo.js"></script>-->
+<!--    <script src="../../META-INF/resources/js/demo/chart-pie-demo.js"></script>-->
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="../META-INF/resources/js/apim.js"></script>
 
 </body>
 

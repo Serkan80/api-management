@@ -11,24 +11,11 @@
     </parent>
 
     <groupId>nl.probot</groupId>
-    <artifactId>apim-dashboard-qute-alpine</artifactId>
+    <artifactId>apim-dashboard-alpinejs</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.quarkiverse.qute.web</groupId>
-            <artifactId>quarkus-qute-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest</artifactId>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
 </project>
