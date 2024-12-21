@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.NotFoundException;
 import nl.probot.apim.core.rest.dto.SubscriptionPOST;
 import org.hibernate.Session;
+import org.hibernate.annotations.Array;
 import org.hibernate.annotations.NaturalId;
 
 import java.time.LocalDate;
@@ -50,6 +51,9 @@ public class SubscriptionEntity extends PanacheEntity {
 
     @OneToMany(mappedBy = "id.subscription")
     public List<ApiCredentialEntity> apiCredentials;
+
+    @Array(length = 10)
+    public String[] accounts;
 
     @ManyToMany(cascade = {MERGE, PERSIST})
     public Set<ApiEntity> apis = new HashSet<>();

@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
+import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
 import nl.probot.apim.core.entities.ApiEntity;
@@ -22,6 +23,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import java.net.URI;
 import java.util.List;
 
+import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @ApplicationScoped
@@ -73,6 +75,22 @@ public class ApiController implements ApiOpenApi {
     @RolesAllowed({"${apim.roles.manager}", "${apim.roles.viewer}"})
     public List<Api> findAll() {
         return ApiEntity.findAll(Sort.ascending("owner"))
+                .withHint(HINT_READONLY, true)
+                .project(Api.class)
+                .list();
+    }
+
+    @Override
+    @RolesAllowed({"${apim.roles.manager}", "${apim.roles.viewer}"})
+    public List<Api> search(String searchQuery) {
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new DynamicStatement("lower(proxyPath) like concat('%', lower(:pp), '%')", searchQuery),
+                new DynamicStatement("lower(proxyUrl) like concat('%', lower(:pu), '%')", searchQuery),
+                new DynamicStatement("lower(owner) like concat('%', lower(:owner), '%')", searchQuery)
+        ).buildWhereStatement(OR);
+
+        return ApiEntity.find(query, helper.values())
                 .withHint(HINT_READONLY, true)
                 .project(Api.class)
                 .list();

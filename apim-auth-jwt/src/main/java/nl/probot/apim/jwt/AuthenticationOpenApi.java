@@ -12,6 +12,7 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.resteasy.reactive.RestCookie;
 
 import java.security.KeyStoreException;
 import java.security.cert.CertificateEncodingException;
@@ -51,7 +52,7 @@ public interface AuthenticationOpenApi {
             @APIResponse(name = "OK", responseCode = "200", description = "A Http-Only Cookie with a new access & refresh token"),
             @APIResponse(name = "Invalid", responseCode = "401", description = "When the given refresh token is invalid or expired")
     })
-    Response refreshToken(@NotBlank String refreshToken);
+    Response refreshToken(@RestCookie("refresh_token") @NotBlank String cookie);
 
     @GET
     @Path("/public-key")

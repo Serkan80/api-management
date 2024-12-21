@@ -3,6 +3,7 @@ package nl.probot.apim.jwt;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
+import io.restassured.http.Cookie;
 import io.restassured.response.ValidatableResponse;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
@@ -81,7 +82,6 @@ class AuthenticationControllerTest {
 
         if (expectedStatus == 200) {
             builder
-                    .log().all()
                     .body("username", is("bob"))
                     .body("roles", hasSize(1))
                     .body("roles", hasItem("manager"))
@@ -140,13 +140,13 @@ class AuthenticationControllerTest {
         }
 
         if (body != null) {
-            builder.body(body);
+            builder.cookie(new Cookie.Builder("refresh_token", (String) body).setPath("/").setHttpOnly(true).setSameSite("Strict").build());
         }
 
         return builder.when()
                 .post(path)
                 .then()
-//                .log().all()
+                .log().all()
                 .statusCode(expectedStatus);
     }
 }

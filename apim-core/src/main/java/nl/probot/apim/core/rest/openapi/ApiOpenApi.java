@@ -1,6 +1,7 @@
 package nl.probot.apim.core.rest.openapi;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -20,6 +21,7 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestPath;
+import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
@@ -51,6 +53,11 @@ public interface ApiOpenApi {
     @GET
     @Operation(summary = "Returns all Apis sorted by its owner")
     List<Api> findAll();
+
+    @GET
+    @Path("/search")
+    @Operation(summary = "Searches Apis for the given search query")
+    List<Api> search(@RestQuery("q") @Size(max = 10) String searchQuery);
 
     @GET
     @Path("/{id}")

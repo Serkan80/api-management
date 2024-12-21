@@ -12,13 +12,13 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.NewCookie.SameSite;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claims;
+import org.jboss.resteasy.reactive.RestCookie;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -53,6 +53,12 @@ public class AuthenticationController implements AuthenticationOpenApi {
 
     @ConfigProperty(name = "smallrye.jwt.keystore.password")
     String keystorePassword;
+
+    @ConfigProperty(name = "apim.cookie.domain.url", defaultValue = "localhost")
+    String domainUrl;
+
+    @ConfigProperty(name = "apim.cookie.site", defaultValue = "NONE")
+    String sameSite;
 
     private KeyStore keystore;
 
@@ -90,7 +96,7 @@ public class AuthenticationController implements AuthenticationOpenApi {
 
     @Override
     @PermitAll
-    public Response refreshToken(@NotBlank String refreshToken) {
+    public Response refreshToken(@RestCookie("refresh_token") String refreshToken) {
         try {
             var rt = this.jwtParser.verify(refreshToken, this.keystore.getCertificate("rt").getPublicKey());
             var username = (String) rt.getClaim(Claims.upn);
@@ -120,9 +126,10 @@ public class AuthenticationController implements AuthenticationOpenApi {
 
     private NewCookie cookie(String name, String value) {
         return new NewCookie.Builder(name)
-                .secure(true)
-                .sameSite(SameSite.STRICT)
+//                .secure(true)
+                .sameSite(SameSite.valueOf(this.sameSite))
                 .httpOnly(true)
+                .domain(this.domainUrl)
                 .path("/")
                 .value(value)
                 .build();

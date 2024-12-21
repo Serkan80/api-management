@@ -90,12 +90,13 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @JsonView(Views.PublicFields.class)
     @RolesAllowed("${apim.roles.manager}")
     public RestResponse<SubscriptionAll> addApi(String key, Set<Long> apiIds) {
-        var sub = SubscriptionEntity.findByKey(key);
         var apis = ApiEntity.findByIds(apiIds);
 
         if (!apis.isEmpty()) {
+            var sub = SubscriptionEntity.findByKey(key);
             apis.forEach(api -> sub.addApi(api));
             this.cacheManager.invalidate(key);
+
             Log.infof("New Api's for Subscription(name=%s) added", sub.name);
             return RestResponse.ok(SubscriptionAll.toDto(sub));
         } else {
