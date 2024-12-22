@@ -87,8 +87,8 @@ function fetchData(url) {
 	    isLoading: false,
 		data: [],
 		postData: {},
-		showForm: window.location.search.split('form')[1] || false,
-		isInsert: window.location.search.split('insert')[1] || true,
+		showForm: false,
+		isInsert: true,
 		errors: null,
 		baseUrl: 'http://localhost:8080/apim/core',
 
@@ -121,8 +121,11 @@ function fetchData(url) {
 	        form.classList.add('was-validated');
 
             if (form.checkValidity()) {
-                const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'post', body: JSON.stringify(this.postData) };
-                fetch(`${this.baseUrl}${url}`, options)
+                const method = this.isInsert ? 'post' : 'put';
+                const path = this.isInsert ? '' : `/${this.postData.id}`;
+                const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(this.postData) };
+
+                fetch(`${this.baseUrl}${url}${path}`, options)
                     .then(res => {
                         if (!res.ok) {
                             return res.json().then(err => {
@@ -140,6 +143,7 @@ function fetchData(url) {
                     })
                    .then(data => {
                         this.showForm = false;
+                        this.postData = {};
                         if (to) {
                             this.loadPage(to);
                         }
@@ -163,7 +167,6 @@ function authBasic() {
 		password: null,
 
 		login() {
-			console.log(`${username}, ${this.password}`);
 			const options = {
 				headers: {'Content-Type': 'application/json', 'Authorization': 'Basic ' + btoa(`${this.username}:${this.password}`)},
 				method: 'post',
@@ -180,8 +183,6 @@ function authBasic() {
                 .then(data => {
                     sessionStorage.setItem("username", data.username);
                     sessionStorage.setItem("roles", data.roles);
-//                    sessionStorage.setItem("at", data.access_token);
-//                    sessionStorage.setItem("rt", data.refresh_token);
                     window.location.href = "pages/index.html";
                 })
                 .catch((err) => console.log(err));

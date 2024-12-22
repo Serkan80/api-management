@@ -64,6 +64,8 @@
             </div>
         </div>
     </div>
+
+    <!-- form -->
     <div class="main-card card shadow mb-4 col-md-12 mx-auto" x-show="showForm">
         <h2 class="card-header" x-show="isInsert">Add New API</h2>
         <h2 class="card-header" x-show="!isInsert">Update API</h2>
@@ -189,12 +191,7 @@
                 <!-- Submit Button -->
                 <div class="d-block text-right card-footer">
                     <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false">Cancel</button>
-                    <template x-if="isInsert">
-                        <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis')">Submit</button>
-                    </template>
-                    <template x-if="!isInsert">
-                        <button type="submit" class="btn btn-primary" @click.prevent="put('#apiForm', '/apis')">Save</button>
-                    </template>
+                    <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm')" x-text="isInsert ? 'Submit' : 'Save'"></button>
                 </div>
             </div>
         </form>
