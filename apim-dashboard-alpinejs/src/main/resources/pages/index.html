@@ -26,6 +26,11 @@
             content: " *";
             color: red;
         }
+
+        table td, th {
+            vertical-align: middle !important;
+            text-align: center !important;
+        }
     </style>
 </head>
 
@@ -59,16 +64,9 @@
             <hr class="sidebar-divider">
 
             <li class="nav-item" :class="{'active': currentRoute === '/apis'}">
-                <a href="#" class="nav-link collapsed" data-toggle="collapse" data-target="#apiCollapse" aria-expanded="true" aria-controls="collapsePages">
+                <a class="nav-link" href="#/apis">
                     <i class="fas fa-fw fa-table"></i>
-                    <span>APIs</span>
-                </a>
-                <div id="apiCollapse" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="#/apis">Apis Overview</a>
-                        <a class="collapse-item" href="#/apis-form">Add Api</a>
-                    </div>
-                </div>
+                    <span>APIs</span></a>
             </li>
 
             <li class="nav-item" :class="{'active': currentRoute === '/subscriptions'}">
@@ -156,7 +154,7 @@
                         <h1 class="h3 mb-0 text-gray-800"></h1>
                     </div>
 
-                    <div class="row" x-html="currentPage"></div>
+                    <div x-html="currentPage"></div>
                 </div>
             </div>
             <!-- End of Main Content -->

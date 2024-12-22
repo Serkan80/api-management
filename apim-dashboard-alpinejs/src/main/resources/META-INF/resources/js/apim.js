@@ -8,7 +8,6 @@ function spa() {
             '/subscription': 'subscription.html',
             '/subscriptions': 'subscriptions.html',
             '/apis': 'apis.html',
-            '/apis-form': 'apis-form.html',
             '/analytics': 'analytics.html'
         },
         username: null,
@@ -28,7 +27,14 @@ function spa() {
 
         // Load the route based on the hash
         loadRoute() {
-            this.currentRoute = window.location.hash.slice(1) || '/';
+            var hashUrl =  window.location.hash.slice(1);
+            var start = hashUrl.indexOf('?');
+            if (start > -1) {
+                hashUrl = hashUrl.slice(0, start);
+            }
+
+            console.log("in loadRoute: " + hashUrl);
+            this.currentRoute = hashUrl || '/';
             this.loadPage(this.currentRoute);
         },
 
@@ -52,7 +58,6 @@ function spa() {
                     // else a redirect occurs to the OIDC server
                 })
                 .catch(err => {
-//                    console.log(`err response from backend: ${err}`);
                     window.location.href = '../login.html';
                 });
         },
@@ -82,7 +87,8 @@ function fetchData(url) {
 	    isLoading: false,
 		data: [],
 		postData: {},
-		searchQuery: null,
+		showForm: window.location.search.split('form')[1] || false,
+		isInsert: window.location.search.split('insert')[1] || true,
 		errors: null,
 		baseUrl: 'http://localhost:8080/apim/core',
 
@@ -98,11 +104,11 @@ function fetchData(url) {
 				});
 		},
 
-		search(searchUrl) {
+		search(searchPath, searchVal) {
             this.isLoading = true;
             const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
-            fetch(`${this.baseUrl}${url}${searchUrl}${this.searchQuery}`, options)
+            fetch(`${this.baseUrl}${url}${searchPath}${searchVal}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.isLoading = false;
@@ -133,11 +139,20 @@ function fetchData(url) {
                         }
                     })
                    .then(data => {
-                        console.log("forwarding to: " + to);
-                        this.loadPage(to);
+                        this.showForm = false;
+                        if (to) {
+                            this.loadPage(to);
+                        }
                    })
                    .catch(err => console.log(err));
             }
+		},
+
+		edit(elem, insert) {
+			this.errors = null;
+			this.isInsert = insert;
+			this.showForm = true;
+			this.postData = elem;
 		}
 	}
 }

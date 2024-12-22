@@ -104,6 +104,7 @@ public class SubscriptionEntity extends PanacheEntity {
         result.subscriptionKey = createRandomKey(32);
         result.createdAt = OffsetDateTime.now(ZoneId.of("Europe/Amsterdam"));
         result.endDate = sub.endDate();
+        result.accounts = sub.accounts();
         return result;
     }
 

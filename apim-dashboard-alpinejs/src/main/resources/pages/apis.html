@@ -1,50 +1,202 @@
-<!--<div class="row">-->
-    <div class="col-md-3 mb-3">
-        <input
-                type="search"
-                class="form-control form-control-sm"
-                placeholder="Search..."
-                x-model="searchQuery"
-                @keyup.debounce.500ms="search('/search?q=')">
-    </div>
-<!--</div>-->
-<div x-data="fetchData('/apis')" x-init="get">
-    <div class="card shadow mb-4" x-show="data.length > 0">
-        <h2 class="card-header">Apis Overview</h2>
-        <div class="card-body">
-            <div class="row">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Enabled</th>
-                        <th>Proxy path</th>
-                        <th>Proxy url</th>
-                        <th>Owner</th>
-                        <th>Max requests/min</th>
-                        <th>OpenAPI URL</th>
-                        <th>Authentication Type</th>
-                        <th>Description</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <template x-for="api in data" :key="api.id">
+<div x-data="fetchData('/apis')">
+    <div x-show="!showForm">
+        <div class="row justify-content-between">
+            <div class="col-md-4 mb-3 pl-0">
+                <input
+                        type="search"
+                        class="form-control form-control-sm"
+                        placeholder="Search..."
+                        @keyup.debounce.500ms="search('/search?q=', $event.target.value)">
+            </div>
+            <div>
+                <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
+                    <span class="btn-icon-wrapper pr-2 opacity-7">
+                        <i class="fa fa-plus fa-w-20"></i>
+                    </span>
+                    New API
+                </button>
+            </div>
+        </div>
+
+        <p x-show="data.length == 0">No APIs available</p>
+
+        <div class="row card shadow mb-4" x-show="data.length > 0" x-init="get">
+            <h2 class="card-header">APIs Overview</h2>
+            <div class="card-body">
+                <div class="row table-responsive">
+                    <table class="table table-bordered table-sm table-hover" width="100%" cellspacing="0">
+                        <thead>
                         <tr>
-                            <td x-text="api.id"></td>
-                            <td x-text="api.enabled"></td>
-                            <td x-text="api.proxyPath"></td>
-                            <td x-text="api.proxyUrl"></td>
-                            <td x-text="api.owner"></td>
-                            <td x-text="api.maxRequests"></td>
-                            <td x-text="api.openApiUrl"></td>
-                            <td x-text="api.authenticationType"></td>
-                            <td x-text="api.description"></td>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Proxy path</th>
+                            <th>Proxy url</th>
+                            <th>Owner</th>
+                            <th>Max requests</th>
+                            <th>OpenAPI URL</th>
+                            <th>Authentication Type</th>
+                            <th>Description</th>
                         </tr>
-                    </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        <template x-for="api in data" :key="api.id">
+                            <tr @click="edit(api, false);" style="cursor: pointer">
+                                <td x-text="api.id"></td>
+                                <td>
+                                    <button class="btn border-0"
+                                            :class="api.enabled ? 'btn-outline-success' : 'btn-outline-danger'"
+                                            x-text="api.enabled ? 'Active' : 'Inactive'"
+                                            disabled>
+                                    </button>
+                                </td>
+                                <td x-text="api.proxyPath"></td>
+                                <td x-text="api.proxyUrl"></td>
+                                <td x-text="api.owner"></td>
+                                <td x-text="api.maxRequests"></td>
+                                <td x-text="api.openApiUrl"></td>
+                                <td x-text="api.authenticationType"></td>
+                                <td x-text="api.description"></td>
+                            </tr>
+                        </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    <p x-show="!data">No Apis available</p>
+    <div class="main-card card shadow mb-4 col-md-12 mx-auto" x-show="showForm">
+        <h2 class="card-header" x-show="isInsert">Add New API</h2>
+        <h2 class="card-header" x-show="!isInsert">Update API</h2>
+
+        <form id="apiForm" novalidate>
+            <div class="card-body">
+                <template x-if="errors != null">
+                    <div class="alert alert-danger fade show alert-dismissible" role="alert" x-html="errors"></div>
+                </template>
+                <div class="form-group required mb-3">
+                    <label for="proxyPath" class="form-label">Proxy Path</label>
+                    <input
+                            type="text"
+                            id="proxyPath"
+                            name="proxyPath"
+                            class="form-control"
+                            placeholder="/v1/example/path"
+                            pattern="/.+"
+                            x-model="postData.proxyPath"
+                            required>
+                    <em class="invalid-feedback">Please provide a valid proxy path.</em>
+                </div>
+
+                <div class="form-group required mb-3">
+                    <label for="proxyUrl" class="form-label">Proxy URL</label>
+                    <input
+                            type="url"
+                            id="proxyUrl"
+                            name="proxyUrl"
+                            class="form-control"
+                            placeholder="https://example.com"
+                            pattern="http(s)?://.+"
+                            x-model="postData.proxyUrl"
+                            required>
+                    <em class="invalid-feedback">Please provide a valid URL.</em>
+                </div>
+
+                <div class="form-group required mb-3">
+                    <label for="owner" class="form-label">Owner</label>
+                    <input
+                            type="text"
+                            id="owner"
+                            name="owner"
+                            class="form-control"
+                            placeholder="Team Marvel"
+                            x-model="postData.owner"
+                            minlength="5"
+                            maxlength="50"
+                            required>
+                    <em class="invalid-feedback">Please provide a valid owner name between 5-50 characters.</em>
+                </div>
+
+                <template x-if="!isInsert">
+                    <div class="form-group mb-3">
+                        <label for="enabled" class="form-check-label">Enabled</label>
+                        <input id="enabled" type="checkbox" x-model="postData.enabled">
+                    </div>
+                </template>
+
+                <!-- Description -->
+                <div class="form-group required mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea
+                            id="description"
+                            name="description"
+                            class="form-control"
+                            placeholder="Add a description here..."
+                            x-model="postData.description"
+                            rows="3"
+                            maxlength="200"
+                            required></textarea>
+                </div>
+
+                <!-- Open API URL -->
+                <div class="form-group mb-3">
+                    <label for="openApiUrl" class="form-label">OpenAPI URL</label>
+                    <input
+                            type="text"
+                            id="openApiUrl"
+                            name="openApiUrl"
+                            class="form-control"
+                            placeholder="https://api.example.com"
+                            pattern="https?://.*"
+                            x-model="postData.openApiUrl">
+                    <em class="invalid-feedback">Please provide a valid URL.</em>
+                </div>
+
+                <!-- Max Requests -->
+                <div class="form-row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="maxRequests" class="form-label">Rate-limit: max requests per minute</label>
+                            <input
+                                    type="number"
+                                    id="maxRequests"
+                                    name="maxRequests"
+                                    class="form-control"
+                                    placeholder="1 - 1,000,000"
+                                    x-model="postData.maxRequests"
+                                    min="1"
+                                    max="1000000">
+                            <em class="invalid-feedback">Please provide a number between 1 and 1,000,000.</em>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authentication Type -->
+                <div class="form-row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="authenticationType" class="form-label">Authentication Type</label>
+                            <select id="authenticationType" name="authenticationType" class="form-control" x-model="postData.authenticationType">
+                                <option value="">Select...</option>
+                                <option value="PASSTHROUGH">Passthrough</option>
+                                <option value="BASIC">Basic</option>
+                                <option value="TOKEN">Token</option>
+                                <option value="CLIENT_CREDENTIALS">Client Credentials</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-block text-right card-footer">
+                    <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false">Cancel</button>
+                    <template x-if="isInsert">
+                        <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis')">Submit</button>
+                    </template>
+                    <template x-if="!isInsert">
+                        <button type="submit" class="btn btn-primary" @click.prevent="put('#apiForm', '/apis')">Save</button>
+                    </template>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>

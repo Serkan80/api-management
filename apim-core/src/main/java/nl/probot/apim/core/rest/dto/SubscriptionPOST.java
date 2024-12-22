@@ -2,6 +2,7 @@ package nl.probot.apim.core.rest.dto;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
@@ -16,6 +17,10 @@ public record SubscriptionPOST(
 
         @Future
         @Schema(example = "2030-01-01", description = "when this subscription ends")
-        LocalDate endDate
+        LocalDate endDate,
+
+        @NotEmpty
+        @Size(max = 10)
+        String[] accounts
 ) {
 }
