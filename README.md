@@ -4,11 +4,13 @@ This project contains an api-management (APIM) system built with Quarkus and Apa
 where you can build your own APIM in a customizable way that fits your needs. Almost all functionalities are optional beside
 the core.
 
+Note that this project is still in progress.
+
 ## Features
 
 The APIM provides the following features:
 
-- proxying REST & GraphQL protocols,
+- proxying REST, SOAP & GraphQL protocols,
 - managing Apis & Subscriptions,
 - analytics: tracing, metrics & logging info about an Api,
 - rate limiting,
@@ -20,7 +22,8 @@ The APIM provides the following features:
 - OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM.
 
 TODOS:
- - a dashboard for managing the APIM
+ - a dashboard for managing the APIM (WIP)
+ - add Readme to each module
  - documentation on how to use in production
 
 ## Modules
@@ -38,6 +41,7 @@ The project consists of the following modules:
 | `apim-core`                 | This module is the core of the APIM, containing the logic for reverse proxying and managing Subscriptions and Apis.                                               |
 | `apim-prometheus-client`    | This module exposes a REST SSE endpoint for streaming Prometheus metrics. Intended usage is for web-applications for showing metrics on dashboards.               |
 | `apim-commons`              | This module is a shared library used within other modules.                                                                                                        |
+| `apim-dashboard-alpinejs`   | This module contains the dashboard (frontend) for the APIM. It is currently WIP.                                                                                  |
 
 These modules should be included in the `pom.xml` of `apim-application`. And one of the `apim-auth-xyz` modules must also be included for adding authentication.
 
@@ -125,33 +129,37 @@ Backend-->>-Api Managment:
 
 #### Usage in development mode
 
-First go to `apim-application` folder and edit `pom.xml` and choose the modules you want to use, then:
+First go to `apim-application` folder:
 > cd apim-application
+
+and edit `pom.xml` and choose the modules you want to use.
 
 Note: in the examples below, I've used `apim-auth-jwt` together with `apim-auth-file-properties`.
 
 Start the app in development mode:
 > mvn clean quarkus:dev
 
-We need to create a Subscription first and add some Apis. After that, we can call the APIM to access the Apis.  
+Create a Subscription first and add some Apis. After that, the APIM can be used to access the Apis.  
 Note that without a Subscription, you can't access the APIM. See it as your account for APIM.
 
 1. Create a subscription first:
-> http -a bob:bob post :8080/apim/core/subscriptions subject="My Organisation"  
+> http -a bob:bob post :8080/apim/core/subscriptions name="My Organisation" accounts:="['userJohn', 'userBob']"
 > Connection: close  
 > Content-Length: 0  
 > Location: http://localhost:8080/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW
+
+The request contains the name for the subscription, and the usernames/accounts that belong to this subscription. The useraccounts are used on the dashboard to know which user belongs to a subscription.
+It is further not necessary for the usage of the APIM.
 
 The response contain the subscription key (in the location header). This is later needed to access the APIM.
 Note that basic authentication is used (bob:bob). 
 
 If you want to create a (temporary) subscription with an end date:
 
-> http -a bob:bob post :8080/apim/core/subscriptions subject="My Organisation" endDate="2025-12-31"
+> http -a bob:bob post :8080/apim/core/subscriptions name="My Organisation" endDate="2025-12-31"
 
 2. Add an Api to https://httpbin.org (it's a free site for testing REST endpoints):
-> http -a bob:bob post :8080/apim/core/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One" authenticationType=BASIC
-> description="a proxy to httpbin"
+> http -a bob:bob post :8080/apim/core/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One" authenticationType=BASIC description="a proxy to httpbin"
  
 The `proxyPath` is the mapping to httpbin.org. So to call this Api from the APIM, it will be like this:
 
