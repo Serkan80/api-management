@@ -74,7 +74,7 @@ public class ApiController implements ApiOpenApi {
     @Override
     @RolesAllowed({"${apim.roles.manager}", "${apim.roles.viewer}"})
     public List<Api> findAll() {
-        return ApiEntity.findAll(Sort.ascending("owner"))
+        return ApiEntity.findAll(Sort.descending("id"))
                 .withHint(HINT_READONLY, true)
                 .project(Api.class)
                 .list();

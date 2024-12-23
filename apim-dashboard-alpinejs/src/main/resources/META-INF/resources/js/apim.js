@@ -33,7 +33,6 @@ function spa() {
                 hashUrl = hashUrl.slice(0, start);
             }
 
-            console.log("in loadRoute: " + hashUrl);
             this.currentRoute = hashUrl || '/';
             this.loadPage(this.currentRoute);
         },
@@ -124,6 +123,8 @@ function fetchData(url) {
                 const method = this.isInsert ? 'post' : 'put';
                 const path = this.isInsert ? '' : `/${this.postData.id}`;
                 const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(this.postData) };
+				console.log("url: " + url);
+				console.log("body: " + JSON.stringify(this.postData));
 
                 fetch(`${this.baseUrl}${url}${path}`, options)
                     .then(res => {
@@ -156,7 +157,10 @@ function fetchData(url) {
 			this.errors = null;
 			this.isInsert = insert;
 			this.showForm = true;
-			this.postData = elem;
+			if (elem) {
+				console.log("setting postdata");
+				this.postData = elem;
+			}
 		}
 	}
 }

@@ -137,13 +137,14 @@
                             rows="3"
                             maxlength="200"
                             required></textarea>
+                    <em class="invalid-feedback">Please provide a description.</em>
                 </div>
 
                 <!-- Open API URL -->
                 <div class="form-group mb-3">
                     <label for="openApiUrl" class="form-label">OpenAPI URL</label>
                     <input
-                            type="text"
+                            type="url"
                             id="openApiUrl"
                             name="openApiUrl"
                             class="form-control"
@@ -190,8 +191,8 @@
 
                 <!-- Submit Button -->
                 <div class="d-block text-right card-footer">
-                    <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false">Cancel</button>
-                    <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm')" x-text="isInsert ? 'Submit' : 'Save'"></button>
+                    <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false;postData=null">Cancel</button>
+                    <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis')" x-text="isInsert ? 'Submit' : 'Save'"></button>
                 </div>
             </div>
         </form>
