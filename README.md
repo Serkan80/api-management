@@ -172,7 +172,7 @@ http://localhost:8080/gateway/bin/any/path/to/httpbin
 Furthermore, we specified that we want to protect this Api with Basic authentication, therefore we also need to add an `ApiCredential`.
 
 3. Create an ApiCredential with Basic Auth and link it to the subscription:
-> http -a bob:bob post :8080/apim/core/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW/credentials apiId=1 username=admin password=12345
+> http -a bob:bob post :8080/apim/core/subscriptions/credentials apiId=1 subscriptionKey=N89GERY08JL91R022M5KOBF924XYRPKW username=admin password=12345
 
 This will add an ApiCredential to Api with id=1 and to the subscription with the given key.
 
