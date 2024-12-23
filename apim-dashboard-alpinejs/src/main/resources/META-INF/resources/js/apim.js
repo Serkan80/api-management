@@ -115,16 +115,17 @@ function fetchData(url) {
                 });
         },
 
-		post(formId, to) {
+		post(formId, putId, to) {
 		    let form = document.querySelector(formId);
 	        form.classList.add('was-validated');
+			if (this.postData.accounts) {
+				this.postData.accounts = this.postData.accounts.split(',');
+			}
 
             if (form.checkValidity()) {
                 const method = this.isInsert ? 'post' : 'put';
-                const path = this.isInsert ? '' : `/${this.postData.id}`;
+                const path = this.isInsert ? '' : `/${putId}`;
                 const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(this.postData) };
-				console.log("url: " + url);
-				console.log("body: " + JSON.stringify(this.postData));
 
                 fetch(`${this.baseUrl}${url}${path}`, options)
                     .then(res => {
@@ -158,7 +159,6 @@ function fetchData(url) {
 			this.isInsert = insert;
 			this.showForm = true;
 			if (elem) {
-				console.log("setting postdata");
 				this.postData = elem;
 			}
 		}

@@ -192,7 +192,7 @@
                 <!-- Submit Button -->
                 <div class="d-block text-right card-footer">
                     <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false;postData=null">Cancel</button>
-                    <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis')" x-text="isInsert ? 'Submit' : 'Save'"></button>
+                    <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', postData.id, '/apis')" x-text="isInsert ? 'Submit' : 'Save'"></button>
                 </div>
             </div>
         </form>
