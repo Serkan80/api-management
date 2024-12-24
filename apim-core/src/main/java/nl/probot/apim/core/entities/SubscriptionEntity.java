@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.NotFoundException;
+import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
+import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
+import nl.probot.apim.core.rest.dto.Subscription;
 import nl.probot.apim.core.rest.dto.SubscriptionPOST;
 import org.hibernate.Session;
 import org.hibernate.annotations.Array;
@@ -26,6 +29,8 @@ import java.util.Set;
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
 import static nl.probot.apim.commons.crypto.CryptoUtil.createRandomKey;
+import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
+import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Entity
 @Table(name = "subscription")
@@ -52,7 +57,7 @@ public class SubscriptionEntity extends PanacheEntity {
     @OneToMany(mappedBy = "id.subscription")
     public List<ApiCredentialEntity> apiCredentials;
 
-    @Array(length = 10)
+    @Array(length = 20)
     public String[] accounts;
 
     @ManyToMany(cascade = {MERGE, PERSIST})
@@ -90,11 +95,50 @@ public class SubscriptionEntity extends PanacheEntity {
                 from SubscriptionEntity s 
                 left join fetch s.apis a
                 left join fetch s.apiCredentials ac 
+                where subscriptionKey = ?1 
+                """, key)
+                .<SubscriptionEntity>singleResultOptional()
+                .orElseThrow(() -> new NotFoundException("Subscription with given key"));
+    }
+
+    public static SubscriptionEntity findActiveByKey(String key) {
+        return find("""
+                select s 
+                from SubscriptionEntity s 
+                left join fetch s.apis a
+                left join fetch s.apiCredentials ac 
                 where subscriptionKey = ?1 and s.enabled = true 
                 and (s.endDate is null or s.endDate > current_date)
                 """, key)
                 .<SubscriptionEntity>singleResultOptional()
                 .orElseThrow(() -> new NotFoundException("Subscription with given key not found or is inactive"));
+    }
+
+    public static SubscriptionEntity findByAccount(String account) {
+        return find("""
+                select s 
+                from SubscriptionEntity s 
+                left join fetch s.apis a
+                left join fetch s.apiCredentials ac 
+                where ?1 = array_any(accounts) 
+                and s.enabled = true 
+                and (s.endDate is null or s.endDate > current_date)
+                """, account)
+                .<SubscriptionEntity>singleResultOptional()
+                .orElseThrow(() -> new NotFoundException("Subscription with given key not found or is inactive"));
+    }
+
+    public static List<Subscription> search(String searchQuery) {
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new DynamicStatement("lower(name) = concat('%', lower(:name), '%')", searchQuery),
+                new DynamicStatement(":query = array_any(accounts)", searchQuery)
+        ).buildWhereStatement(OR);
+
+        return find(query, helper.values())
+                .withHint(HINT_READONLY, true)
+                .project(Subscription.class)
+                .list();
     }
 
     public static SubscriptionEntity toEntity(SubscriptionPOST sub) {

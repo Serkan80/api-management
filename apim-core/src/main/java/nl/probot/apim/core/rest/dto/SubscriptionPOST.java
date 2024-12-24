@@ -1,5 +1,6 @@
 package nl.probot.apim.core.rest.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -21,6 +22,7 @@ public record SubscriptionPOST(
 
         @NotEmpty
         @Size(max = 10)
+        @JsonDeserialize(using = StringArrayDeserializer.class)
         String[] accounts
 ) {
 }

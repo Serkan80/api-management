@@ -34,7 +34,7 @@ public class SubscriptionProcessor implements Processor {
         var in = exchange.getIn();
         var incomingRequest = in.getHeader(HTTP_URI, String.class);
         var subscriptionKey = in.getHeader(SUBSCRIPTION_KEY, String.class);
-        var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findByKey(subscriptionKey));
+        var subscription = this.cacheManager.get(subscriptionKey, () -> SubscriptionEntity.findActiveByKey(subscriptionKey));
         var api = subscription.findApi(incomingRequest);
 
         checkApiCredentials(exchange, subscription, api);

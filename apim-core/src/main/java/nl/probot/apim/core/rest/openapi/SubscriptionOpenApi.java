@@ -25,9 +25,11 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestPath;
+import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.eclipse.microprofile.openapi.annotations.enums.SchemaType.STRING;
@@ -66,6 +68,15 @@ public interface SubscriptionOpenApi {
     })
     SubscriptionAll findByKey(@RestPath String key);
 
+    @GET
+    @Path("/accounts/{account}")
+    @Operation(summary = "Returns the Subscription and its Api's for the account name")
+    SubscriptionAll findByAccount(@RestPath String account);
+
+    @GET
+    @Path("/search")
+    List<Subscription> search(@RestQuery("q") String searchQuery);
+
     @POST
     @Path("/{key}/apis")
     @Operation(summary = "Adds the Apis for the given Subscription")
@@ -99,5 +110,5 @@ public interface SubscriptionOpenApi {
     @Path("/cleanup")
     @Operation(summary = "Cleans up expired subscriptions")
     @APIResponse(name = "OK", responseCode = "204")
-    RestResponse<Void> cleanupExpiredSubscriptions();
+    RestResponse<Map<String, Long>> cleanupExpiredSubscriptions();
 }

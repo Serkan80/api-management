@@ -1,0 +1,81 @@
+<form id="subForm" novalidate>
+    <div class="card-body">
+        <template x-if="errors != null">
+            <div class="alert alert-danger fade show alert-dismissible" role="alert" x-html="errors"></div>
+        </template>
+
+        <div class="form-group required mb-3">
+            <label for="subName" class="form-label">Name</label>
+            <template x-if="isInsert">
+                <input
+                        type="text"
+                        id="subName"
+                        name="subName"
+                        class="form-control"
+                        placeholder="Backend Team"
+                        x-model="postData.name"
+                        minlength="3"
+                        maxlength="50"
+                        required>
+                <em class="invalid-feedback">Please provide a valid name between 3-50 characters.</em>
+            </template>
+            <template x-if="!isInsert">
+                <input
+                        type="text"
+                        id="subName"
+                        name="subName"
+                        class="form-control"
+                        :value="postData.name"
+                        disabled>
+            </template>
+        </div>
+
+        <template x-if="!isInsert">
+            <div class="form-group required mb-3">
+                <label for="key" class="form-label">Key</label>
+                <input
+                        id="key"
+                        name="key"
+                        type="text"
+                        class="form-control"
+                        :value="postData.subscriptionKey"
+                        disabled
+                >
+            </div>
+        </template>
+
+        <div class="form-group required mb-3">
+            <label for="accounts" class="form-label">User Accounts</label>
+            <input
+                    type="text"
+                    id="accounts"
+                    name="accounts"
+                    class="form-control"
+                    placeholder="username1,username2,etc."
+                    pattern="[\w\d]{5,20}(,[\w\d]{5,20})*"
+                    x-model="postData.accounts"
+                    required>
+            <em class="invalid-feedback">Please provide user accounts with minimum length of 5 and separated with comma's.</em>
+        </div>
+
+        <div class="form-group mb-3 col-md-2 pl-0">
+            <label for="endDate" class="form-label">End Date</label>
+            <input
+                    type="date"
+                    id="endDate"
+                    name="endDate"
+                    class="form-control"
+                    placeholder="2030-01-01"
+                    data-toggle="datepicker"
+                    x-model="postData.endDate"
+                    :min="new Date().toISOString().substring(0,10)">
+            <em class="invalid-feedback">Please provide a date in the future.</em>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-block text-right card-footer">
+            <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false;postData=null">Cancel</button>
+            <button type="submit" class="btn btn-primary" @click.prevent="post('#subForm', postData.subscriptionKey, '/subscriptions')" x-text="isInsert ? 'Submit' : 'Save'"></button>
+        </div>
+    </div>
+</form>

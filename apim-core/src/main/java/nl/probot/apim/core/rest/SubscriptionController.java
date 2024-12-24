@@ -27,6 +27,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -57,7 +58,8 @@ public class SubscriptionController implements SubscriptionOpenApi {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("enabled", sub.enabled()),
-                new StaticStatement("endDate", sub.endDate())
+                new StaticStatement("endDate", sub.endDate()),
+                new StaticStatement("accounts", sub.accounts())
         ).buildUpdateStatement(new WhereStatement("subscriptionKey = :key", key));
 
         var count = SubscriptionEntity.update(query, helper.values());
@@ -86,6 +88,20 @@ public class SubscriptionController implements SubscriptionOpenApi {
     }
 
     @Override
+    @JsonView(Views.PublicFields.class)
+    @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
+    public SubscriptionAll findByAccount(String account) {
+        return SubscriptionAll.toDto(SubscriptionEntity.findByAccount(account));
+    }
+
+    @Override
+    @JsonView(Views.PublicFields.class)
+    @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
+    public List<Subscription> search(String searchQuery) {
+        return SubscriptionEntity.search(searchQuery);
+    }
+
+    @Override
     @Transactional
     @JsonView(Views.PublicFields.class)
     @RolesAllowed("${apim.roles.manager}")
@@ -93,7 +109,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
         var apis = ApiEntity.findByIds(apiIds);
 
         if (!apis.isEmpty()) {
-            var sub = SubscriptionEntity.findByKey(key);
+            var sub = SubscriptionEntity.findActiveByKey(key);
             apis.forEach(api -> sub.addApi(api));
             this.cacheManager.invalidate(key);
 
@@ -157,7 +173,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
-    public RestResponse<Void> cleanupExpiredSubscriptions() {
+    public RestResponse<Map<String, Long>> cleanupExpiredSubscriptions() {
         //@formatter:off
         var ids = SubscriptionEntity.find("""
                                           select id
@@ -169,11 +185,12 @@ public class SubscriptionController implements SubscriptionOpenApi {
         //@formatter:on
 
         if (!ids.isEmpty()) {
-            var count = ApiCredentialEntity.delete("id.subscription.id in (?1)", ids);
-            Log.infof("%d expired credentials(s) deleted", count);
+            var count1 = ApiCredentialEntity.delete("id.subscription.id in (?1)", ids);
+            Log.infof("%d expired credentials(s) deleted", count1);
 
-            count = SubscriptionEntity.delete("id in (?1)", ids);
-            Log.infof("%d expired subscription(s) deleted", count);
+            var count2 = SubscriptionEntity.delete("id in (?1)", ids);
+            Log.infof("%d expired subscription(s) deleted", count2);
+            return RestResponse.ok(Map.of("countApiCredentials", count1, "countSubscriptions", count2));
         }
 
         return RestResponse.noContent();

@@ -86,6 +86,7 @@ function fetchData(url) {
 	    isLoading: false,
 		data: [],
 		postData: {},
+		selectedRows: [],
 		showForm: false,
 		isInsert: true,
 		errors: null,
@@ -118,9 +119,6 @@ function fetchData(url) {
 		post(formId, putId, to) {
 		    let form = document.querySelector(formId);
 	        form.classList.add('was-validated');
-			if (this.postData.accounts) {
-				this.postData.accounts = this.postData.accounts.split(',');
-			}
 
             if (form.checkValidity()) {
                 const method = this.isInsert ? 'post' : 'put';
@@ -140,6 +138,7 @@ function fetchData(url) {
                                 } else {
                                     this.errors = Object.values(err).join([separator='\n']);
                                 }
+                                throw new Error("response contains error");
                             });
                         }
                     })
@@ -161,6 +160,42 @@ function fetchData(url) {
 			if (elem) {
 				this.postData = elem;
 			}
+		},
+
+		findBy(attr) {
+			const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
+            fetch(`${this.baseUrl}${url}${attr}`, options)
+                .then(res => res.json())
+                .then(json => {
+                    this.errors = null;
+                    this.isInsert = false;
+                    this.showForm = true;
+                    this.postData = json;
+                });
+		},
+
+		toggleRow(id) {
+//			elem.click();
+			if (this.selectedRows.indexOf(id) > -1) {
+				console.log("unchecked id: " + id);
+				this.selectedRows = this.selectedRows.filter(i => i !== id);
+			} else {
+				console.log("checked id: " + id);
+				this.selectedRows.push(id);
+			}
+		},
+
+		addApis() {
+			if (this.selectedRows.length > 0) {
+				const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(this.selectedRows) };
+
+	            fetch(`${this.baseUrl}${url}/${postData.subscriptionKey}/apis`, options)
+	               .then(data => {
+	                    this.selectedRows = [];
+	               })
+	               .catch(err => console.log(err));
+           }
+           this.$el.querySelector('#modalClose').click();
 		}
 	}
 }

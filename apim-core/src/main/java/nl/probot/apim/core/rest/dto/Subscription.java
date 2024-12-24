@@ -1,5 +1,7 @@
 package nl.probot.apim.core.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
@@ -10,4 +12,9 @@ public record Subscription(
         LocalDate endDate,
         boolean enabled,
         String[] accounts) {
+
+    @JsonGetter("accounts")
+    public String accountsAsString() {
+        return String.join(",", this.accounts);
+    }
 }

@@ -24,7 +24,7 @@
             <h2 class="card-header">Subscriptions Overview</h2>
             <div class="card-body">
                 <div class="row table-responsive">
-                    <table class="table table-bordered table-sm table-hover" width="100%" cellspacing="0">
+                    <table class="table table-bordered table-sm table-hover">
                         <thead>
                         <tr>
                             <th>Name</th>
@@ -37,7 +37,7 @@
                         </thead>
                         <tbody>
                         <template x-for="sub in data" :key="sub.subscriptionKey">
-                            <tr @click="edit(sub, false);" style="cursor: pointer">
+                            <tr @click="findBy('/' + sub.subscriptionKey)" style="cursor: pointer">
                                 <td x-text="sub.name"></td>
                                 <td>
                                     <button class="btn border-0"
@@ -47,9 +47,9 @@
                                     </button>
                                 </td>
                                 <td x-text="sub.subscriptionKey"></td>
-                                <td x-text="sub.createdAt"></td>
+                                <td x-text="new Date(sub.createdAt).toLocaleString('nl-NL', {timezone: 'Europe/Amsterdam'})"></td>
                                 <td x-text="sub.endDate"></td>
-                                <td x-text="sub.accounts.join([separator=','])"></td>
+                                <td x-text="sub.accounts"></td>
                             </tr>
                         </template>
                         </tbody>
@@ -60,75 +60,28 @@
     </div>
 
     <!-- form -->
-    <div class="main-card card shadow mb-4 col-md-12 mx-auto" x-show="showForm">
-        <h2 class="card-header" x-show="isInsert">Add New Subscription</h2>
-        <h2 class="card-header" x-show="!isInsert">Update Subscription</h2>
-
-        <form id="subForm" novalidate>
+    <template x-if="showForm">
+        <div class="card mb-4 col-md-12 mx-auto">
             <div class="card-body">
-                <template x-if="errors != null">
-                    <div class="alert alert-danger fade show alert-dismissible" role="alert" x-html="errors"></div>
-                </template>
-                <div class="form-group required mb-3">
-                    <label for="subName" class="form-label">Name</label>
-                    <input
-                            type="text"
-                            id="subName"
-                            name="subName"
-                            class="form-control"
-                            placeholder="Backend Team"
-                            x-model="postData.name"
-                            minlength="3"
-                            maxlength="50"
-                            required>
-                    <em class="invalid-feedback">Please provide a valid name between 3-50 characters.</em>
-                </div>
-
-                <template x-if="!isInsert">
-                    <label for="key" class="form-label">Key</label>
-                    <input
-                            id="key"
-                            name="key"
-                            type="text"
-                            class="form-control"
-                            x-model="postData.subscriptionKey"
-                            >
-                </template>
-
-                <div class="form-group required mb-3">
-                    <label for="accounts" class="form-label">User Accounts</label>
-                    <input
-                            type="text"
-                            id="accounts"
-                            name="accounts"
-                            class="form-control"
-                            placeholder="user1, user2"
-                            pattern=".+(,.+)*"
-                            x-model="postData.accounts"
-                            required>
-                    <em class="invalid-feedback">Please user account ids (separated with comma's).</em>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="endDate" class="form-label">End Date</label>
-                    <input
-                            type="date"
-                            id="endDate"
-                            name="endDate"
-                            class="form-control"
-                            placeholder="2030-01-01"
-                            data-toggle="datepicker"
-                            x-model="postData.endDate"
-                            :min="new Date().toISOString().substring(0,10)">
-                    <em class="invalid-feedback">Please provide a date in the future.</em>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-block text-right card-footer">
-                    <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false;postData=null">Cancel</button>
-                    <button type="submit" class="btn btn-primary" @click.prevent="post('#subForm', postData.subscriptionKey, '/subscriptions')" x-text="isInsert ? 'Submit' : 'Save'"></button>
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a data-toggle="tab" href="#tab-sub" class="nav-link active" x-text="isInsert ? 'Add New Subscription' : 'Subscription'"></a>
+                    </li>
+                    <template x-if="!isInsert">
+                        <li class="nav-item">
+                            <a data-toggle="tab" href="#tab-apis" class="nav-link">APIs</a>
+                        </li>
+                    </template>
+                </ul>
+                <div class="tab-content">
+                    <div id="tab-sub" class="tab-pane active" role="tabpanel">
+                        <div x-html="fetchPage('sub-form.html')"></div>
+                    </div>
+                    <div id="tab-apis" class="tab-pane" role="tabpanel">
+                        <div x-html="fetchPage('sub-apis.html')"></div>
+                    </div>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </template>
 </div>
