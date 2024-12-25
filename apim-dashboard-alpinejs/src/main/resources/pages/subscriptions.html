@@ -1,14 +1,14 @@
-<div x-data="fetchData('/subscriptions')" x-init="get">
+<div x-data="fetchData" x-init="get('/subscriptions')">
     <div x-show="!showForm">
         <div class="row justify-content-between">
-            <div class="col-md-4 mb-3 pl-0">
+            <div class="col-md-4 mb-4 pl-0">
                 <input
                         type="search"
                         class="form-control form-control-sm"
                         placeholder="Search..."
-                        @keyup.debounce.500ms="search('/search?q=', $event.target.value)">
+                        @keyup.debounce.500ms="search('/subscriptions/search?q=', $event.target.value)">
             </div>
-            <div>
+            <div style="width: auto">
                 <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
                     <span class="btn-icon-wrapper pr-2 opacity-7">
                         <i class="fa fa-plus fa-w-20"></i>
@@ -37,7 +37,7 @@
                         </thead>
                         <tbody>
                         <template x-for="sub in data" :key="sub.subscriptionKey">
-                            <tr @click="findBy('/' + sub.subscriptionKey)" style="cursor: pointer">
+                            <tr @click="findBy('/subscriptions/' + sub.subscriptionKey)" style="cursor: pointer">
                                 <td x-text="sub.name"></td>
                                 <td>
                                     <button class="btn border-0"
@@ -65,11 +65,16 @@
             <div class="card-body">
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
-                        <a data-toggle="tab" href="#tab-sub" class="nav-link active" x-text="isInsert ? 'Add New Subscription' : 'Subscription'"></a>
+                        <a data-toggle="tab" href="#tab-sub" class="nav-link active" x-text="isInsert ? 'New Subscription' : 'Subscription'"></a>
                     </li>
                     <template x-if="!isInsert">
                         <li class="nav-item">
                             <a data-toggle="tab" href="#tab-apis" class="nav-link">APIs</a>
+                        </li>
+                    </template>
+                    <template x-if="!isInsert">
+                        <li class="nav-item">
+                            <a data-toggle="tab" href="#tab-credentials" class="nav-link">Credentials</a>
                         </li>
                     </template>
                 </ul>
@@ -77,9 +82,16 @@
                     <div id="tab-sub" class="tab-pane active" role="tabpanel">
                         <div x-html="fetchPage('sub-form.html')"></div>
                     </div>
-                    <div id="tab-apis" class="tab-pane" role="tabpanel">
-                        <div x-html="fetchPage('sub-apis.html')"></div>
-                    </div>
+                    <template x-if="!isInsert">
+                        <div id="tab-apis" class="tab-pane" role="tabpanel">
+                            <div x-html="fetchPage('sub-apis.html')"></div>
+                        </div>
+                    </template>
+                    <template x-if="!isInsert">
+                        <div id="tab-credentials" class="tab-pane" role="tabpanel">
+                            <div x-html="fetchPage('sub-credentials.html')"></div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>

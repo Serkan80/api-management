@@ -81,18 +81,19 @@ async function fetchPage(page) {
     return await res.text();
 }
 
-function fetchData(url) {
+function fetchData() {
     return {
 	    isLoading: false,
 		data: [],
 		postData: {},
+		selectedData: {},
 		selectedRows: [],
 		showForm: false,
 		isInsert: true,
 		errors: null,
 		baseUrl: 'http://localhost:8080/apim/core',
 
-		get() {
+		get(url) {
 		    this.isLoading = true;
 		    const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
@@ -104,11 +105,11 @@ function fetchData(url) {
 				});
 		},
 
-		search(searchPath, searchVal) {
+		search(url, searchVal) {
             this.isLoading = true;
             const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
-            fetch(`${this.baseUrl}${url}${searchPath}${searchVal}`, options)
+            fetch(`${this.baseUrl}${url}${searchVal}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.isLoading = false;
@@ -116,16 +117,15 @@ function fetchData(url) {
                 });
         },
 
-		post(formId, putId, to) {
+		post(formId, url, body, toPage) {
 		    let form = document.querySelector(formId);
 	        form.classList.add('was-validated');
 
             if (form.checkValidity()) {
                 const method = this.isInsert ? 'post' : 'put';
-                const path = this.isInsert ? '' : `/${putId}`;
-                const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(this.postData) };
+                const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(body) };
 
-                fetch(`${this.baseUrl}${url}${path}`, options)
+                fetch(`${this.baseUrl}${url}`, options)
                     .then(res => {
                         if (!res.ok) {
                             return res.json().then(err => {
@@ -145,8 +145,8 @@ function fetchData(url) {
                    .then(data => {
                         this.showForm = false;
                         this.postData = {};
-                        if (to) {
-                            this.loadPage(to);
+                        if (toPage) {
+                            this.loadPage(toPage);
                         }
                    })
                    .catch(err => console.log(err));
@@ -157,45 +157,51 @@ function fetchData(url) {
 			this.errors = null;
 			this.isInsert = insert;
 			this.showForm = true;
-			if (elem) {
+			if (elem && elem !== '') {
 				this.postData = elem;
 			}
 		},
 
-		findBy(attr) {
+		findBy(url) {
 			const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
-            fetch(`${this.baseUrl}${url}${attr}`, options)
+            fetch(`${this.baseUrl}${url}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.errors = null;
                     this.isInsert = false;
                     this.showForm = true;
-                    this.postData = json;
+                    this.selectedData = json;
+                    if (this.selectedData.apis) {
+                        this.selectedData.apis.sort((a, b) => b.id - a.id);
+                    }
                 });
 		},
 
 		toggleRow(id) {
-//			elem.click();
 			if (this.selectedRows.indexOf(id) > -1) {
-				console.log("unchecked id: " + id);
 				this.selectedRows = this.selectedRows.filter(i => i !== id);
 			} else {
-				console.log("checked id: " + id);
 				this.selectedRows.push(id);
 			}
 		},
 
 		addApis() {
 			if (this.selectedRows.length > 0) {
-				const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(this.selectedRows) };
+				const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'post', body: JSON.stringify(this.selectedRows) };
 
-	            fetch(`${this.baseUrl}${url}/${postData.subscriptionKey}/apis`, options)
+	            fetch(`${this.baseUrl}/subscriptions/${this.selectedData.subscriptionKey}/apis`, options)
+	               .then(res => res.json())
 	               .then(data => {
 	                    this.selectedRows = [];
+	                    this.selectedData.apis = data.apis.sort((a, b) => b.id - a.id);
 	               })
 	               .catch(err => console.log(err));
            }
-           this.$el.querySelector('#modalClose').click();
+           document.querySelector('#modalClose').dispatchEvent(new MouseEvent('click', {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+           }));
 		}
 	}
 }

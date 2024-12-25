@@ -1,5 +1,5 @@
 <div class="row justify-content-between">
-    <div class="ml-auto mt-3 mb-3">
+    <div class="ml-auto mt-3 mb-4" style="width: auto">
         <button type="button" class="btn btn-shadow btn-wide btn-primary" data-toggle="modal" data-target="#apis-modal">
             <span class="btn-icon-wrapper pr-2 opacity-7">
                 <i class="fa fa-plus fa-w-20"></i>
@@ -8,9 +8,9 @@
         </button>
     </div>
 </div>
-<p x-show="postData.apis && postData.apis.length == 0">Subscription does not have APIs</p>
-<div class="row table-responsive" x-show="postData.apis && postData.apis.length > 0">
-    <table class="table table-bordered table-sm table-hover">
+<p x-show="selectedData.apis && selectedData.apis.length == 0">Subscription does not have APIs</p>
+<div class="row table-responsive" x-show="selectedData.apis && selectedData.apis.length > 0">
+    <table class="table table-bordered table-sm">
         <thead>
         <tr>
             <th>ID</th>
@@ -25,7 +25,7 @@
         </tr>
         </thead>
         <tbody>
-        <template x-for="api in postData.apis" :key="api.id">
+        <template x-for="api in selectedData.apis" :key="api.id">
             <tr>
                 <td x-text="api.id"></td>
                 <td>
@@ -48,7 +48,7 @@
     </table>
 </div>
 
-<div id="apis-modal" class="modal fade show" tabindex="-1" role="dialog" aria-modal="true" x-data="fetchData('/apis')">
+<div id="apis-modal" class="modal fade show" tabindex="-1" role="dialog" aria-modal="true" x-init="get('/apis')">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -57,18 +57,18 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <div class="modal-body" x-init="get">
+            <div class="modal-body">
                 <div class="row justify-content-between">
                     <div class="col-md-4 mb-3">
                         <input
                                 type="search"
                                 class="form-control form-control-sm"
                                 placeholder="Search..."
-                                @keyup.debounce.500ms="search('/search?q=', $event.target.value)">
+                                @keyup.debounce.500ms="search('/apis/search?q=', $event.target.value)">
                     </div>
                 </div>
                 <div class="row table-responsive scroll-area-lg">
-                    <table class="table table-bordered table-sm table-hover scrollbar-container ps">
+                    <table class="table table-bordered table-sm scrollbar-container ps">
                         <thead>
                         <tr>
                             <th>Select</th>
