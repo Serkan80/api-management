@@ -145,12 +145,11 @@
                     <div class="form-group mb-3">
                         <label for="openApiUrl" class="form-label">OpenAPI URL</label>
                         <input
-                                type="url"
                                 id="openApiUrl"
                                 name="openApiUrl"
+                                type="url"
                                 class="form-control"
                                 placeholder="https://api.example.com"
-                                pattern="https?://.*"
                                 x-model="postData.openApiUrl">
                         <em class="invalid-feedback">Please provide a valid URL.</em>
                     </div>
@@ -159,7 +158,7 @@
                     <div class="form-row">
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="maxRequests" class="form-label">Rate-limit: max requests per minute</label>
+                                <label for="maxRequests" class="form-label">Rate limit: max requests per minute</label>
                                 <input
                                         type="number"
                                         id="maxRequests"
@@ -182,8 +181,8 @@
                                 <select id="authenticationType" name="authenticationType" class="form-control" x-model="postData.authenticationType">
                                     <option value="">Select...</option>
                                     <option value="PASSTHROUGH">Passthrough</option>
-                                    <option value="BASIC">Basic</option>
-                                    <option value="TOKEN">Token</option>
+                                    <option value="BASIC">Basic Authentication</option>
+                                    <option value="TOKEN">Api-Key</option>
                                     <option value="CLIENT_CREDENTIALS">Client Credentials</option>
                                 </select>
                             </div>
