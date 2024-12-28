@@ -98,7 +98,7 @@ public class SubscriptionEntity extends PanacheEntity {
                 where subscriptionKey = ?1 
                 """, key)
                 .<SubscriptionEntity>singleResultOptional()
-                .orElseThrow(() -> new NotFoundException("Subscription with given key"));
+                .orElseThrow(() -> new NotFoundException("Subscription with given key not found"));
     }
 
     public static SubscriptionEntity findActiveByKey(String key) {
@@ -114,7 +114,7 @@ public class SubscriptionEntity extends PanacheEntity {
                 .orElseThrow(() -> new NotFoundException("Subscription with given key not found or is inactive"));
     }
 
-    public static SubscriptionEntity findByAccount(String account) {
+    public static SubscriptionEntity findActiveByAccount(String account) {
         return find("""
                 select s 
                 from SubscriptionEntity s 

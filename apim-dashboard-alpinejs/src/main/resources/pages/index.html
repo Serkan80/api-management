@@ -64,19 +64,19 @@
             <hr class="sidebar-divider">
 
             <li class="nav-item" :class="{'active': currentRoute === '/apis'}">
-                <a class="nav-link" href="#/apis">
+                <a class="nav-link" href="#/apis" @click="changeUrl()">
                     <i class="fas fa-fw fa-table"></i>
                     <span>APIs</span></a>
             </li>
 
             <li class="nav-item" :class="{'active': currentRoute === '/subscriptions'}">
-                <a class="nav-link" href="#/subscriptions">
+                <a class="nav-link" href="#/subscriptions" @click="changeUrl()">
                     <i class="fas fa-fw fa-table"></i>
                     <span>Subscriptions</span></a>
             </li>
 
             <li class="nav-item" :class="{'active': currentRoute === '/analytics'}">
-                <a class="nav-link" href="#/analytics">
+                <a class="nav-link" href="#/analytics" @click="changeUrl()">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Analytics</span></a>
             </li>

@@ -39,7 +39,10 @@ function spa() {
 
         // Dynamically load page content
         async loadPage(route) {
+            const index = route.indexOf('_') > -1 ? route.indexOf('_') : route.length;
+            const path = route.substring(0, index);
             const page = this.routes[route];
+
             if (page) {
                 this.currentPage = fetchPage(page);
             } else {
@@ -68,6 +71,11 @@ function spa() {
         logout() {
             sessionStorage.clear();
             this.init();
+        },
+
+        changeUrl() {
+            let url = window.location.hash += "_" + Math.floor(Math.random() * 10000000);
+            console.log('change url: ' + url);
         }
     };
 }
@@ -90,6 +98,7 @@ function fetchData() {
 		selectedRows: [],
 		showForm: false,
 		isInsert: true,
+		isModalInsert: true,
 		errors: null,
 		baseUrl: 'http://localhost:8080/apim/core',
 
@@ -202,7 +211,54 @@ function fetchData() {
                 "bubbles": true,
                 "cancelable": false
            }));
-		}
+		},
+
+		addCredentials(formId, url, body) {
+			if (this.selectedData.apis && this.selectedData.apis.length > 0) {
+				body.subscriptionKey = document.querySelector('#credentialsKey').value;
+
+				let form = document.querySelector(formId);
+                form.classList.add('was-validated');
+
+                if (form.checkValidity()) {
+                    const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: this.isModalInsert ? 'post' : 'put', body: JSON.stringify(body) };
+
+                    fetch(`${this.baseUrl}${url}`, options)
+                        .then(res => {
+                            if (!res.ok) {
+                                return res.json().then(err => {
+                                     if (err.violations) {
+                                         this.errors = new Array();
+                                         err.violations.forEach(ex => this.errors.push(`<li>${ex.field.split('.').at(-1)}: ${ex.message}</li>`));
+                                         this.errors = "<ul style='margin:0'>" + this.errors.join([separator='\n']) + "</ul>";
+                                     } else if (err.message) {
+                                         this.errors = err.message;
+                                     } else {
+                                         this.errors = Object.values(err).join([separator='\n']);
+                                     }
+                                     throw new Error("response contains error");
+                                });
+                            }
+                        })
+                       .then(data => {
+                            this.errors = null;
+                            this.postData = {};
+                            document.querySelector('#modalCloseCredentials').dispatchEvent(new MouseEvent('click', {
+                                "view": window,
+                                "bubbles": true,
+                                "cancelable": false
+                           }));
+                       })
+                       .catch(err => console.log(err));
+				}
+			} else {
+				alert(`Api with ID ${body.apiId} is not present in this subscription. \n\nPlease add the API to this subscription first.`);
+			}
+		},
+
+		getSelectedCredential(apiId) {
+            return this.selectedData.credentials.filter(cr => cr.apiId == apiId);
+        }
 	}
 }
 

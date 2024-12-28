@@ -90,7 +90,7 @@ public class ApiController implements ApiOpenApi {
                 new DynamicStatement("lower(owner) like concat('%', lower(:owner), '%')", searchQuery)
         ).buildWhereStatement(OR);
 
-        return ApiEntity.find(query, helper.values())
+        return ApiEntity.find(query, Sort.descending("id"), helper.values())
                 .withHint(HINT_READONLY, true)
                 .project(Api.class)
                 .list();

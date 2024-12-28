@@ -72,11 +72,6 @@
                             <a data-toggle="tab" href="#tab-apis" class="nav-link">APIs</a>
                         </li>
                     </template>
-                    <template x-if="!isInsert">
-                        <li class="nav-item">
-                            <a data-toggle="tab" href="#tab-credentials" class="nav-link">Credentials</a>
-                        </li>
-                    </template>
                 </ul>
                 <div class="tab-content">
                     <div id="tab-sub" class="tab-pane active" role="tabpanel">
@@ -85,11 +80,6 @@
                     <template x-if="!isInsert">
                         <div id="tab-apis" class="tab-pane" role="tabpanel">
                             <div x-html="fetchPage('sub-apis.html')"></div>
-                        </div>
-                    </template>
-                    <template x-if="!isInsert">
-                        <div id="tab-credentials" class="tab-pane" role="tabpanel">
-                            <div x-html="fetchPage('sub-credentials.html')"></div>
                         </div>
                     </template>
                 </div>

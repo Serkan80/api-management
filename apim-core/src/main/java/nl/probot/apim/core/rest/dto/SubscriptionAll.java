@@ -28,7 +28,7 @@ public record SubscriptionAll(
 
     public static SubscriptionAll toDto(SubscriptionEntity entity) {
         var apis = entity.apis.stream().map(Api::toDto).toList();
-        var credentials = entity.apiCredentials.stream().map(cr -> ApiCredential.toDto(entity.subscriptionKey, cr)).toList();
+        var credentials = entity.apiCredentials.stream().map(cr -> ApiCredential.toDto(entity.subscriptionKey, cr)).distinct().toList();
 
         return new SubscriptionAll(
                 entity.subscriptionKey,

@@ -91,7 +91,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @JsonView(Views.PublicFields.class)
     @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
     public SubscriptionAll findByAccount(String account) {
-        return SubscriptionAll.toDto(SubscriptionEntity.findByAccount(account));
+        return SubscriptionAll.toDto(SubscriptionEntity.findActiveByAccount(account));
     }
 
     @Override
