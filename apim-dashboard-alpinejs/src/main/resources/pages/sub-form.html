@@ -74,9 +74,9 @@
 
         <!-- Submit Button -->
         <div class="d-block text-right card-footer">
-            <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false;selectedData=null;postData=null">Cancel</button>
-            <button type="submit" class="btn btn-primary" @click.prevent="post('#subForm', '/subscriptions', selectedData, '/subscriptions')" x-show="isInsert">Submit</button>
-            <button type="submit" class="btn btn-primary" @click.prevent="post('#subForm', '/subscriptions/' + selectedData.subscriptionKey, selectedData, '/subscriptions')" x-show="!isInsert">Save</button>
+            <button class="mr-2 btn btn-link btn-sm" @click.prevent="loadPage('/subscriptions')">Cancel</button>
+            <button type="button" class="btn btn-primary" @click.prevent="post('#subForm', '/subscriptions', selectedData, '/subscriptions')" x-show="isInsert">Submit</button>
+            <button type="button" class="btn btn-primary" @click.prevent="post('#subForm', '/subscriptions/' + selectedData.subscriptionKey, selectedData, '/subscriptions')" x-show="!isInsert">Save</button>
         </div>
     </div>
 </form>

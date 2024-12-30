@@ -45,14 +45,14 @@
                 <td x-text="api.description"></td>
                 <td>
                     <template x-if="!selectedData.credentials || getSelectedCredential(api.id).length == 0">
-                        <button @click="postData.apiId=api.id,isModalInsert=true"
+                        <button @click.prevent="postData['apiId']=api.id,isModalInsert=true"
                                 class="btn btn-sm btn-primary"
                                 data-toggle="modal" data-target="#credentials-modal">
                             Add Credential
                         </button>
                     </template>
                     <template x-if="getSelectedCredential(api.id).length > 0">
-                        <button @click="postData=getSelectedCredential(api.id)[0],isModalInsert=false"
+                        <button @click.prevent="postData=getSelectedCredential(api.id)[0],isModalInsert=false"
                                 class="btn btn-sm btn-primary"
                                 data-toggle="modal" data-target="#credentials-modal">
                             Update Credential
@@ -281,12 +281,12 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="postData=null,errors=null">Close</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @click.prevent="postData=null,errors=null">Close</button>
                 <button
-                        type="submit"
+                        type="button"
                         class="btn btn-primary"
                         x-text="isModalInsert ? 'Submit' : 'Save'"
-                        @click="addCredentials('#credentialsForm', '/subscriptions/credentials', postData)">
+                        @click.prevent="addCredentials('#credentialsForm', '/subscriptions/credentials', postData)">
                 </button>
             </div>
         </div>

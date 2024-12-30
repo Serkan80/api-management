@@ -27,7 +27,8 @@ function spa() {
 
         // Load the route based on the hash
         loadRoute() {
-            var hashUrl =  window.location.hash.slice(1);
+            console.log("loading route, hash changed: " + window.location.hash);
+            var hashUrl = window.location.hash.slice(1);
             var start = hashUrl.indexOf('?');
             if (start > -1) {
                 hashUrl = hashUrl.slice(0, start);
@@ -39,6 +40,7 @@ function spa() {
 
         // Dynamically load page content
         async loadPage(route) {
+            window.dispatchEvent(new CustomEvent('page-changed'));
             const index = route.indexOf('_') > -1 ? route.indexOf('_') : route.length;
             const path = route.substring(0, index);
             const page = this.routes[route];
@@ -71,11 +73,6 @@ function spa() {
         logout() {
             sessionStorage.clear();
             this.init();
-        },
-
-        changeUrl() {
-            let url = window.location.hash += "_" + Math.floor(Math.random() * 10000000);
-            console.log('change url: ' + url);
         }
     };
 }
@@ -261,6 +258,82 @@ function fetchData() {
         }
 	}
 }
+
+function sse(queries) {
+	return {
+	    source: null,
+		metrics: [],
+		baseUrl: 'http://localhost:8080/apim/prometheus/metrics',
+
+		get(threshold) {
+			let counter = 1;
+			this.source = new EventSource(this.baseUrl + queries, { withCredentials: true });
+		    this.source.onmessage = (event) => {
+		        const data = JSON.parse(event.data).data;
+
+		        if (data.result.length == 1) {
+			        const value = data.result[0].value[1];
+			        if (value.indexOf('.') > -1) {
+			            this.metrics[1] = parseFloat(value).toFixed(4);
+			        } else {
+			            this.metrics[0] = value;
+			        }
+		        } else if (data.result.length > 1) {
+		            const isAvgSet = data.result.every(metric => metric.value[1].indexOf('.') > -1 || metric.value[1] === '0');
+					const isTotalPerSub = data.result[0].metric.hasOwnProperty('subscription');
+
+		            if (isAvgSet) {
+		                setAvgResponseTimes(data, this.metrics);
+		            } else if (isTotalPerSub) {
+		                setTotalsPerSub(data, this.metrics, threshold);
+		            } else {
+		                setTotalCounts(data, this.metrics, threshold);
+		            }
+		        }
+		    };
+
+		    this.source.onerror = (event) => {
+		        console.log('Error occured: ' + event);
+		        this.source.close();
+		    };
+	    },
+
+	    closeSse() {
+	        if (this.source) {
+		        this.source.close();
+		        console.log('sse closed');
+	        }
+	    }
+    }
+}
+
+function setTotalCounts(data, metrics, threshold) {
+	metrics[2] = data.result
+                     .filter(metric => parseInt(metric.value[1]) > threshold)
+                     .map(metric => {
+                        return {proxyPath: metric.metric.proxyPath, value: metric.value[1]};
+                     })
+    metrics[2].sort((a, b) => b.value - a.value).length = 10;
+}
+
+function setAvgResponseTimes(data, metrics) {
+	metrics[3] = data.result
+                     .filter(metric => metric.value[1] != '0')
+                     .map(metric => {
+                        return {proxyPath: metric.metric.proxyPath, value: parseFloat(metric.value[1]).toFixed(4)};
+                     })
+    metrics[3].sort((a, b) => b.value - a.value).length = 10;
+}
+
+function setTotalsPerSub(data, metrics, threshold) {
+	metrics[4] = data.result
+                     .filter(metric => parseInt(metric.value[1]) > threshold)
+                     .map(metric => {
+                        return {proxyPath: metric.metric.proxyPath, sub: metric.metric.subscription, value: metric.value[1]};
+                     })
+    metrics[4].sort((a, b) => b.value - a.value).length = 10;
+}
+
 
 function authBasic() {
 	return {
