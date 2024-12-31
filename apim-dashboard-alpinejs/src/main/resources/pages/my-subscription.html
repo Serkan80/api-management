@@ -1,0 +1,25 @@
+<div x-data="fetchData()"
+     x-init="findBy('/subscriptions/accounts/' + username)">
+
+    <p x-show="!Object.hasOwnProperty(selectedData, 'name')" x-html="'User <em>' + username + '</em> has no subscription'"></p>
+    <div class="card mb-4 col-md-12 mx-auto" x-show="Object.hasOwnProperty(selectedData, 'name')">
+        <div class="card-body">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a data-toggle="tab" href="#tab-sub" class="nav-link active">My Subscription</a>
+                </li>
+                <li class="nav-item">
+                    <a data-toggle="tab" href="#tab-apis" class="nav-link">APIs</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div id="tab-sub" class="tab-pane active" role="tabpanel">
+                    <div x-html="fetchPage('my-sub-form.html')"></div>
+                </div>
+                <div id="tab-apis" class="tab-pane" role="tabpanel">
+                    <div x-html="fetchPage('my-sub-apis.html')"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

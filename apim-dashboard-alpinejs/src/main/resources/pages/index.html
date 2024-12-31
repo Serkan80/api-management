@@ -54,8 +54,8 @@
             <hr class="sidebar-divider my-0">
 
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item" :class="{'active': currentRoute === '/subscription'}">
-                <a class="nav-link" href="#/subscription">
+            <li class="nav-item" :class="{'active': currentRoute === '/my-subscription'}">
+                <a class="nav-link" href="#/my-subscription" @click.prevent="loadPage('/my-subscription')">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>My Subscription</span></a>
             </li>
@@ -115,7 +115,7 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Douglas McGee</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small" x-text="username"></span>
                                 <img class="img-profile rounded-circle"
                                     src="../META-INF/resources/img/undraw_profile.svg">
                             </a>

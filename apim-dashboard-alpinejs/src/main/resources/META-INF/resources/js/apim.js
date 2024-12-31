@@ -5,6 +5,7 @@ function spa() {
         routes: {
             '/': 'index.html',
             '/login': '../login.html',
+            '/my-subscription': 'my-subscription.html',
             '/subscription': 'subscription.html',
             '/subscriptions': 'subscriptions.html',
             '/apis': 'apis.html',
@@ -281,11 +282,14 @@ function sse(queries) {
 		        } else if (data.result.length > 1) {
 		            const isAvgSet = data.result.every(metric => metric.value[1].indexOf('.') > -1 || metric.value[1] === '0');
 					const isTotalPerSub = data.result[0].metric.hasOwnProperty('subscription');
+					const isTotalPerStatus = data.result[0].metric.hasOwnProperty('status');
 
 		            if (isAvgSet) {
 		                setAvgResponseTimes(data, this.metrics);
 		            } else if (isTotalPerSub) {
 		                setTotalsPerSub(data, this.metrics, threshold);
+		            } else if (isTotalPerStatus) {
+		                setTotalPerStatus(data, this.metrics, threshold);
 		            } else {
 		                setTotalCounts(data, this.metrics, threshold);
 		            }
@@ -307,33 +311,43 @@ function sse(queries) {
     }
 }
 
+function metricTemplate(data, metric, filter, mapper) {
+    var result = data.result.filter(filter).map(mapper);
+    result.sort((a, b) => b.value - a.value).length = 10;
+    return result;
+}
+
 function setTotalCounts(data, metrics, threshold) {
-	metrics[2] = data.result
-                     .filter(metric => parseInt(metric.value[1]) > threshold)
-                     .map(metric => {
-                        return {proxyPath: metric.metric.proxyPath, value: metric.value[1]};
-                     })
-    metrics[2].sort((a, b) => b.value - a.value).length = 10;
+    metrics[2] = metricTemplate(
+                    data,
+                    metrics,
+                    row => parseInt(row.value[1]) > threshold,
+                    row => { return {proxyPath: row.metric.proxyPath, value: row.value[1]}; });
 }
 
 function setAvgResponseTimes(data, metrics) {
-	metrics[3] = data.result
-                     .filter(metric => metric.value[1] != '0')
-                     .map(metric => {
-                        return {proxyPath: metric.metric.proxyPath, value: parseFloat(metric.value[1]).toFixed(4)};
-                     })
-    metrics[3].sort((a, b) => b.value - a.value).length = 10;
+	metrics[3] = metricTemplate(
+                        data,
+                        metrics,
+                        row => row.value[1] != '0',
+                        row => { return {proxyPath: row.metric.proxyPath, value: parseFloat(row.value[1]).toFixed(4)}; });
 }
 
 function setTotalsPerSub(data, metrics, threshold) {
-	metrics[4] = data.result
-                     .filter(metric => parseInt(metric.value[1]) > threshold)
-                     .map(metric => {
-                        return {proxyPath: metric.metric.proxyPath, sub: metric.metric.subscription, value: metric.value[1]};
-                     })
-    metrics[4].sort((a, b) => b.value - a.value).length = 10;
+	metrics[4] = metricTemplate(
+                        data,
+                        metrics,
+                        row => parseInt(row.value[1]) > threshold,
+                        row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; });
 }
 
+function setTotalPerStatus(data, metrics, threshold) {
+	metrics[5] = metricTemplate(
+                            data,
+                            metrics,
+                            row => parseInt(row.value[1]) > threshold,
+                            row => { return {proxyPath: row.metric.proxyPath, status: row.metric.status, value: row.value[1]}; });
+}
 
 function authBasic() {
 	return {

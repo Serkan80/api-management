@@ -1,0 +1,47 @@
+<div class="card-body">
+    <div class="form-group col-md-3 mb-3">
+        <label for="subName" class="form-label">Name</label>
+        <input
+                type="text"
+                id="subName"
+                name="subName"
+                class="form-control"
+                x-model="selectedData.name"
+                disabled>
+    </div>
+
+    <div class="form-group col-md-3 mb-3">
+        <label for="key" class="form-label">Key</label>
+        <input
+                id="key"
+                name="key"
+                type="text"
+                class="form-control"
+                :value="selectedData.subscriptionKey"
+                disabled
+        >
+    </div>
+
+    <div class="form-group col-md-3 mb-3">
+        <label for="accounts" class="form-label">User Accounts</label>
+        <input
+                type="text"
+                id="accounts"
+                name="accounts"
+                class="form-control"
+                x-model="selectedData.accounts"
+                disabled>
+    </div>
+
+    <div class="form-group mb-3 col-md-2">
+        <label for="endDate" class="form-label">End Date</label>
+        <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                class="form-control"
+                placeholder="2030-01-01"
+                x-model="selectedData.endDate"
+                disabled>
+    </div>
+</div>

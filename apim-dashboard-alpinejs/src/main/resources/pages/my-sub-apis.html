@@ -1,0 +1,49 @@
+<p x-show="selectedData.apis && selectedData.apis.length == 0">Subscription does not have APIs</p>
+<div class="row table-responsive" x-show="selectedData.apis && selectedData.apis.length > 0">
+    <table class="table table-bordered table-sm">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Proxy path</th>
+            <th>Proxy url</th>
+            <th>Owner</th>
+            <th>Max requests</th>
+            <th>OpenAPI URL</th>
+            <th>Authentication Type</th>
+            <th>Description</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <template x-for="api in selectedData.apis" :key="api.id">
+            <tr>
+                <td x-text="api.id"></td>
+                <td>
+                    <button class="btn border-0"
+                            :class="api.enabled ? 'btn-outline-success' : 'btn-outline-danger'"
+                            x-text="api.enabled ? 'Active' : 'Inactive'"
+                            disabled>
+                    </button>
+                </td>
+                <td x-text="api.proxyPath"></td>
+                <td x-text="api.proxyUrl"></td>
+                <td x-text="api.owner"></td>
+                <td x-text="api.maxRequests"></td>
+                <td x-text="api.openApiUrl"></td>
+                <td x-text="api.authenticationType"></td>
+                <td x-text="api.description"></td>
+                <td>
+                    <template x-if="getSelectedCredential(api.id).length > 0">
+                        <button @click.prevent="postData=getSelectedCredential(api.id)[0]"
+                                class="btn btn-sm btn-primary"
+                                data-toggle="modal" data-target="#credentials-modal">
+                            View Credential
+                        </button>
+                    </template>
+                </td>
+            </tr>
+        </template>
+        </tbody>
+    </table>
+</div>

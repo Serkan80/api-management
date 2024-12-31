@@ -44,7 +44,7 @@
                 <td x-text="api.authenticationType"></td>
                 <td x-text="api.description"></td>
                 <td>
-                    <template x-if="!selectedData.credentials || getSelectedCredential(api.id).length == 0">
+                    <template x-if="(!selectedData.credentials || getSelectedCredential(api.id).length == 0) && api.authenticationType && api.authenticationType != 'PASSTHROUGH'">
                         <button @click.prevent="postData['apiId']=api.id,isModalInsert=true"
                                 class="btn btn-sm btn-primary"
                                 data-toggle="modal" data-target="#credentials-modal">
