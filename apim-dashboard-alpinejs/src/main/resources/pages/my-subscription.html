@@ -1,15 +1,18 @@
 <div x-data="fetchData()"
-     x-init="findBy('/subscriptions/accounts/' + username)">
+     x-init="findBy('/subscriptions/accounts/')">
 
-    <p x-show="!Object.hasOwnProperty(selectedData, 'name')" x-html="'User <em>' + username + '</em> has no subscription'"></p>
-    <div class="card mb-4 col-md-12 mx-auto" x-show="Object.hasOwnProperty(selectedData, 'name')">
+    <p x-show="!selectedData || !selectedData.accounts.includes(username)" x-html="'User <em>' + username + '</em> has no subscription'"></p>
+    <div class="card mb-4 col-md-12 mx-auto" x-show="selectedData && selectedData.accounts.includes(username)">
         <div class="card-body">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
                     <a data-toggle="tab" href="#tab-sub" class="nav-link active">My Subscription</a>
                 </li>
                 <li class="nav-item">
-                    <a data-toggle="tab" href="#tab-apis" class="nav-link">APIs</a>
+                    <a data-toggle="tab" href="#tab-apis" class="nav-link">My APIs</a>
+                </li>
+                <li class="nav-item">
+                    <a data-toggle="tab" href="#tab-analytics" class="nav-link">My Analytics</a>
                 </li>
             </ul>
             <div class="tab-content">
@@ -18,6 +21,9 @@
                 </div>
                 <div id="tab-apis" class="tab-pane" role="tabpanel">
                     <div x-html="fetchPage('my-sub-apis.html')"></div>
+                </div>
+                <div id="tab-analytics" class="tab-pane" role="tabpanel">
+                    <div x-html="fetchPage('my-sub-analytics.html')"></div>
                 </div>
             </div>
         </div>

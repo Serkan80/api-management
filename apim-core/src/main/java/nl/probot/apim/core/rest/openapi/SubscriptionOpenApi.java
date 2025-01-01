@@ -1,5 +1,6 @@
 package nl.probot.apim.core.rest.openapi;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.DELETE;
@@ -69,9 +70,9 @@ public interface SubscriptionOpenApi {
     SubscriptionAll findByKey(@RestPath String key);
 
     @GET
-    @Path("/accounts/{account}")
-    @Operation(summary = "Returns the Subscription and its Api's for the account name")
-    SubscriptionAll findByAccount(@RestPath String account);
+    @Path("/accounts")
+    @Operation(summary = "Returns the Subscription and its Api's for the current logged in user")
+    SubscriptionAll findByAccount(@Context SecurityIdentity identity);
 
     @GET
     @Path("/search")

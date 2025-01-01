@@ -120,7 +120,7 @@ public class SubscriptionEntity extends PanacheEntity {
                 from SubscriptionEntity s 
                 left join fetch s.apis a
                 left join fetch s.apiCredentials ac 
-                where array_includes(accounts, ?1) 
+                where array_any(accounts, ?1) 
                 and s.enabled = true 
                 and (s.endDate is null or s.endDate > current_date)
                 """, account)
@@ -131,8 +131,8 @@ public class SubscriptionEntity extends PanacheEntity {
     public static List<Subscription> search(String searchQuery) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
-                new DynamicStatement("lower(name) = concat('%', lower(:name), '%')", searchQuery),
-                new DynamicStatement("array_includes(accounts, :query)", searchQuery)
+                new DynamicStatement("lower(name) like concat('%', lower(:name), '%')", searchQuery),
+                new DynamicStatement("array_any(accounts, :query)", searchQuery)
         ).buildWhereStatement(OR);
 
         return find(query, helper.values())

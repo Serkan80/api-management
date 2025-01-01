@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 import static java.util.Objects.requireNonNullElse;
 
-public record SubscriptionPUT(Boolean enabled, LocalDate endDate, @JsonDeserialize(using = StringArrayDeserializer.class) String[] accounts) {
+public record SubscriptionPUT(Boolean enabled, LocalDate endDate, @JsonDeserialize(using = StringToArrayDeserializer.class) String[] accounts) {
 
     @JsonIgnore
     @AssertTrue(message = "At least one update parameter must be specified")

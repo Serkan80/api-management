@@ -2,6 +2,7 @@ package nl.probot.apim.core.rest;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.quarkus.logging.Log;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -90,8 +91,8 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @JsonView(Views.PublicFields.class)
     @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
-    public SubscriptionAll findByAccount(String account) {
-        return SubscriptionAll.toDto(SubscriptionEntity.findActiveByAccount(account));
+    public SubscriptionAll findByAccount(SecurityIdentity identity) {
+        return SubscriptionAll.toDto(SubscriptionEntity.findActiveByAccount(identity.getPrincipal().getName()));
     }
 
     @Override

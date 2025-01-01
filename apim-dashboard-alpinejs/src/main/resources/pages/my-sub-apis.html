@@ -1,5 +1,5 @@
-<p x-show="selectedData.apis && selectedData.apis.length == 0">Subscription does not have APIs</p>
-<div class="row table-responsive" x-show="selectedData.apis && selectedData.apis.length > 0">
+<p class="mt-3" x-show="selectedData.apis && selectedData.apis.length == 0">Subscription does not have APIs</p>
+<div class="row table-responsive mt-3" x-show="selectedData.apis && selectedData.apis.length > 0">
     <table class="table table-bordered table-sm">
         <thead>
         <tr>
@@ -37,7 +37,7 @@
                     <template x-if="getSelectedCredential(api.id).length > 0">
                         <button @click.prevent="postData=getSelectedCredential(api.id)[0]"
                                 class="btn btn-sm btn-primary"
-                                data-toggle="modal" data-target="#credentials-modal">
+                                data-toggle="modal" data-target="#credentials-view-modal">
                             View Credential
                         </button>
                     </template>
@@ -46,4 +46,155 @@
         </template>
         </tbody>
     </table>
+</div>
+
+<div id="credentials-view-modal" class="modal fade show" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Credential Overview</h5>
+                <button id="modalCloseCredentials" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="apiID" class="form-label">API ID</label>
+                            <input
+                                    id="apiID"
+                                    name="apiID"
+                                    type="number"
+                                    class="form-control"
+                                    x-model="postData.apiId"
+                                    disabled>
+                        </div>
+                        <div class="form-group col-md-10">
+                            <label for="credentialsKey">Key</label>
+                            <input
+                                    id="credentialsKey"
+                                    name="credentialsKey"
+                                    type="text"
+                                    class="form-control"
+                                    x-model="selectedData.subscriptionKey"
+                                    disabled
+                            >
+                        </div>
+                    </div>
+
+                    <!-- basic auth -->
+                    <fieldset>
+                        <legend>Basic Authentication</legend>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="username" class="form-label">Username</label>
+                                <input
+                                        id="username"
+                                        name="username"
+                                        type="text"
+                                        class="form-control"
+                                        x-model="postData.username"
+                                        disabled>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="password" class="form-label">Password</label>
+                                <input
+                                        id="password"
+                                        name="password"
+                                        type="text"
+                                        class="form-control"
+                                        x-model="postData.password"
+                                        disabled>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- client credentials -->
+                    <fieldset>
+                        <legend>Client Credentials</legend>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="clientId" class="form-label">Client ID</label>
+                                <input
+                                        id="clientId"
+                                        name="clientId"
+                                        type="text"
+                                        class="form-control"
+                                        x-model="postData.clientId"
+                                        disabled>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="clientSecret" class="form-label">Client Secret</label>
+                                <input
+                                        id="clientSecret"
+                                        name="clientSecret"
+                                        type="text"
+                                        class="form-control"
+                                        x-model="postData.clientSecret"
+                                        disabled>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="clientUrl" class="form-label">Client URL</label>
+                            <input
+                                    id="clientUrl"
+                                    name="clientUrl"
+                                    type="url"
+                                    class="form-control"
+                                    x-model="postData.clientUrl"
+                                    disabled>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="clientScopes" class="form-label">Client Scopes</label>
+                            <input
+                                    id="clientScopes"
+                                    name="clientScopes"
+                                    type="url"
+                                    class="form-control"
+                                    x-model="postData.clientScope"
+                                    disabled>
+                        </div>
+                    </fieldset>
+
+                    <!-- api token -->
+                    <fieldset>
+                        <legend>ApiKey</legend>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="apiKey" class="form-label">Api-Key</label>
+                                <input
+                                        id="apiKey"
+                                        name="apiKey"
+                                        type="text"
+                                        class="form-control"
+                                        x-model="postData.apiKey"
+                                        disabled>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="apiKeyHeader" class="form-label">Api-Key Header</label>
+                                <input
+                                        id="apiKeyHeader"
+                                        name="apiKeyHeader"
+                                        type="text"
+                                        class="form-control"
+                                        x-model="postData.apiKeyHeader"
+                                        disabled
+                                >
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label for="clientUrl" class="form-label">Api-Key Location</label>
+                                <select name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation" disabled>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @click.prevent="postData=null">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
