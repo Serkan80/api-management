@@ -70,7 +70,8 @@ public final class CamelUtils {
 
         // binary part of multipart
         if (attachments != null) {
-            attachments.entrySet().forEach(entry -> multiPartBuilder.addBinaryBody(entry.getKey(), Unchecked.supplier(() -> entry.getValue().getInputStream()).get()));
+            attachments.entrySet()
+                    .forEach(entry -> multiPartBuilder.addBinaryBody(entry.getKey(), Unchecked.supplier(() -> entry.getValue().getInputStream()).get()));
         }
 
         exchange.getMessage().setBody(multiPartBuilder.build());
@@ -156,7 +157,7 @@ public final class CamelUtils {
         if (start) {
             var sample = Timer.start(registry);
             exchange.setProperty("timer", sample);
-            exchange.setProperty("proxyPath", sanitize(exchange.getIn().getHeader(HTTP_URI, String.class)));
+            exchange.setProperty("httpPath", sanitize(exchange.getIn().getHeader(HTTP_URI, String.class)));
         } else {
             var timer = exchange.getProperty("timer", Sample.class);
             var subName = Optional.ofNullable(exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class))
@@ -167,6 +168,7 @@ public final class CamelUtils {
                     "apim_metrics",
                     "status", requireNonBlankElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
                     "proxyPath", exchange.getProperty("proxyPath", String.class),
+                    "httpPath", exchange.getProperty("httpPath", String.class),
                     "traceId", requireNonBlankElse(exchange.getIn().getHeader(TRACE_ID, String.class), ""),
                     "subscription", subName));
         }

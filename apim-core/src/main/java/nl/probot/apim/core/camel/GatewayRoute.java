@@ -61,7 +61,8 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .throttle(exchangeProperty(THROTTLING_MAX_REQUESTS), header(SUBSCRIPTION_KEY))
                 .totalRequestsMode()
                 .rejectExecution(true)
-                .timePeriodMillis(60000);
+                .timePeriodMillis(60000)
+                .setHeader("X-RateLimit-Limit", exchangeProperty(THROTTLING_MAX_REQUESTS));
     }
 }
 

@@ -1,49 +1,19 @@
-<p class="mt-3" x-show="!metrics || metrics == 'undefined'">No metrics available</p>
-<div x-data="sse('?query=sum by (proxyPath, status) (apim_metrics_seconds_count)&query=sum by (proxyPath, subscription) (apim_metrics_seconds_count)&query=avg by (proxyPath) (apim_metrics_seconds_max)&query=sum by (proxyPath) (apim_metrics_seconds_count)&query=sum(apim_metrics_seconds_max*apim_metrics_seconds_count)/sum(apim_metrics_seconds_count)&query=sum(apim_metrics_seconds_count)')"
-     x-init="get(1)"
-     x-show="metrics[0] > 0"
-     @page-changed.window="closeSse()">
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card border-left-primary shadow h-100 py-2">
+<div x-data="sse()"
+     x-init="streamForMySub(1, selectedData.name)">
+
+    <template x-if="metrics === null">
+        <p class="mt-4">Loading metrics...</p>
+    </template>
+
+    <template x-if="metrics !== null && (!metrics[4]?.length && !metrics[6]?.length)">
+        <p class="mt-4">No metrics available</p>
+    </template>
+
+    <div x-show="metrics && (metrics[4]?.length || metrics[6]?.length)" @page-changed.window="closeSse()">
+        <div class="row mt-3">
+            <div class="col-lg-3" x-show="metrics && metrics[4]?.length">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total API calls
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" x-text="metrics[0]"></div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Avg. Response Times
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" x-text="metrics[1]"></div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col-lg-3">
-            <div class="main-card mb-3 card">
-                <div class="card-body">
-                    <h5>Top 10</h5>
+                    <h5>Top 10 APIs</h5>
                     <table class="table table-bordered table-sm">
                         <thead>
                         <tr>
@@ -52,7 +22,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <template x-for="metric in metrics[2]" :key="metric.proxyPath">
+                        <template x-for="(metric, index) in metrics[4]" :key="index">
                             <tr>
                                 <td x-text="metric.proxyPath"></td>
                                 <td x-text="metric.value"></td>
@@ -62,74 +32,20 @@
                     </table>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-3">
-            <div class="main-card mb-3 card">
+            <div class="col-lg-3" x-show="metrics && metrics[6]?.length">
                 <div class="card-body">
-                    <h5>Avg. Response Times (sec)</h5>
+                    <h5>Top 10 Requests</h5>
                     <table class="table table-bordered table-sm">
                         <thead>
                         <tr>
-                            <th>Proxy path</th>
-                            <th>Avg. Time</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template x-for="metric in metrics[3]" :key="metric.proxyPath">
-                            <tr>
-                                <td x-text="metric.proxyPath"></td>
-                                <td x-text="metric.value"></td>
-                            </tr>
-                        </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-lg-5">
-            <div class="main-card mb-3 card">
-                <div class="card-body">
-                    <h5>Total Requests Per Subscription</h5>
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                        <tr>
-                            <th>Proxy path</th>
-                            <th>Subscription</th>
+                            <th>Request</th>
                             <th>Count</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <template x-for="metric in metrics[4]" :key="metric.proxyPath">
+                        <template x-for="(metric, index) in metrics[6]" :key="index">
                             <tr>
-                                <td x-text="metric.proxyPath"></td>
-                                <td x-text="metric.sub"></td>
-                                <td x-text="metric.value"></td>
-                            </tr>
-                        </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-5">
-            <div class="main-card mb-3 card">
-                <div class="card-body">
-                    <h5>API Status</h5>
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                        <tr>
-                            <th>Proxy path</th>
-                            <th>Status</th>
-                            <th>Count</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template x-for="metric in metrics[5]" :key="metric.proxyPath">
-                            <tr>
-                                <td x-text="metric.proxyPath"></td>
-                                <td x-text="metric.status" :class="metric.status >= 400 && 'bg-danger text-white'"></td>
+                                <td x-text="metric.httpPath"></td>
                                 <td x-text="metric.value"></td>
                             </tr>
                         </template>

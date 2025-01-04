@@ -104,7 +104,7 @@ function fetchData() {
 		    this.isLoading = true;
 		    const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
-			fetch(`${this.baseUrl}${url}`, options)
+			fetchInterceptor(`${this.baseUrl}${url}`, options)
 				.then(res => res.json())
 				.then(json => {
 					this.isLoading = false;
@@ -116,7 +116,7 @@ function fetchData() {
             this.isLoading = true;
             const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
-            fetch(`${this.baseUrl}${url}${searchVal}`, options)
+            fetchInterceptor(`${this.baseUrl}${url}${searchVal}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.isLoading = false;
@@ -132,7 +132,7 @@ function fetchData() {
                 const method = this.isInsert ? 'post' : 'put';
                 const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(body) };
 
-                fetch(`${this.baseUrl}${url}`, options)
+                fetchInterceptor(`${this.baseUrl}${url}`, options)
                     .then(res => {
                         if (!res.ok) {
                             return res.json().then(err => {
@@ -171,7 +171,7 @@ function fetchData() {
 
 		findBy(url) {
 			const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
-            fetch(`${this.baseUrl}${url}`, options)
+            fetchInterceptor(`${this.baseUrl}${url}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.errors = null;
@@ -196,7 +196,7 @@ function fetchData() {
 			if (this.selectedRows.length > 0) {
 				const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'post', body: JSON.stringify(this.selectedRows) };
 
-	            fetch(`${this.baseUrl}/subscriptions/${this.selectedData.subscriptionKey}/apis`, options)
+	            fetchInterceptor(`${this.baseUrl}/subscriptions/${this.selectedData.subscriptionKey}/apis`, options)
 	               .then(res => res.json())
 	               .then(data => {
 	                    this.selectedRows = [];
@@ -221,7 +221,7 @@ function fetchData() {
                 if (form.checkValidity()) {
                     const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: this.isModalInsert ? 'post' : 'put', body: JSON.stringify(body) };
 
-                    fetch(`${this.baseUrl}${url}`, options)
+                    fetchInterceptor(`${this.baseUrl}${url}`, options)
                         .then(res => {
                             if (!res.ok) {
                                 return res.json().then(err => {
@@ -260,14 +260,24 @@ function fetchData() {
 	}
 }
 
-function sse(queries) {
+function sse() {
 	return {
 	    source: null,
-		metrics: [],
+		metrics: null,
 		baseUrl: 'http://localhost:8080/apim/prometheus/metrics',
 
-		get(threshold) {
-			let counter = 1;
+		stream(threshold) {
+		    const promQueries = [
+		        '?query=sum by (proxyPath, status) (apim_metrics_seconds_count)',
+		        'query=sum by (proxyPath, subscription) (apim_metrics_seconds_count)',
+		        'query=avg by (proxyPath) (apim_metrics_seconds_max)',
+		        'query=sum by (proxyPath) (apim_metrics_seconds_count)',
+		        'query=sum(apim_metrics_seconds_max*apim_metrics_seconds_count)/sum(apim_metrics_seconds_count)',
+		        'query=sum(apim_metrics_seconds_count)'
+		    ];
+		    const queries = promQueries.join('&');
+
+			this.metrics = [];
 			this.source = new EventSource(this.baseUrl + queries, { withCredentials: true });
 		    this.source.onmessage = (event) => {
 		        const data = JSON.parse(event.data).data;
@@ -285,68 +295,101 @@ function sse(queries) {
 					const isTotalPerStatus = data.result[0].metric.hasOwnProperty('status');
 
 		            if (isAvgSet) {
-		                setAvgResponseTimes(data, this.metrics);
+		                this.metrics[3] = getAvgResponseTimes(data);
 		            } else if (isTotalPerSub) {
-		                setTotalsPerSub(data, this.metrics, threshold);
+		                this.metrics[4] = getTotalsPerSub(data, threshold);
 		            } else if (isTotalPerStatus) {
-		                setTotalPerStatus(data, this.metrics, threshold);
+		                this.metrics[5] = getTotalPerStatus(data, threshold);
 		            } else {
-		                setTotalCounts(data, this.metrics, threshold);
+		                this.metrics[2] = getTotalCounts(data, threshold);
 		            }
 		        }
 		    };
 
 		    this.source.onerror = (event) => {
 		        console.log('Error occured: ' + event);
-		        this.source.close();
+		        this.closeSse();
 		    };
 	    },
+
+        // need to do it like this, otherwise quotes in query param causes CORS errors
+	    streamForMySub(threshold, subName) {
+	        this.closeSse();
+	        const promQueries = [
+                `sum by (proxyPath) (apim_metrics_seconds_count{subscription="${subName}"})`,
+                `sum by (httpPath, subscription) (apim_metrics_seconds_count{subscription="${subName}"})`
+            ];
+	        let queryParam = new URLSearchParams({query: promQueries[0]});
+	        queryParam.append("query", promQueries[1]);
+
+			this.metrics = [];
+            this.source = new EventSource(`${this.baseUrl}?${queryParam.toString()}`, { withCredentials: true });
+            this.source.onmessage = (event) => {
+                const data = JSON.parse(event.data).data;
+                const isTotalPerSub = data.result[0].metric.hasOwnProperty('proxyPath');
+
+                if (isTotalPerSub) {
+                    this.metrics[4] = getTotalsPerSub(data, threshold);
+                } else {
+                    this.metrics[6] = getTotalRequestsPerSub(data);
+                }
+            };
+
+            this.source.onerror = (event) => {
+                console.log('Error occured: ' + event);
+                this.closeSse();
+            };
+        },
 
 	    closeSse() {
 	        if (this.source) {
 		        this.source.close();
+		        this.source = null;
+		        this.metrics = null;
 		        console.log('sse closed');
 	        }
 	    }
     }
 }
 
-function metricTemplate(data, metric, filter, mapper) {
+function metricTemplate(data, filter, mapper) {
     var result = data.result.filter(filter).map(mapper);
-    result.sort((a, b) => b.value - a.value).length = 10;
-    return result;
+    return result.sort((a, b) => b.value - a.value).slice(0, 10);
 }
 
-function setTotalCounts(data, metrics, threshold) {
-    metrics[2] = metricTemplate(
+function getTotalCounts(data, threshold) {
+    return metricTemplate(
                     data,
-                    metrics,
                     row => parseInt(row.value[1]) > threshold,
                     row => { return {proxyPath: row.metric.proxyPath, value: row.value[1]}; });
 }
 
-function setAvgResponseTimes(data, metrics) {
-	metrics[3] = metricTemplate(
+function getAvgResponseTimes(data) {
+	return metricTemplate(
                         data,
-                        metrics,
                         row => row.value[1] != '0',
                         row => { return {proxyPath: row.metric.proxyPath, value: parseFloat(row.value[1]).toFixed(4)}; });
 }
 
-function setTotalsPerSub(data, metrics, threshold) {
-	metrics[4] = metricTemplate(
+function getTotalsPerSub(data, threshold) {
+	return metricTemplate(
                         data,
-                        metrics,
                         row => parseInt(row.value[1]) > threshold,
                         row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; });
 }
 
-function setTotalPerStatus(data, metrics, threshold) {
-	metrics[5] = metricTemplate(
-                            data,
-                            metrics,
-                            row => parseInt(row.value[1]) > threshold,
-                            row => { return {proxyPath: row.metric.proxyPath, status: row.metric.status, value: row.value[1]}; });
+function getTotalPerStatus(data, threshold) {
+	return metricTemplate(
+                        data,
+                        row => parseInt(row.value[1]) > threshold,
+                        row => { return {proxyPath: row.metric.proxyPath, status: row.metric.status, value: row.value[1]}; });
+}
+
+function getTotalRequestsPerSub(data) {
+	return metricTemplate(
+                        data,
+                        row => true,
+                        row => { return {httpPath: row.metric.httpPath, value: row.value[1]}; });
 }
 
 function authBasic() {
@@ -376,4 +419,32 @@ function authBasic() {
                 .catch((err) => console.log(err));
 		}
 	}
+}
+
+
+async function fetchInterceptor(url, options = {}) {
+    // First attempt
+    const response = await fetch(url, options);
+
+    if (response.status !== 401) {
+        return response;
+    }
+
+    await refreshAccessToken();
+	console.log("Access Token refreshed");
+
+    // Retry the original request with new token
+    return fetch(url, options);
+}
+
+async function refreshAccessToken() {
+    const response = await fetch('http://localhost:8080/apim/auth/refresh', {
+        method: 'post',
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        sessionStorage.clear();
+        console.log('Failed to refresh token');
+    }
 }

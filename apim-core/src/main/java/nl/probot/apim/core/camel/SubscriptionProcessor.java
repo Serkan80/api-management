@@ -20,6 +20,7 @@ import static org.apache.camel.Exchange.HTTP_URI;
 @Singleton
 public class SubscriptionProcessor implements Processor {
 
+    public static final String PROXY_PATH = "proxyPath";
     public static final String SUBSCRIPTION_KEY = "subscription-key";
     public static final String SUBSCRIPTION = "subscription";
     public static final String THROTTLING_ENABLED = "throttling_enabled";
@@ -40,6 +41,7 @@ public class SubscriptionProcessor implements Processor {
         checkApiCredentials(exchange, subscription, api);
         checkThrottling(exchange, api);
         exchange.setProperty(SUBSCRIPTION, subscription);
+        exchange.setProperty(PROXY_PATH, api.proxyPath);
     }
 
     private static void checkApiCredentials(Exchange exchange, SubscriptionEntity subscription, ApiEntity api) {
