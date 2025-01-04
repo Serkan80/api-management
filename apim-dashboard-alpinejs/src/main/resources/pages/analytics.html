@@ -9,7 +9,7 @@
         <p class="mt-4">No metrics available</p>
     </template>
 
-    <div px-show="metrics !== null && Object.keys(metrics).length > 0" @page-changed.window="closeSse()">
+    <div x-show="metrics !== null && Object.keys(metrics).length > 0" @page-changed.window="closeSse()">
         <div class="row mt-3">
             <div class="col-md-3">
                 <div class="card border-left-primary shadow h-100 py-2">

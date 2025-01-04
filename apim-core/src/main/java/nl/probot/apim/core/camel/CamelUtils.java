@@ -167,7 +167,7 @@ public final class CamelUtils {
             timer.stop(registry.timer(
                     "apim_metrics",
                     "status", requireNonBlankElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
-                    "proxyPath", exchange.getProperty("proxyPath", String.class),
+                    "proxyPath", requireNonBlankElse(exchange.getProperty("proxyPath", String.class), "proxyPath not available"),
                     "httpPath", exchange.getProperty("httpPath", String.class),
                     "traceId", requireNonBlankElse(exchange.getIn().getHeader(TRACE_ID, String.class), ""),
                     "subscription", subName));
