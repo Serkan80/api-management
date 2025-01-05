@@ -1,5 +1,6 @@
 function spa() {
 	return {
+	    year: new Date().getFullYear(),
         currentRoute: '/',
         currentPage: '',
         routes: {
