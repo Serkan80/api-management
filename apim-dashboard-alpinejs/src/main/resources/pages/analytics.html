@@ -1,5 +1,5 @@
 <div x-data="sse()"
-     x-init="stream(1)">
+     x-init="startStream()">
 
     <template x-if="metrics === null">
         <p class="mt-4">Loading metrics...</p>

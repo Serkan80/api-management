@@ -1,5 +1,5 @@
 <div x-data="sse()"
-     x-init="streamForMySub(1, selectedData.name)">
+     x-init="startStreamForMySub(selectedData.name)">
 
     <template x-if="metrics === null">
         <p class="mt-4">Loading metrics...</p>
@@ -9,7 +9,7 @@
         <p class="mt-4">No metrics available</p>
     </template>
 
-    <div x-show="metrics && (metrics[4]?.length || metrics[6]?.length)" @page-changed.window="closeSse()">
+    <div x-show="metrics && (metrics[4]?.length || metrics[6]?.length || metrics[7]?.length)" @page-changed.window="closeSse()">
         <div class="row mt-3">
             <div class="col-lg-3" x-show="metrics && metrics[4]?.length">
                 <div class="card-body">
@@ -46,6 +46,27 @@
                         <template x-for="(metric, index) in metrics[6]" :key="index">
                             <tr>
                                 <td x-text="metric.httpPath"></td>
+                                <td x-text="metric.value"></td>
+                            </tr>
+                        </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-3" x-show="metrics && metrics[7]?.length">
+                <div class="card-body">
+                    <h5>Avg. Response Times</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                        <tr>
+                            <th>Proxy path</th>
+                            <th>Time (sec)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <template x-for="(metric, index) in metrics[7]" :key="index">
+                            <tr>
+                                <td x-text="metric.proxyPath"></td>
                                 <td x-text="metric.value"></td>
                             </tr>
                         </template>

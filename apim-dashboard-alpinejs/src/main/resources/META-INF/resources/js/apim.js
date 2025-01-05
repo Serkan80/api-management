@@ -266,7 +266,7 @@ function sse() {
 		metrics: null,
 		baseUrl: 'http://localhost:8080/apim/prometheus/metrics',
 
-		stream(threshold) {
+		startStream() {
 		    const promQueries = [
 		        '?query=sum by (proxyPath, status) (apim_metrics_seconds_count)',
 		        'query=sum by (proxyPath, subscription) (apim_metrics_seconds_count)',
@@ -297,11 +297,11 @@ function sse() {
 		            if (isAvgSet) {
 		                this.metrics[3] = getAvgResponseTimes(data);
 		            } else if (isTotalPerSub) {
-		                this.metrics[4] = getTotalsPerSub(data, threshold);
+		                this.metrics[4] = getTotalsPerSub(data);
 		            } else if (isTotalPerStatus) {
-		                this.metrics[5] = getTotalPerStatus(data, threshold);
+		                this.metrics[5] = getTotalPerStatus(data);
 		            } else {
-		                this.metrics[2] = getTotalCounts(data, threshold);
+		                this.metrics[2] = getTotalCounts(data);
 		            }
 		        }
 		    };
@@ -313,23 +313,30 @@ function sse() {
 	    },
 
         // need to do it like this, otherwise quotes in query param causes CORS errors
-	    streamForMySub(threshold, subName) {
+	    startStreamForMySub(subName) {
 	        this.closeSse();
 	        const promQueries = [
-                `sum by (proxyPath) (apim_metrics_seconds_count{subscription="${subName}"})`,
-                `sum by (httpPath, subscription) (apim_metrics_seconds_count{subscription="${subName}"})`
-            ];
-	        let queryParam = new URLSearchParams({query: promQueries[0]});
-	        queryParam.append("query", promQueries[1]);
+	            `sum by (proxyPath) (apim_metrics_seconds_count{subscription="${subName}"})`,
+	            `sum by (httpPath) (apim_metrics_seconds_count{subscription="${subName}"})`,
+	            `avg by (proxyPath, subscription) (apim_metrics_seconds_max{subscription="${subName}"})`
+	        ];
 
-			this.metrics = [];
-            this.source = new EventSource(`${this.baseUrl}?${queryParam.toString()}`, { withCredentials: true });
+	        const queryParams = promQueries.reduce((params, query) => {
+	            params.append('query', query);
+	            return params;
+	        }, new URLSearchParams());
+
+	        this.metrics = [];
+	        this.source = new EventSource(`${this.baseUrl}?${queryParams.toString()}`, { withCredentials: true });
             this.source.onmessage = (event) => {
                 const data = JSON.parse(event.data).data;
-                const isTotalPerSub = data.result[0].metric.hasOwnProperty('proxyPath');
+                const isAvgResponseTime = data.result[0].metric.hasOwnProperty('subscription');
+                const isTotalPerSub = data.result[0].metric.hasOwnProperty('proxyPath') && !isAvgResponseTime;
 
                 if (isTotalPerSub) {
-                    this.metrics[4] = getTotalsPerSub(data, threshold);
+                    this.metrics[4] = getTotalsPerSub(data);
+                } else if (isAvgResponseTime) {
+                    this.metrics[7] = getAvgResponseTimes(data);
                 } else {
                     this.metrics[6] = getTotalRequestsPerSub(data);
                 }
@@ -357,10 +364,10 @@ function metricTemplate(data, filter, mapper) {
     return result.sort((a, b) => b.value - a.value).slice(0, 10);
 }
 
-function getTotalCounts(data, threshold) {
+function getTotalCounts(data) {
     return metricTemplate(
                     data,
-                    row => parseInt(row.value[1]) > threshold,
+                    row => true,
                     row => { return {proxyPath: row.metric.proxyPath, value: row.value[1]}; });
 }
 
@@ -371,17 +378,17 @@ function getAvgResponseTimes(data) {
                         row => { return {proxyPath: row.metric.proxyPath, value: parseFloat(row.value[1]).toFixed(4)}; });
 }
 
-function getTotalsPerSub(data, threshold) {
+function getTotalsPerSub(data) {
 	return metricTemplate(
                         data,
-                        row => parseInt(row.value[1]) > threshold,
+                        row => true,
                         row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; });
 }
 
-function getTotalPerStatus(data, threshold) {
+function getTotalPerStatus(data) {
 	return metricTemplate(
                         data,
-                        row => parseInt(row.value[1]) > threshold,
+                        row => true,
                         row => { return {proxyPath: row.metric.proxyPath, status: row.metric.status, value: row.value[1]}; });
 }
 
