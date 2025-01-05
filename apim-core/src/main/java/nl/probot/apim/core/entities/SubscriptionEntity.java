@@ -20,6 +20,7 @@ import org.hibernate.annotations.NaturalId;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +29,7 @@ import java.util.Set;
 
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
+import static java.util.stream.Collectors.joining;
 import static nl.probot.apim.commons.crypto.CryptoUtil.createRandomKey;
 import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
@@ -81,6 +83,23 @@ public class SubscriptionEntity extends PanacheEntity {
         return this.apiCredentials.stream()
                 .filter(credential -> credential.id.api.id.equals(apiId))
                 .findFirst();
+    }
+
+    public static boolean accountNotExists(String[] users) {
+        return accountNotExists(null, users);
+    }
+
+    public static boolean accountNotExists(String subscriptionKey, String[] users) {
+        var arrays = Arrays.stream(users)
+                .map("'%s'"::formatted)
+                .collect(joining(",", "array(", ")"));
+
+        if (subscriptionKey != null) {
+            var query = "subscriptionKey <> ?1 and array_includes(accounts, %s)".formatted(arrays);
+            return count(query, subscriptionKey) == 0;
+        }
+
+        return count("array_includes(accounts, %s)".formatted(arrays)) == 0;
     }
 
     public static SubscriptionEntity getByNaturalId(String subscriptionKey) {

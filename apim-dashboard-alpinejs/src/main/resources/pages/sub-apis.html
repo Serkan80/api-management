@@ -68,54 +68,57 @@
 <div id="apis-modal" class="modal fade show" tabindex="-1" role="dialog" aria-modal="true" x-init="get('/apis')">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" x-show="data && data.length > 0">
                 <h5 class="modal-title">Select APIs</h5>
                 <button id="modalClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="row justify-content-between">
-                    <div class="col-md-4 mb-3">
-                        <input
-                                type="search"
-                                class="form-control form-control-sm"
-                                placeholder="Search..."
-                                @keyup.debounce.500ms="search('/apis/search?q=', $event.target.value)">
+                <p x-show="data && data.length == 0">No APIs available</p>
+                <div x-show="data && data.length > 0">
+                    <div class="row justify-content-between">
+                        <div class="col-md-4 mb-3">
+                            <input
+                                    type="search"
+                                    class="form-control form-control-sm"
+                                    placeholder="Search..."
+                                    @keyup.debounce.500ms="search('/apis/search?q=', $event.target.value)">
+                        </div>
                     </div>
-                </div>
-                <div class="row table-responsive scroll-area-lg">
-                    <table class="table table-bordered table-sm scrollbar-container ps">
-                        <thead>
-                        <tr>
-                            <th>Select</th>
-                            <th>Proxy path</th>
-                            <th>Proxy url</th>
-                            <th>Owner</th>
-                            <th>Authentication Type</th>
-                            <th>Description</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template x-for="api in data" :key="api.id">
-                            <tr x-show="api.enabled">
-                                <td>
-                                    <input type="checkbox" @click="toggleRow(api.id)">
-                                </td>
-                                <td x-text="api.proxyPath"></td>
-                                <td x-text="api.proxyUrl"></td>
-                                <td x-text="api.owner"></td>
-                                <td x-text="api.authenticationType"></td>
-                                <td x-text="api.description"></td>
+                    <div class="row table-responsive scroll-area-lg">
+                        <table class="table table-bordered table-sm scrollbar-container ps">
+                            <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Proxy path</th>
+                                <th>Proxy url</th>
+                                <th>Owner</th>
+                                <th>Authentication Type</th>
+                                <th>Description</th>
                             </tr>
-                        </template>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            <template x-for="api in data" :key="api.id">
+                                <tr x-show="api.enabled">
+                                    <td>
+                                        <input type="checkbox" @click="toggleRow(api.id)">
+                                    </td>
+                                    <td x-text="api.proxyPath"></td>
+                                    <td x-text="api.proxyUrl"></td>
+                                    <td x-text="api.owner"></td>
+                                    <td x-text="api.authenticationType"></td>
+                                    <td x-text="api.description"></td>
+                                </tr>
+                            </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" @click="addApis">Add</button>
+                <button type="button" class="btn btn-primary" @click="addApis" x-show="data && data.length > 0">Add</button>
             </div>
         </div>
     </div>

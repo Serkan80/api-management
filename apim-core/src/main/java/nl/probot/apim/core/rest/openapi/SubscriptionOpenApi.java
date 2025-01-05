@@ -44,17 +44,21 @@ public interface SubscriptionOpenApi {
 
     @POST
     @Operation(summary = "Adds a new Subscription and returns its key via the Location Header")
-    @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri")))
-    RestResponse<Void> save(@Valid SubscriptionPOST sub, @Context UriInfo uriInfo);
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri"))),
+            @APIResponse(name = "Not updated", responseCode = "400", description = "When the subscription contains existing accounts")
+    })
+    RestResponse<Map<String, String>> save(@Valid SubscriptionPOST sub, @Context UriInfo uriInfo);
 
     @PUT
     @Path("/{key}")
     @Operation(summary = "Updates the given Subscription")
     @APIResponses({
             @APIResponse(name = "OK", responseCode = "200"),
-            @APIResponse(name = "Not updated", responseCode = "204", description = "When the subscription is not updated")
+            @APIResponse(name = "Not updated", responseCode = "204", description = "When the subscription is not updated"),
+            @APIResponse(name = "Not updated", responseCode = "400", description = "When the subscription contains existing accounts")
     })
-    RestResponse<Void> update(@RestPath String key, @Valid SubscriptionPUT sub);
+    RestResponse<Map<String, String>> update(@RestPath String key, @Valid SubscriptionPUT sub);
 
     @GET
     @Operation(summary = "Returns all Subscriptions without their Api's")

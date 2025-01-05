@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.jboss.resteasy.reactive.RestResponse.Status.BAD_REQUEST;
 
 @ApplicationScoped
 public class SubscriptionController implements SubscriptionOpenApi {
@@ -44,24 +45,34 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
-    public RestResponse<Void> save(SubscriptionPOST sub, UriInfo uriInfo) {
+    public RestResponse<Map<String, String>> save(SubscriptionPOST sub, UriInfo uriInfo) {
         var entity = SubscriptionEntity.toEntity(sub);
-        entity.persist();
-        Log.infof("Subscription(name=%s, endDate=%s) created", entity.name, Objects.requireNonNullElse(entity.endDate, "unlimited"));
+        if (SubscriptionEntity.accountNotExists(entity.accounts)) {
+            entity.persist();
+            Log.infof("Subscription(name=%s, endDate=%s) created", entity.name, Objects.requireNonNullElse(entity.endDate, "unlimited"));
 
-        return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
+            return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
+        }
+
+        return RestResponse.status(BAD_REQUEST, Map.of("message", "Subscription contains account(s) that exists in another subscription"));
     }
 
     @Override
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
-    public RestResponse<Void> update(String key, SubscriptionPUT sub) {
+    public RestResponse<Map<String, String>> update(String key, SubscriptionPUT sub) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
                 new StaticStatement("enabled", sub.enabled()),
                 new StaticStatement("endDate", sub.endDate()),
                 new StaticStatement("accounts", sub.accounts())
         ).buildUpdateStatement(new WhereStatement("subscriptionKey = :key", key));
+
+        if (sub.accounts() != null && sub.accounts().length > 0) {
+            if (!SubscriptionEntity.accountNotExists(key, sub.accounts())) {
+                return RestResponse.status(BAD_REQUEST, Map.of("message", "Subscription contains account(s) that exists in another subscription"));
+            }
+        }
 
         var count = SubscriptionEntity.update(query, helper.values());
         if (count > 0) {

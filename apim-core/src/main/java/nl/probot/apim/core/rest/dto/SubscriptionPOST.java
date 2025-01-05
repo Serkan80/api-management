@@ -1,5 +1,6 @@
 package nl.probot.apim.core.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Size;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 public record SubscriptionPOST(
@@ -26,9 +28,10 @@ public record SubscriptionPOST(
         @Size(max = 20)
         @JsonDeserialize(using = StringToArrayDeserializer.class)
         String[] accounts) {
-        
-    @AssertTrue(message = "Accounts must contain unique values")
+
+    @JsonIgnore
+    @AssertTrue(message = "User Accounts must contain unique values")
     public boolean isAccountsUnique() {
-        return Set.of(this.accounts).size() == this.accounts.length;
+        return Set.copyOf(List.of(this.accounts)).size() == this.accounts.length;
     }
 }
