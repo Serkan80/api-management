@@ -18,7 +18,6 @@ import jakarta.ws.rs.core.NewCookie.SameSite;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claims;
-import org.jboss.resteasy.reactive.RestCookie;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -96,7 +95,7 @@ public class AuthenticationController implements AuthenticationOpenApi {
 
     @Override
     @PermitAll
-    public Response refreshToken(@RestCookie("refresh_token") String refreshToken) {
+    public Response refreshToken(String refreshToken) {
         try {
             var rt = this.jwtParser.verify(refreshToken, this.keystore.getCertificate("rt").getPublicKey());
             var username = (String) rt.getClaim(Claims.upn);
@@ -104,7 +103,7 @@ public class AuthenticationController implements AuthenticationOpenApi {
 
             return Response
                     .ok(createUserInfo(username, roles))
-                    .cookie(cookie("access_token", generateAccessToken()), cookie("refresh_token", generateRefreshToken(username, roles)))
+                    .cookie(cookie("access_token", generateAccessToken(username, roles)), cookie("refresh_token", generateRefreshToken(username, roles)))
                     .build();
         } catch (ParseException | GeneralSecurityException e) {
             throw new WebApplicationException("Invalid or expired refreshToken", e, 401);
@@ -133,6 +132,13 @@ public class AuthenticationController implements AuthenticationOpenApi {
                 .path("/")
                 .value(value)
                 .build();
+    }
+
+    private String generateAccessToken(String username, Set<String> roles) {
+        return Jwt.upn(username)
+                .subject(username)
+                .groups(roles)
+                .sign();
     }
 
     /*

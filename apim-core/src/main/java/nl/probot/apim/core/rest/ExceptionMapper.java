@@ -40,7 +40,7 @@ public class ExceptionMapper {
     @ServerExceptionMapper
     public RestResponse<Map<String, String>> toResponse(AuthenticationFailedException e) {
         return RestResponse.status(UNAUTHORIZED, Map.of(
-                "message", "Wrong credentials provided",
+                "message", "Authentication failed",
                 "exception", e.getClass().getName()
         ));
     }

@@ -396,6 +396,7 @@ function authBasic() {
 	return {
 		username: null,
 		password: null,
+		errors: null,
 
 		login() {
 			const options = {
@@ -408,8 +409,12 @@ function authBasic() {
                 .then(res => {
                     if (res.ok)
                       return res.json();
-                    else
-                      throw new Error("Authentication failed: " + res);
+                    else {
+                        return res.json().then(err => {
+                             this.errors = "Username and/or password is incorrect";
+                             throw new Error("response contains error");
+                        });
+                    }
                 })
                 .then(data => {
                     sessionStorage.setItem("username", data.username);
@@ -420,7 +425,6 @@ function authBasic() {
 		}
 	}
 }
-
 
 async function fetchInterceptor(url, options = {}) {
     // First attempt
