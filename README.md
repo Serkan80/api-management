@@ -139,6 +139,14 @@ Note: in the examples below, I've used `apim-auth-jwt` together with `apim-auth-
 Start the app in development mode:
 > mvn clean quarkus:dev
 
+### Using the dashboard
+
+If `apim-dashboard-alpinejs` is included in `apim-application`, then you can open the application via:
+
+> http://localhost:8080/pages/index.html
+
+### Using the CLI
+
 Create a Subscription first and add some Apis. After that, the APIM can be used to access the Apis.  
 Note that without a Subscription, you can't access the APIM. See it as your account for APIM.
 
@@ -196,5 +204,6 @@ Save the access token as a variable:
 
 You can access the following urls when the application runs in development mode:
 
+- [APIM Dashboard](http://localhost:8080/pages/index.html)
 - [Swagger UI](http://localhost:8080/q/swagger-ui)
 - [Quarkus Development Dashboard](http://localhost:8080/q/dev-ui)
