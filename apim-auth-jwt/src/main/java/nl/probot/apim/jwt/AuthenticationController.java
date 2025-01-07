@@ -56,8 +56,11 @@ public class AuthenticationController implements AuthenticationOpenApi {
     @ConfigProperty(name = "apim.cookie.domain.url", defaultValue = "localhost")
     String domainUrl;
 
-    @ConfigProperty(name = "apim.cookie.site", defaultValue = "NONE")
+    @ConfigProperty(name = "apim.cookie.site", defaultValue = "STRICT")
     String sameSite;
+
+    @ConfigProperty(name = "apim.roles.manager")
+    String managerRole;
 
     private KeyStore keystore;
 
@@ -166,6 +169,8 @@ public class AuthenticationController implements AuthenticationOpenApi {
     private Map<String, Object> createUserInfo(String username, Set<String> roles) {
         return Map.of(
                 "username", username,
-                "roles", roles);
+                "roles", roles,
+                "managerRole", this.managerRole
+        );
     }
 }

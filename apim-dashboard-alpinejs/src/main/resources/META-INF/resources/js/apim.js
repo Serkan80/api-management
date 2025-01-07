@@ -5,7 +5,7 @@ function spa() {
         currentPage: '',
         routes: {
             '/': 'index.html',
-            '/login': '../login.html',
+            '/login': 'login.html',
             '/my-subscription': 'my-subscription.html',
             '/subscription': 'subscription.html',
             '/subscriptions': 'subscriptions.html',
@@ -14,10 +14,12 @@ function spa() {
         },
         username: null,
         roles: [],
+        isOidc: true,
+        isManager: false,
 
         // Initialize the SPA
-        init() {
-            const loggedIn = this.isLoggedIn();
+        async init() {
+            const loggedIn = await this.isLoggedIn();
             if (!loggedIn) {
                 this.determineAuthentication();
             } else {
@@ -29,7 +31,6 @@ function spa() {
 
         // Load the route based on the hash
         loadRoute() {
-            console.log("loading route, hash changed: " + window.location.hash);
             var hashUrl = window.location.hash.slice(1);
             var start = hashUrl.indexOf('?');
             if (start > -1) {
@@ -50,31 +51,32 @@ function spa() {
             if (page) {
                 this.currentPage = fetchPage(page);
             } else {
-                this.currentPage = fetchPage('../404.html');
+                this.currentPage = fetchPage('404.html');
             }
         },
 
         determineAuthentication() {
-            const options = { headers: {'Content-Type': 'application/json'}};
-            fetch("http://localhost:8080/apim/core/apis", options)
-                .then(res => {
-                    if (res.status >= 400) {
-                        window.location.href = '../login.html';
-                    }
-                    // else a redirect occurs to the OIDC server
-                })
-                .catch(err => {
-                    window.location.href = '../login.html';
-                });
+			window.location.href = this.isOidc ? '/apim/oidc/redirect' : 'login.html';
         },
 
-        isLoggedIn() {
+        async isLoggedIn() {
+            if (this.isOidc) {
+	            const res = await fetch('/apim/oidc/userinfo', { headers: {'Content-Type': 'application/json'}, mode: 'no-cors', redirect: 'follow', credentials: 'include' });
+	            if (res.ok) {
+	                const data = await res.json();
+	                sessionStorage.setItem('username', data.username);
+	                sessionStorage.setItem('roles', data.roles);
+	                this.isManager = data.roles.includes(data.managerRole);
+	            }
+	            return res.ok;
+            }
+			this.isManager = sessionStorage.getItem('isManager');
             return sessionStorage.getItem('username') !== null;
         },
 
         logout() {
             sessionStorage.clear();
-            this.init();
+            window.location.href = '/logout';
         }
     };
 }
@@ -82,7 +84,7 @@ function spa() {
 async function fetchPage(page) {
     let res = await fetch(page);
     if (!res.ok) {
-        res = await fetch('../404.html');
+        res = await fetch('404.html');
         return await res.text();
     }
     return await res.text();
@@ -99,7 +101,7 @@ function fetchData() {
 		isInsert: true,
 		isModalInsert: true,
 		errors: null,
-		baseUrl: 'http://localhost:8080/apim/core',
+		baseUrl: '/apim/core',
 
 		get(url) {
 		    this.isLoading = true;
@@ -265,7 +267,7 @@ function sse() {
 	return {
 	    source: null,
 		metrics: null,
-		baseUrl: 'http://localhost:8080/apim/prometheus/metrics',
+		baseUrl: '/apim/prometheus/metrics',
 
 		startStream() {
 		    const promQueries = [
@@ -413,20 +415,24 @@ function authBasic() {
 				credentials: 'include'
 			};
 
-            fetch('http://localhost:8080/apim/auth/token/web', options)
+            fetch('/apim/auth/token/web', options)
                 .then(res => {
-                    if (res.ok)
-                      return res.json();
+                    this.password = null;
+
+                    if (res.ok) {
+                        return res.json();
+                    }
                     else {
                         return res.json().then(err => {
                              this.errors = "Username and/or password is incorrect";
-                             throw new Error("response contains error");
+                             throw new Error("Login failed");
                         });
                     }
                 })
                 .then(data => {
                     sessionStorage.setItem("username", data.username);
                     sessionStorage.setItem("roles", data.roles);
+                    sessionStorage.setItem("isManager", data.roles.includes(data.managerRole));
                     window.location.href = "pages/index.html";
                 })
                 .catch((err) => console.log(err));
@@ -442,15 +448,17 @@ async function fetchInterceptor(url, options = {}) {
         return response;
     }
 
-    await refreshAccessToken();
-	console.log("Access Token refreshed");
+	if (!this.isOidc) {
+	    await refreshAccessToken();
+		console.log("Access Token refreshed");
 
-    // Retry the original request with new token
-    return fetch(url, options);
+	    // Retry the original request with new token
+	    return fetch(url, options);
+    }
 }
 
 async function refreshAccessToken() {
-    const response = await fetch('http://localhost:8080/apim/auth/refresh', {
+    const response = await fetch('/apim/auth/refresh', {
         method: 'post',
         credentials: 'include'
     });

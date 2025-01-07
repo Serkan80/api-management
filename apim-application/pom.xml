@@ -23,21 +23,25 @@
             <groupId>nl.probot.apimanagement</groupId>
             <artifactId>apim-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>nl.probot</groupId>
+            <artifactId>apim-auth-oidc</artifactId>
+        </dependency>
 <!--        <dependency>-->
-<!--            <groupId>nl.probot</groupId>-->
-<!--            <artifactId>apim-auth-oidc</artifactId>-->
+<!--            <groupId>nl.probot.apimanagement</groupId>-->
+<!--            <artifactId>apim-auth-file-properties</artifactId>-->
 <!--        </dependency>-->
-        <dependency>
-            <groupId>nl.probot.apimanagement</groupId>
-            <artifactId>apim-auth-file-properties</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>nl.probot.apimanagement</groupId>
-            <artifactId>apim-auth-jwt</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>nl.probot.apimanagement</groupId>-->
+<!--            <artifactId>apim-auth-jwt</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>nl.probot</groupId>
             <artifactId>apim-prometheus-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>nl.probot</groupId>
+            <artifactId>apim-dashboard-alpinejs</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
