@@ -1,6 +1,7 @@
 package nl.probot.apim.core.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.panache.common.Sort;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
@@ -154,9 +155,10 @@ public class SubscriptionEntity extends PanacheEntity {
                 new DynamicStatement("array_any(accounts, :query)", searchQuery)
         ).buildWhereStatement(OR);
 
-        return find(query, helper.values())
+        return find(query, Sort.descending("id"), helper.values())
                 .withHint(HINT_READONLY, true)
                 .project(Subscription.class)
+                .page(0, 50)
                 .list();
     }
 

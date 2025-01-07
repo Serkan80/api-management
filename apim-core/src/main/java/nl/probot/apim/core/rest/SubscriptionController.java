@@ -2,6 +2,7 @@ package nl.probot.apim.core.rest;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.quarkus.logging.Log;
+import io.quarkus.panache.common.Sort;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -86,9 +87,10 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @RolesAllowed("${apim.roles.manager}")
     public List<Subscription> findAll() {
-        return SubscriptionEntity.findAll()
+        return SubscriptionEntity.findAll(Sort.descending("id"))
                 .withHint(HINT_READONLY, true)
                 .project(Subscription.class)
+                .page(0, 50)
                 .list();
     }
 
