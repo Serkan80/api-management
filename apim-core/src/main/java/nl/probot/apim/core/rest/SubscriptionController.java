@@ -10,9 +10,6 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.UriInfo;
-import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
-import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
-import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.ApiEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
@@ -47,7 +44,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
     public RestResponse<Map<String, String>> save(SubscriptionPOST sub, UriInfo uriInfo) {
-        var entity = SubscriptionEntity.toEntity(sub);
+        var entity = sub.toEntity();
         if (SubscriptionEntity.accountNotExists(entity.accounts)) {
             entity.persist();
             Log.infof("Subscription(name=%s, endDate=%s) created", entity.name, Objects.requireNonNullElse(entity.endDate, "unlimited"));
@@ -61,21 +58,8 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
-    public RestResponse<Map<String, String>> update(String key, SubscriptionPUT sub) {
-        var helper = new PanacheDyanmicQueryHelper();
-        var query = helper.statements(
-                new StaticStatement("enabled", sub.enabled()),
-                new StaticStatement("endDate", sub.endDate()),
-                new StaticStatement("accounts", sub.accounts())
-        ).buildUpdateStatement(new WhereStatement("subscriptionKey = :key", key));
-
-        if (sub.accounts() != null && sub.accounts().length > 0) {
-            if (!SubscriptionEntity.accountNotExists(key, sub.accounts())) {
-                return RestResponse.status(BAD_REQUEST, Map.of("message", "Subscription contains account(s) that exists in another subscription"));
-            }
-        }
-
-        var count = SubscriptionEntity.update(query, helper.values());
+    public RestResponse<Void> update(String key, SubscriptionPUT sub) {
+        var count = SubscriptionEntity.updateConditionally(key, sub);
         if (count > 0) {
             Log.infof("Subscription(key=%s*****, %s)", key.substring(0, 3), sub);
             return RestResponse.ok();
@@ -159,23 +143,9 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @RolesAllowed({"${apim.roles.manager}"})
     public RestResponse<Void> updateCredential(ApiCredentialPUT credential) {
         var sub = SubscriptionEntity.getByNaturalId(credential.subscriptionKey());
-        var subId = sub.id;
         var apiId = credential.apiId();
 
-        var helper = new PanacheDyanmicQueryHelper();
-        var query = helper.statements(
-                new StaticStatement("username", credential.username()),
-                new StaticStatement("password", credential.password()),
-                new StaticStatement("clientId", credential.clientId()),
-                new StaticStatement("clientSecret", credential.clientSecret()),
-                new StaticStatement("clientUrl", credential.clientUrl()),
-                new StaticStatement("clientScope", credential.clientScope()),
-                new StaticStatement("apiKey", credential.apiKey()),
-                new StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
-                new StaticStatement("apiKeyLocation", credential.apiKeyLocation())
-        ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
-
-        var count = ApiCredentialEntity.update(query, helper.values());
+        var count = SubscriptionEntity.updateCredentialConditionally(sub.id, apiId, credential);
         if (count > 0) {
             this.cacheManager.invalidate(credential.subscriptionKey());
             Log.infof("ApiCredential(apiId=%d, sub='%s') updated with %d record(s)", apiId, sub.name, count);

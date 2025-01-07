@@ -58,7 +58,7 @@ public interface SubscriptionOpenApi {
             @APIResponse(name = "Not updated", responseCode = "204", description = "When the subscription is not updated"),
             @APIResponse(name = "Not updated", responseCode = "400", description = "When the subscription contains existing accounts")
     })
-    RestResponse<Map<String, String>> update(@RestPath String key, @Valid SubscriptionPUT sub);
+    RestResponse<Void> update(@RestPath String key, @Valid SubscriptionPUT sub);
 
     @GET
     @Operation(summary = "Returns all Subscriptions without their Api's")

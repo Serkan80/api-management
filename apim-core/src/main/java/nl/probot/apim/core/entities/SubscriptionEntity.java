@@ -10,17 +10,18 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.WebApplicationException;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
+import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
-import nl.probot.apim.core.rest.dto.SubscriptionPOST;
+import nl.probot.apim.core.rest.dto.SubscriptionPUT;
 import org.hibernate.Session;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.NaturalId;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,6 @@ import java.util.Set;
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
 import static java.util.stream.Collectors.joining;
-import static nl.probot.apim.commons.crypto.CryptoUtil.createRandomKey;
 import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
@@ -162,15 +162,38 @@ public class SubscriptionEntity extends PanacheEntity {
                 .list();
     }
 
-    public static SubscriptionEntity toEntity(SubscriptionPOST sub) {
-        var result = new SubscriptionEntity();
-        result.name = sub.name();
-        result.enabled = true;
-        result.subscriptionKey = createRandomKey(32);
-        result.createdAt = OffsetDateTime.now(ZoneId.of("Europe/Amsterdam"));
-        result.endDate = sub.endDate();
-        result.accounts = sub.accounts();
-        return result;
+    public static int updateCredentialConditionally(Long subId, Long apiId, ApiCredentialPUT credential) {
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new PanacheDyanmicQueryHelper.StaticStatement("username", credential.username()),
+                new PanacheDyanmicQueryHelper.StaticStatement("password", credential.password()),
+                new PanacheDyanmicQueryHelper.StaticStatement("clientId", credential.clientId()),
+                new PanacheDyanmicQueryHelper.StaticStatement("clientSecret", credential.clientSecret()),
+                new PanacheDyanmicQueryHelper.StaticStatement("clientUrl", credential.clientUrl()),
+                new PanacheDyanmicQueryHelper.StaticStatement("clientScope", credential.clientScope()),
+                new PanacheDyanmicQueryHelper.StaticStatement("apiKey", credential.apiKey()),
+                new PanacheDyanmicQueryHelper.StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
+                new PanacheDyanmicQueryHelper.StaticStatement("apiKeyLocation", credential.apiKeyLocation())
+        ).buildUpdateStatement(new PanacheDyanmicQueryHelper.WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
+
+        return ApiCredentialEntity.update(query, helper.values());
+    }
+
+    public static int updateConditionally(String key, SubscriptionPUT sub) {
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new PanacheDyanmicQueryHelper.StaticStatement("enabled", sub.enabled()),
+                new PanacheDyanmicQueryHelper.StaticStatement("endDate", sub.endDate()),
+                new PanacheDyanmicQueryHelper.StaticStatement("accounts", sub.accounts())
+        ).buildUpdateStatement(new PanacheDyanmicQueryHelper.WhereStatement("subscriptionKey = :key", key));
+
+        if (sub.accounts() != null && sub.accounts().length > 0) {
+            if (!SubscriptionEntity.accountNotExists(key, sub.accounts())) {
+                throw new WebApplicationException("Subscription contains account(s) that exists in another subscription", 400);
+            }
+        }
+
+        return SubscriptionEntity.update(query, helper.values());
     }
 
     @Override
