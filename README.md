@@ -61,7 +61,7 @@ For more info on how to use these modules, refer to the `README.md` file in each
     Component(apim-auth, "apim-auth-xyz", "Quarkus", "An authentication module.")
     Component(apim, "apim-core", "Quarkus, Camel", "The core of APIM.")
     ContainerDb(db, "Database", "PostgreSql Database", "Stores Subscriptions, Apis & Api Credentials.")
-    Component(dashboard, "apim-dashboard", "Html, Htmx, Qute", "The dashboard of APIM")
+    Component(dashboard, "apim-dashboard", "Html, Alpine.js, JS", "The dashboard of APIM")
     Component(apim-prom, "apim-prometheus", "Quarkus", "Queries & streams data from Prometheus")
     ContainerDb(prom, "Prometheus", "", "Stores & scrapes metrics from APIM")
   }
