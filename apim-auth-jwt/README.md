@@ -8,20 +8,19 @@ This module enables custom JWT authentication to the following authentication mo
 
 This means, that the authentication to the APIM will switch from Basic Authentication into Bearer authentication.
 
-The dashboard will use secure cookies.
-
 ## Usage
 
-First, you need to make sure that you disable one of the following properties in `/apim-application/src/main/resources/application.properties`:
+First, depending on which authentication module is chosen, you need to make sure that you disable *one* of the following properties in `/apim-application/src/main/resources/application.properties`:
+
+If `apim-auth-file-properties` is chosen, then you need to disable this:
 
 ```properties
-#quarkus.http.auth.permission.file.enabled=false
+quarkus.http.auth.permission.file.enabled=false
 #quarkus.http.auth.permission.jpa.enabled=false
 #quarkus.http.auth.permission.ldap.enabled=false
 ```
 
-`apim-auth-jwt` will override and use its own permissions, that's why you need to disable the above properties.
-
+### Access tokens
 To obtain an access token, you need to first authenticate yourself via Basic Authentication:
 
 > http -a [username]:[password] post :8080/apim/auth/token/bearer  
@@ -33,11 +32,11 @@ After this, you can access the APIM with the access token:
 
 > http -A bearer -a [access_token] :8080/gateway/... subscription-key:[your key]
 
-## Configuration parameters
+### Configuration parameters
 
 The configuration can either be put in `/apim-application/src/main/resources/application.properties` (recommended) or in `/apim-auth-jwt/src/main/resources/application.properties`.
 
-Here are the parameters that can or must be overridden for production usage:
+Here are the parameters that must be overridden for production usage:
 
 ```properties
 mp.jwt.verify.publickey.location=the keystore file which contains the certificate/public-key to verify the JWT tokens (must end with .p12)
@@ -45,7 +44,11 @@ smallrye.jwt.sign.key.location=the keystore file which contains the private-key 
 smallrye.jwt.keystore.password=password for the keystore file
 smallrye.jwt.keystore.verify.key.alias=the alias used in the keystore file for the certificate
 smallrye.jwt.keystore.sign.key.alias=the alias used in the keystore file for the private-key
-rt.expiration.days=the expiration time in days for the refresh token, used in the dashboard
+rt.expiration.days=the expiration time in days for the refresh token, needed for apim-dashboard
 ```
- 
-For more check `/apim-auth-jwt/src/main/resources/application.properties`.
+
+### Dashboard configuration
+
+The `isOidc` parameter needs to be set to `false` in: 
+
+`/apim-dashboard-alpinejs/src/main/resources/META-INF/resources/js/apim.js`, on line 17.

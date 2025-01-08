@@ -14,7 +14,7 @@ function spa() {
         },
         username: null,
         roles: [],
-        isOidc: true,
+        isOidc: false,
         isManager: false,
 
         // Initialize the SPA
@@ -76,7 +76,13 @@ function spa() {
 
         logout() {
             sessionStorage.clear();
-            window.location.href = '/logout';
+            this.username = null;
+            this.roles = [];
+            if (this.isOidc) {
+                window.location.href = '/logout';
+            } else {
+                this.init();
+            }
         }
     };
 }
@@ -433,7 +439,7 @@ function authBasic() {
                     sessionStorage.setItem("username", data.username);
                     sessionStorage.setItem("roles", data.roles);
                     sessionStorage.setItem("isManager", data.roles.includes(data.managerRole));
-                    window.location.href = "pages/index.html";
+                    window.location.href = "index.html";
                 })
                 .catch((err) => console.log(err));
 		}

@@ -42,6 +42,17 @@
             </div>
         </template>
 
+        <template x-if="!isInsert">
+            <div class="form-group mb-3">
+                <label for="subEnabled" class="form-check-label">Enabled</label>
+                <input
+                        id="subEnabled"
+                        type="checkbox"
+                        x-model="selectedData.enabled"
+                >
+            </div>
+        </template>
+
         <div class="form-group required mb-3">
             <label for="accounts" class="form-label">User Accounts</label>
             <input

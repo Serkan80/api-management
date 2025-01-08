@@ -2,8 +2,7 @@
 
 This project contains an api-management (APIM) system built with Quarkus and Apache Camel. It is built in a modular way,
 where you can build your own APIM in a customizable way that fits your needs. Almost all functionalities are optional
-beside
-the core.
+beside the core.
 
 Note that this project is still in progress.
 
@@ -12,8 +11,8 @@ Note that this project is still in progress.
 The APIM provides the following features:
 
 - proxying REST, SOAP & GraphQL protocols,
-- managing Apis & Subscriptions,
-- analytics: tracing, metrics & logging info about an Api,
+- managing APIs & Subscriptions,
+- analytics: tracing, metrics & logging info about an API,
 - rate limiting,
 - circuit breaker,
 - multipart,
@@ -50,7 +49,7 @@ also be included for adding authentication.
 
 For more info on how to use these modules, refer to the `README.md` file in each module.
 
-### Architecture
+## Architecture
 
 ```mermaid
         C4Container
@@ -110,36 +109,24 @@ classDiagram
     - basic auth
     - client credentials
     - token based
-    - pass-through, this is default behaviour and it will passthrough anything from the original request to the
+    - pass-through, this is the default behaviour, and it will pass through anything from the original request to the
       downstream services.
 
-### An example flow
+## Usage in development mode
 
-```mermaid
-sequenceDiagram
-    Client ->> Api Managment: 1. Add Subscriptions
-    Client ->> Api Managment: 2. Add Apis
-    Client ->> Api Managment: 3. Add ApiCredentials
-    Client ->> Api Managment: 4. Link Api with Subscription
-    Client ->>+ Api Managment: 5. POST /auth/token (basic auth)
-    Api Managment -->>- Client: JWT token
-    Client ->> Api Managment: 6. POST /gateway/bin/post (JWT/bearer auth)
-    Api Managment ->>+ Backend: https://httpbin.org/post
-Backend-->>-Api Managment: 
-    Api Managment-->>Client: 
-```
+First build the whole project:
 
-#### Usage in development mode
+> mvn clean install -DskipTests
 
-First go to `apim-application` folder:
+Then go to `apim-application` folder:
 > cd apim-application
 
 and edit `pom.xml` and choose the modules you want to use.
 
-Note: in the examples below, I've used `apim-auth-jwt` together with `apim-auth-file-properties`.
+Note: in the examples below, `apim-auth-jwt` and `apim-auth-file-properties` are used.
 
 Start the app in development mode:
-> mvn clean quarkus:dev
+> mvn quarkus:dev
 
 ### Using the dashboard
 
@@ -147,64 +134,72 @@ If `apim-dashboard-alpinejs` is included in `apim-application`, then you can ope
 
 > http://localhost:8080/pages/index.html
 
-### Using the CLI
+The default user with the `manager` and `viewer` roles is:
+- username: bob
+- password: bob
 
-Create a Subscription first and add some Apis. After that, the APIM can be used to access the Apis.  
-Note that without a Subscription, you can't access the APIM. See it as your account for APIM.
+#### Adding APIs
+On the Dashboard click: `APIs > New API` to add an API. 
 
-1. Create a subscription first:
+- Proxy Path: is the mapping prefix to the API. Example: `/v1/myapi`.
+- Proxy Url: is the URL of the API. Example: https://myapi.com
+- Owner: the team or organisation that owns the API.
+- Authentication Type: default is passthrough (even when you leave it empty). Choose this if the API requires authentication.
 
-> http -a bob:bob post :8080/apim/core/subscriptions name="My Organisation" accounts:="['userJohn', 'userBob']"
-> Connection: close  
-> Content-Length: 0  
-> Location: http://localhost:8080/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW
+The full url to call https://myapi.com from the APIM will be: 
 
-The request contains the name for the subscription, and the usernames/accounts that belong to this subscription. The
-useraccounts are used on the dashboard to know which user belongs to a subscription.
-It is further not necessary for the usage of the APIM.
-
-The response contain the subscription key (in the location header). This is later needed to access the APIM.
-Note that basic authentication is used (bob:bob).
-
-If you want to create a (temporary) subscription with an end date:
-
-> http -a bob:bob post :8080/apim/core/subscriptions name="My Organisation" endDate="2025-12-31"
-
-2. Add an Api to https://httpbin.org (it's a free site for testing REST endpoints):
-
-> http -a bob:bob post :8080/apim/core/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One"
-> authenticationType=BASIC description="a proxy to httpbin"
-
-The `proxyPath` is the mapping to httpbin.org. So to call this Api from the APIM, it will be like this:
-
-http://localhost:8080/gateway/bin/any/path/to/httpbin
+http://localhost:8080/gateway/v1/myapi
 
 - `/gateway`: this is the `apim.context-root` see also `application.propeties` in `apim-application` folder. All Api
   calls will start with this path.
-- `/bin`: is the mapping (the `proxyPath`) we defined for the Api. Any call to `/bin` will be forwarded
-  to `httpbin.org` (the proxyUrl).
-- any path after `/bin` will be added and forwarded to `httpbin.org`. This includes: query parameters, headers, cookies
+- `/v1/myapi`: is the mapping (the `proxyPath`). Any call to `/v1/myapi` will be forwarded to `myapi.com` (the proxyUrl).
+- any path after `/v1/myapi` will be added and forwarded to `myapi.com`. This includes: query parameters, headers, cookies
   and the request body.
 
-Furthermore, we specified that we want to protect this Api with Basic authentication, therefore we also need to add
-an `ApiCredential`.
+#### Adding a Subscription
 
-3. Create an ApiCredential with Basic Auth and link it to the subscription:
+On the Dashboard click: `Subsriptions > New Subscription` to add a subscription.
 
-> http -a bob:bob post :8080/apim/core/subscriptions/credentials apiId=1
-> subscriptionKey=N89GERY08JL91R022M5KOBF924XYRPKW username=admin password=12345
+- Name: the name for the subscription, usually the name of a team or organisation.
+- User accounts: a comma separated list of accounts, that belong to this subscription. This is needed when a team member wants to view his subscription
+via the dashboard. Max. 20 accounts allowed.
+- End date: a date in the future to end the subscription (not mandatory), if the subscription is temporary.
 
-This will add an ApiCredential to Api with id=1 and to the subscription with the given key.
+#### Adding APIs to a Subscription
 
-This will cause the following:   
-Anytime a call to httpbin.org is made through the APIM, then also the credentials `admin & 12345` will be forwarded with
-the Authorization header.
+On the Dashboard click: `Subscriptions > Select a subscription from the table > choose the APIs tab > Add API`.
 
-4. Add this Api (with id=1) to the subscription (you can add many Apis in an array):
+#### Adding a Credential to an API (if needed)
 
-> echo "[1]" | http -a bob:bob post :8080/apim/core/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW/apis
+Make sure that the API has an `Authentication Type`, see above `Adding an API`.
 
-5. Then obtain a JWT token for accessing the gateway:
+On the Dashboard click: `Subscriptions > Select a subscription from the table > choose the APIs tab > Click Add Credentials on the row`.
+
+The `Add Credentials` button will only show up, if the API has an `Authentication Type` which is not equal to `passthrough`.
+
+#### View My Subscription
+
+If the logged-in user has a subscription, and the latter contains his username in `User Accounts` (see above), then the user can view his subscription via:
+`My Subscription`.
+
+#### View Analytics
+
+Analytics only works if `apim-prometheus-client` is added to `apim-application`, and with a running Prometheus instance. See also [README.md of apim-prometheus](apim-prometheus-client/README.md).
+
+Analytics are shown, when the APIM has processed requests (see below), and it shows the following:
+
+- Total amount of all requests
+- Avg. response time of all requests
+- Top 10 API requests
+- Top 10 API avg. response times
+- Top 10 API requests per subscription
+- Top 10 API requests and its status
+
+## Making requests via the APIM
+
+Depending on which authentication module has been chosen, you need to authenticate yourself first, and you also need to have a subscription key.
+
+- First obtain a JWT token for accessing the gateway:
 
 > http -a bob:bob post :8080/apim/auth/token  
 > { "access_token": "ej....." }
@@ -212,9 +207,9 @@ the Authorization header.
 Save the access token as a variable:
 > JWT_TOKEN=ej...
 
-6. Now call httpbin via the gateway. This will forward your requests to httpbin with Basic Auth:
+- Now call your API via the gateway.
 
-> http -A bearer -a $JWT_TOKEN post :8080/gateway/bin/post subscription-key:N89GERY08JL91R022M5KOBF924XYRPKW
+> http -A bearer -a $JWT_TOKEN post :8080/gateway/v1/myapi subscription-key:[your key]
 
 ## Important urls
 
