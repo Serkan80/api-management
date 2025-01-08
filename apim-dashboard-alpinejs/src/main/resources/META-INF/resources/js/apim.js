@@ -142,7 +142,7 @@ function fetchData() {
                                 if (err.violations) {
                                     this.errors = new Array();
                                     err.violations.forEach(ex => this.errors.push(`${ex.field.split('.').at(-1)}: ${ex.message}`));
-                                    this.errors = this.error.join([separator='\n']);
+                                    this.errors = this.errors.join([separator='\n']);
                                 } else if (err.message) {
                                     this.errors = err.message;
                                 } else {
