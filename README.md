@@ -1,7 +1,8 @@
 # Background
 
 This project contains an api-management (APIM) system built with Quarkus and Apache Camel. It is built in a modular way,
-where you can build your own APIM in a customizable way that fits your needs. Almost all functionalities are optional beside
+where you can build your own APIM in a customizable way that fits your needs. Almost all functionalities are optional
+beside
 the core.
 
 Note that this project is still in progress.
@@ -19,12 +20,13 @@ The APIM provides the following features:
 - CORS,
 - TLS/SSL,
 - downstream Basic Auth, Client Credentials and token based authentication,
-- OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM.
+- OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM,
+- a dashboard for managing the APIM
 
 TODOS:
- - a dashboard for managing the APIM (WIP)
- - add Readme to each module
- - documentation on how to use in production
+
+- add Readme to each module
+- documentation on how to use in production
 
 ## Modules
 
@@ -41,12 +43,12 @@ The project consists of the following modules:
 | `apim-core`                 | This module is the core of the APIM, containing the logic for reverse proxying and managing Subscriptions and Apis.                                               |
 | `apim-prometheus-client`    | This module exposes a REST SSE endpoint for streaming Prometheus metrics. Intended usage is for web-applications for showing metrics on dashboards.               |
 | `apim-commons`              | This module is a shared library used within other modules.                                                                                                        |
-| `apim-dashboard-alpinejs`   | This module contains the dashboard (frontend) for the APIM. It is currently WIP.                                                                                  |
+| `apim-dashboard-alpinejs`   | This module contains the dashboard (frontend) for the APIM.                                                                                                       |
 
-These modules should be included in the `pom.xml` of `apim-application`. And one of the `apim-auth-xyz` modules must also be included for adding authentication.
+These modules should be included in the `pom.xml` of `apim-application`. And one of the `apim-auth-xyz` modules must
+also be included for adding authentication.
 
 For more info on how to use these modules, refer to the `README.md` file in each module.
-
 
 ### Architecture
 
@@ -88,7 +90,6 @@ To build and run this project locally, you need the following libraries and tool
 - Docker or Podman
 - A REST client tool like Postman, Httpie, Curl, etc. In the examples below, Httpie is used.
 
-
 ## Terminology
 
 ```mermaid
@@ -98,8 +99,9 @@ classDiagram
     ApiCredential --> Api
 ```
 
-- _Subscription_: this is similar to a team or an organisation who wants to subscribe and gain access to the APIM. 
-  A Subscription can have many Apis. After subscribing successfully, a subscription key will be generated. This is needed to gain access to the APIM.
+- _Subscription_: this is similar to a team or an organisation who wants to subscribe and gain access to the APIM.
+  A Subscription can have many Apis. After subscribing successfully, a subscription key will be generated. This is
+  needed to gain access to the APIM.
 - _Api_: this is the Api of the downstream service/backend that needs to be accessed via the APIM. An Api can be shared
   among many Subscriptions.
 - _ApiCredentials_: optional: you can add an authentication method to the Api, if this is needed. An ApiCredential
@@ -109,7 +111,7 @@ classDiagram
     - client credentials
     - token based
     - pass-through, this is default behaviour and it will passthrough anything from the original request to the
-      downstream services, except the Authorization header.
+      downstream services.
 
 ### An example flow
 
@@ -151,46 +153,59 @@ Create a Subscription first and add some Apis. After that, the APIM can be used 
 Note that without a Subscription, you can't access the APIM. See it as your account for APIM.
 
 1. Create a subscription first:
+
 > http -a bob:bob post :8080/apim/core/subscriptions name="My Organisation" accounts:="['userJohn', 'userBob']"
 > Connection: close  
 > Content-Length: 0  
 > Location: http://localhost:8080/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW
 
-The request contains the name for the subscription, and the usernames/accounts that belong to this subscription. The useraccounts are used on the dashboard to know which user belongs to a subscription.
+The request contains the name for the subscription, and the usernames/accounts that belong to this subscription. The
+useraccounts are used on the dashboard to know which user belongs to a subscription.
 It is further not necessary for the usage of the APIM.
 
 The response contain the subscription key (in the location header). This is later needed to access the APIM.
-Note that basic authentication is used (bob:bob). 
+Note that basic authentication is used (bob:bob).
 
 If you want to create a (temporary) subscription with an end date:
 
 > http -a bob:bob post :8080/apim/core/subscriptions name="My Organisation" endDate="2025-12-31"
 
 2. Add an Api to https://httpbin.org (it's a free site for testing REST endpoints):
-> http -a bob:bob post :8080/apim/core/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One" authenticationType=BASIC description="a proxy to httpbin"
- 
+
+> http -a bob:bob post :8080/apim/core/apis proxyPath=/bin proxyUrl=https://httpbin.org owner="Team One"
+> authenticationType=BASIC description="a proxy to httpbin"
+
 The `proxyPath` is the mapping to httpbin.org. So to call this Api from the APIM, it will be like this:
 
 http://localhost:8080/gateway/bin/any/path/to/httpbin
 
-- `/gateway`: this is the `apim.context-root` see also `application.propeties` in `apim-application` folder. All Api calls will start with this path.
-- `/bin`: is the mapping (the `proxyPath`) we defined for the Api. Any call to `/bin` will be forwarded to `httpbin.org` (the proxyUrl).
-- any path after `/bin` will be added and forwarded to `httpbin.org`. This includes: query parameters, headers, cookies and the request body.
+- `/gateway`: this is the `apim.context-root` see also `application.propeties` in `apim-application` folder. All Api
+  calls will start with this path.
+- `/bin`: is the mapping (the `proxyPath`) we defined for the Api. Any call to `/bin` will be forwarded
+  to `httpbin.org` (the proxyUrl).
+- any path after `/bin` will be added and forwarded to `httpbin.org`. This includes: query parameters, headers, cookies
+  and the request body.
 
-Furthermore, we specified that we want to protect this Api with Basic authentication, therefore we also need to add an `ApiCredential`.
+Furthermore, we specified that we want to protect this Api with Basic authentication, therefore we also need to add
+an `ApiCredential`.
 
 3. Create an ApiCredential with Basic Auth and link it to the subscription:
-> http -a bob:bob post :8080/apim/core/subscriptions/credentials apiId=1 subscriptionKey=N89GERY08JL91R022M5KOBF924XYRPKW username=admin password=12345
+
+> http -a bob:bob post :8080/apim/core/subscriptions/credentials apiId=1
+> subscriptionKey=N89GERY08JL91R022M5KOBF924XYRPKW username=admin password=12345
 
 This will add an ApiCredential to Api with id=1 and to the subscription with the given key.
 
 This will cause the following:   
-Anytime a call to httpbin.org is made through the APIM, then also the credentials `admin & 12345` will be forwarded with the Authorization header.
+Anytime a call to httpbin.org is made through the APIM, then also the credentials `admin & 12345` will be forwarded with
+the Authorization header.
 
 4. Add this Api (with id=1) to the subscription (you can add many Apis in an array):
+
 > echo "[1]" | http -a bob:bob post :8080/apim/core/subscriptions/N89GERY08JL91R022M5KOBF924XYRPKW/apis
 
 5. Then obtain a JWT token for accessing the gateway:
+
 > http -a bob:bob post :8080/apim/auth/token  
 > { "access_token": "ej....." }
 
@@ -198,6 +213,7 @@ Save the access token as a variable:
 > JWT_TOKEN=ej...
 
 6. Now call httpbin via the gateway. This will forward your requests to httpbin with Basic Auth:
+
 > http -A bearer -a $JWT_TOKEN post :8080/gateway/bin/post subscription-key:N89GERY08JL91R022M5KOBF924XYRPKW
 
 ## Important urls
