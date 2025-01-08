@@ -24,7 +24,7 @@ public record ApiPOST(
         String proxyUrl,
 
         @NotBlank
-        @Size(max = 100)
+        @Size(max = 50)
         @Schema(example = "sek")
         String owner,
 
@@ -45,6 +45,7 @@ public record ApiPOST(
         AuthenticationType authenticationType
 
 ) {
+
     public ApiEntity toEntity() {
         var result = new ApiEntity();
         result.proxyPath = this.proxyPath;

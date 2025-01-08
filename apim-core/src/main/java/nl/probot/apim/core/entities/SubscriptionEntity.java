@@ -1,6 +1,7 @@
 package nl.probot.apim.core.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
+import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
 import nl.probot.apim.core.rest.dto.SubscriptionPUT;
@@ -194,6 +196,18 @@ public class SubscriptionEntity extends PanacheEntity {
         }
 
         return SubscriptionEntity.update(query, helper.values());
+    }
+
+    public static void addCredential(ApiCredential credential) {
+        var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, credential.apiId());
+        var subscriptionEntity = Optional.ofNullable(SubscriptionEntity.getByNaturalId(credential.subscriptionKey()))
+                .orElseThrow(() -> new NotFoundException("Subscription with the given not found"));
+
+        var credentialEntity = credential.toEntity();
+        credentialEntity.id.api = apiEntity;
+        credentialEntity.id.subscription = subscriptionEntity;
+        credentialEntity.persist();
+        Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.name);
     }
 
     @Override

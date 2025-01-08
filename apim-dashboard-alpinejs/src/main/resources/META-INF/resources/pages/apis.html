@@ -75,9 +75,7 @@
 
             <form id="apiForm" novalidate>
                 <div class="card-body">
-                    <template x-if="errors != null">
-                        <div class="alert alert-danger fade show alert-dismissible" role="alert" x-html="errors"></div>
-                    </template>
+                    <div x-html="fetchPage('errors.html')"></div>
                     <div class="form-group required mb-3">
                         <label for="proxyPath" class="form-label">Proxy Path</label>
                         <input

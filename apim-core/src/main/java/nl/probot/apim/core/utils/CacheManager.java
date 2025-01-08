@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 /**
  * A very basic cache implementation for the APIM.
  * <p>
- * This prevents that the {@link SubscriptionEntity} is not looked up each time to forward requests to the downstream.
+ * This prevents that the {@link SubscriptionEntity} is not looked up each time when forwarding requests to the downstream.
  */
 @Singleton
 public class CacheManager {
@@ -43,12 +43,10 @@ public class CacheManager {
                 this.cache.entrySet().removeIf(entry -> entry.getValue().isStale(this.keepTime));
             }
 
-            Log.trace("Cache miss");
             this.cache.put(key, new TimedValue(result));
             return result;
         }
 
-        Log.trace("Cache hit");
         return (T) timedValue.value;
     }
 
@@ -58,7 +56,6 @@ public class CacheManager {
 
     public void clearAll() {
         this.cache.clear();
-        Log.trace("Cache cleared");
     }
 
     record TimedValue(Object value, long timestamp) {

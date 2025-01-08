@@ -8,7 +8,6 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.ApiEntity;
@@ -28,7 +27,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
@@ -47,7 +45,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
         var entity = sub.toEntity();
         if (SubscriptionEntity.accountNotExists(entity.accounts)) {
             entity.persist();
-            Log.infof("Subscription(name=%s, endDate=%s) created", entity.name, Objects.requireNonNullElse(entity.endDate, "unlimited"));
+            Log.infof("Subscription(name=%s, endDate=%s) created", entity.name, Objects.requireNonNullElse(entity.endDate, "-"));
 
             return RestResponse.created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.subscriptionKey)));
         }
@@ -123,18 +121,8 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Transactional
     @RolesAllowed({"${apim.roles.manager}"})
     public RestResponse<Void> addCredential(ApiCredential credential) {
-        var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, credential.apiId());
-        var subscriptionEntity = Optional.ofNullable(SubscriptionEntity.getByNaturalId(credential.subscriptionKey()))
-                .orElseThrow(() -> new NotFoundException("Subscription with the given not found"));
-
-        var credentialEntity = credential.toEntity();
-        credentialEntity.id.api = apiEntity;
-        credentialEntity.id.subscription = subscriptionEntity;
-        credentialEntity.persist();
-
+        SubscriptionEntity.addCredential(credential);
         this.cacheManager.invalidate(credential.subscriptionKey());
-        Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.name);
-
         return RestResponse.ok();
     }
 

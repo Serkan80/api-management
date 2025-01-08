@@ -43,7 +43,7 @@ public class ApiEntity extends PanacheEntity {
     public String proxyUrl;
 
     @NotBlank
-    @Size(max = 100)
+    @Size(max = 50)
     public String owner;
 
     @URL

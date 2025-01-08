@@ -1,0 +1,9 @@
+.form-group.required label:after {
+    content: " *";
+    color: red;
+}
+
+table td, th {
+    vertical-align: middle !important;
+    text-align: center !important;
+}

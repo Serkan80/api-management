@@ -103,11 +103,11 @@ function fetchData() {
 		errors: null,
 		baseUrl: '/apim/core',
 
-		get(url) {
+		get(path) {
 		    this.isLoading = true;
 		    const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
-			fetchInterceptor(`${this.baseUrl}${url}`, options)
+			fetchInterceptor(`${this.baseUrl}${path}`, options)
 				.then(res => res.json())
 				.then(json => {
 					this.isLoading = false;
@@ -115,11 +115,11 @@ function fetchData() {
 				});
 		},
 
-		search(url, searchVal) {
+		search(path, searchVal) {
             this.isLoading = true;
             const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
 
-            fetchInterceptor(`${this.baseUrl}${url}${searchVal}`, options)
+            fetchInterceptor(`${this.baseUrl}${path}${searchVal}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.isLoading = false;
@@ -127,7 +127,7 @@ function fetchData() {
                 });
         },
 
-		post(formId, url, body, toPage) {
+		post(formId, path, body, toPage) {
 		    let form = document.querySelector(formId);
 	        form.classList.add('was-validated');
 
@@ -135,14 +135,14 @@ function fetchData() {
                 const method = this.isInsert ? 'post' : 'put';
                 const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(body) };
 
-                fetchInterceptor(`${this.baseUrl}${url}`, options)
+                fetchInterceptor(`${this.baseUrl}${path}`, options)
                     .then(res => {
                         if (!res.ok) {
                             return res.json().then(err => {
                                 if (err.violations) {
                                     this.errors = new Array();
-                                    err.violations.forEach(ex => this.errors.push(`<li>${ex.field.split('.').at(-1)}: ${ex.message}</li>`));
-                                    this.errors = "<ul style='margin:0'>" + this.errors.join([separator='\n']) + "</ul>";
+                                    err.violations.forEach(ex => this.errors.push(`${ex.field.split('.').at(-1)}: ${ex.message}`));
+                                    this.errors = this.error.join([separator='\n']);
                                 } else if (err.message) {
                                     this.errors = err.message;
                                 } else {
@@ -172,9 +172,9 @@ function fetchData() {
 			}
 		},
 
-		findBy(url) {
+		findBy(path) {
 			const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include' };
-            fetchInterceptor(`${this.baseUrl}${url}`, options)
+            fetchInterceptor(`${this.baseUrl}${path}`, options)
                 .then(res => res.json())
                 .then(json => {
                     this.errors = null;
@@ -230,8 +230,7 @@ function fetchData() {
                                 return res.json().then(err => {
                                      if (err.violations) {
                                          this.errors = new Array();
-                                         err.violations.forEach(ex => this.errors.push(`<li>${ex.field.split('.').at(-1)}: ${ex.message}</li>`));
-                                         this.errors = "<ul style='margin:0'>" + this.errors.join([separator='\n']) + "</ul>";
+                                         err.violations.forEach(ex => this.errors.push(`${ex.field.split('.').at(-1)}: ${ex.message}`));
                                      } else if (err.message) {
                                          this.errors = err.message;
                                      } else {
@@ -244,6 +243,7 @@ function fetchData() {
                        .then(data => {
                             this.errors = null;
                             this.postData = {};
+                            this.findBy('/subscriptions/' + this.selectedData.subscriptionKey);
                             document.querySelector('#modalCloseCredentials').dispatchEvent(new MouseEvent('click', {
                                 "view": window,
                                 "bubbles": true,
