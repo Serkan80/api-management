@@ -141,10 +141,10 @@ The default user with the `manager` and `viewer` roles is:
 #### Adding APIs
 On the Dashboard click: `APIs > New API` to add an API. 
 
-- Proxy Path: is the mapping prefix to the API. Example: `/v1/myapi`.
-- Proxy Url: is the URL of the API. Example: https://myapi.com
-- Owner: the team or organisation that owns the API.
-- Authentication Type: default is passthrough (even when you leave it empty). Choose this if the API requires authentication.
+- __Proxy Path__: is the mapping prefix to the API. Example: `/v1/myapi`.
+- __Proxy Url__: is the URL of the API. Example: https://myapi.com
+- __Owner__: the team or organisation that owns the API.
+- __Authentication Type__: default is passthrough (even when you leave it empty). Choose this if the API requires authentication.
 
 The full url to call https://myapi.com from the APIM will be: 
 
@@ -160,10 +160,10 @@ http://localhost:8080/gateway/v1/myapi
 
 On the Dashboard click: `Subsriptions > New Subscription` to add a subscription.
 
-- Name: the name for the subscription, usually the name of a team or organisation.
-- User accounts: a comma separated list of accounts, that belong to this subscription. This is needed when a team member wants to view his subscription
+- __Name__: the name for the subscription, usually the name of a team or organisation.
+- __User accounts__: a comma separated list of accounts, that belong to this subscription. This is needed when a team member wants to view his subscription
 via the dashboard. Max. 20 accounts allowed.
-- End date: a date in the future to end the subscription (not mandatory), if the subscription is temporary.
+- __End date__: a date in the future to end the subscription (not mandatory), if the subscription is temporary.
 
 #### Adding APIs to a Subscription
 
