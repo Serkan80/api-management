@@ -24,14 +24,14 @@ First, you need to make sure that you disable one of the following properties in
 
 To obtain an access token, you need to first authenticate yourself via Basic Authentication:
 
-> http -a <username>:<password> post :8080/apim/auth/token/bearer
+> http -a [username]:[password] post :8080/apim/auth/token/bearer  
 > { "access_token": "...." }
 
 Your credentials are obviously stored either in the database, ldap or in the properties file, depending on which auth module is selected. 
 
 After this, you can access the APIM with the access token:
 
-> http -A bearer -a <access_token> :8080/gateway/... subscription-key:<your key>
+> http -A bearer -a [access_token] :8080/gateway/... subscription-key:[your key]
 
 ## Configuration parameters
 

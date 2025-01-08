@@ -87,7 +87,7 @@
                                     <td x-text="metric.proxyPath"></td>
                                     <td x-text="metric.value"
                                         :class="metric.value >= 10 && 'bg-danger text-white'"
-                                        :class="metric.value >= 5 && 'bg-warn text-white'"></td>
+                                        :class="metric.value >= 5 && metric.value < 10 && 'bg-warn text-white'"></td>
                                 </tr>
                             </template>
                             </tbody>
