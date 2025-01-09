@@ -14,6 +14,7 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
+import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
 import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
@@ -167,15 +168,15 @@ public class SubscriptionEntity extends PanacheEntity {
     public static int updateCredentialConditionally(Long subId, Long apiId, ApiCredentialPUT credential) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
-                new PanacheDyanmicQueryHelper.StaticStatement("username", credential.username()),
-                new PanacheDyanmicQueryHelper.StaticStatement("password", credential.password()),
-                new PanacheDyanmicQueryHelper.StaticStatement("clientId", credential.clientId()),
-                new PanacheDyanmicQueryHelper.StaticStatement("clientSecret", credential.clientSecret()),
-                new PanacheDyanmicQueryHelper.StaticStatement("clientUrl", credential.clientUrl()),
-                new PanacheDyanmicQueryHelper.StaticStatement("clientScope", credential.clientScope()),
-                new PanacheDyanmicQueryHelper.StaticStatement("apiKey", credential.apiKey()),
-                new PanacheDyanmicQueryHelper.StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
-                new PanacheDyanmicQueryHelper.StaticStatement("apiKeyLocation", credential.apiKeyLocation())
+                new StaticStatement("username", credential.username()),
+                new StaticStatement("password", credential.password()),
+                new StaticStatement("clientId", credential.clientId()),
+                new StaticStatement("clientSecret", credential.clientSecret()),
+                new StaticStatement("clientUrl", credential.clientUrl()),
+                new StaticStatement("clientScope", credential.clientScope()),
+                new StaticStatement("apiKey", credential.apiKey()),
+                new StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
+                new StaticStatement("apiKeyLocation", credential.apiKeyLocation())
         ).buildUpdateStatement(new PanacheDyanmicQueryHelper.WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
 
         return ApiCredentialEntity.update(query, helper.values());
@@ -184,9 +185,9 @@ public class SubscriptionEntity extends PanacheEntity {
     public static int updateConditionally(String key, SubscriptionPUT sub) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper.statements(
-                new PanacheDyanmicQueryHelper.StaticStatement("enabled", sub.enabled()),
-                new PanacheDyanmicQueryHelper.StaticStatement("endDate", sub.endDate()),
-                new PanacheDyanmicQueryHelper.StaticStatement("accounts", sub.accounts())
+                new StaticStatement("enabled", sub.enabled()),
+                new StaticStatement("endDate", sub.endDate()),
+                new StaticStatement("accounts", sub.accounts())
         ).buildUpdateStatement(new PanacheDyanmicQueryHelper.WhereStatement("subscriptionKey = :key", key));
 
         if (sub.accounts() != null && sub.accounts().length > 0) {

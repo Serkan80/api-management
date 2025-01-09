@@ -45,10 +45,10 @@ public class SubscriptionProcessor implements Processor {
     }
 
     private static void checkApiCredentials(Exchange exchange, SubscriptionEntity subscription, ApiEntity api) {
-        exchange.getIn().removeHeader(AUTHORIZATION);
         var authType = api.authenticationType;
 
         if (authType != null && authType != PASSTHROUGH) {
+            exchange.getIn().removeHeader(AUTHORIZATION);
             var credential = subscription.findApiCredential(api.id).orElseThrow(() -> new WebApplicationException(
                     "Api requires %s authentication but no credentials were found for this Api".formatted(authType),
                     400));
