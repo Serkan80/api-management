@@ -138,6 +138,10 @@ function fetchData() {
 	        form.classList.add('was-validated');
 
             if (form.checkValidity()) {
+                if (body.accounts && body.accounts?.length) {
+                    body.accounts = body.accounts.split(',');
+                }
+
                 const method = this.isInsert ? 'post' : 'put';
                 const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: method, body: JSON.stringify(body) };
 

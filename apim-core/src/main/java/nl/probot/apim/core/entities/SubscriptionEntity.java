@@ -15,6 +15,7 @@ import jakarta.ws.rs.WebApplicationException;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
+import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
 import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
@@ -177,7 +178,7 @@ public class SubscriptionEntity extends PanacheEntity {
                 new StaticStatement("apiKey", credential.apiKey()),
                 new StaticStatement("apiKeyHeader", credential.apiKeyHeader()),
                 new StaticStatement("apiKeyLocation", credential.apiKeyLocation())
-        ).buildUpdateStatement(new PanacheDyanmicQueryHelper.WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
+        ).buildUpdateStatement(new WhereStatement("id.api.id = :apiId and id.subscription.id = :subId", List.of(apiId, subId)));
 
         return ApiCredentialEntity.update(query, helper.values());
     }
@@ -187,11 +188,11 @@ public class SubscriptionEntity extends PanacheEntity {
         var query = helper.statements(
                 new StaticStatement("enabled", sub.enabled()),
                 new StaticStatement("endDate", sub.endDate()),
-                new StaticStatement("accounts", sub.accounts())
-        ).buildUpdateStatement(new PanacheDyanmicQueryHelper.WhereStatement("subscriptionKey = :key", key));
+                new StaticStatement("accounts", sub.accountAsArray())
+        ).buildUpdateStatement(new WhereStatement("subscriptionKey = :key", key));
 
-        if (sub.accounts() != null && sub.accounts().length > 0) {
-            if (!SubscriptionEntity.accountNotExists(key, sub.accounts())) {
+        if (sub.accounts() != null && !sub.accounts().isEmpty()) {
+            if (!SubscriptionEntity.accountNotExists(key, sub.accountAsArray())) {
                 throw new WebApplicationException("Subscription contains account(s) that exists in another subscription", 400);
             }
         }
