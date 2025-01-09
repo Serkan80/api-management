@@ -20,11 +20,10 @@
             <tr>
                 <td x-text="api.id"></td>
                 <td>
-                    <button class="btn border-0"
-                            :class="api.enabled ? 'btn-outline-success' : 'btn-outline-danger'"
-                            x-text="api.enabled ? 'Active' : 'Inactive'"
-                            disabled>
-                    </button>
+                    <span class="status-indicator rounded-circle d-inline-block"
+                          :class="api.enabled ? 'bg-success' : 'bg-danger'"
+                          style="width: 10px; height: 10px;">
+                    </span>
                 </td>
                 <td x-text="api.proxyPath"></td>
                 <td x-text="api.proxyUrl"></td>

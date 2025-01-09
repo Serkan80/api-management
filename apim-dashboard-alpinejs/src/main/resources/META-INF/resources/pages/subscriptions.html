@@ -6,7 +6,7 @@
                         type="search"
                         class="form-control form-control-sm"
                         placeholder="Search..."
-                        @keyup.debounce.500ms="search('/subscriptions/search?q=', $event.target.value)">
+                        @keyup.debounce.1000ms="search('/subscriptions/search?q=', $event.target.value)">
             </div>
             <div style="width: auto">
                 <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
@@ -21,7 +21,7 @@
         <p x-show="data.length == 0">No subscriptions available</p>
 
         <div class="row card shadow mb-4" x-show="data.length > 0">
-            <h2 class="card-header">Subscriptions Overview</h2>
+            <h4 class="card-header">Subscriptions Overview</h4>
             <div class="card-body">
                 <div class="row table-responsive">
                     <table class="table table-bordered table-sm table-hover">
@@ -40,11 +40,10 @@
                             <tr @click="findBy('/subscriptions/' + sub.subscriptionKey)" style="cursor: pointer">
                                 <td x-text="sub.name"></td>
                                 <td>
-                                    <button class="btn border-0"
-                                            :class="sub.enabled ? 'btn-outline-success' : 'btn-outline-danger'"
-                                            x-text="sub.enabled ? 'Active' : 'Inactive'"
-                                            disabled>
-                                    </button>
+                                    <span class="status-indicator rounded-circle d-inline-block"
+                                          :class="sub.enabled ? 'bg-success' : 'bg-danger'"
+                                          style="width: 10px; height: 10px;">
+                                    </span>
                                 </td>
                                 <td x-text="sub.subscriptionKey"></td>
                                 <td x-text="new Date(sub.createdAt).toLocaleString('nl-NL', {timezone: 'Europe/Amsterdam'})"></td>

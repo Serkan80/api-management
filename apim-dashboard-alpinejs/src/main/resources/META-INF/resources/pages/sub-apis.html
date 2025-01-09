@@ -30,11 +30,10 @@
             <tr>
                 <td x-text="api.id"></td>
                 <td>
-                    <button class="btn border-0"
-                            :class="api.enabled ? 'btn-outline-success' : 'btn-outline-danger'"
-                            x-text="api.enabled ? 'Active' : 'Inactive'"
-                            disabled>
-                    </button>
+                    <span class="status-indicator rounded-circle d-inline-block"
+                          :class="api.enabled ? 'bg-success' : 'bg-danger'"
+                          style="width: 10px; height: 10px;">
+                    </span>
                 </td>
                 <td x-text="api.proxyPath"></td>
                 <td x-text="api.proxyUrl"></td>
@@ -44,7 +43,8 @@
                 <td x-text="api.authenticationType"></td>
                 <td x-text="api.description"></td>
                 <td>
-                    <template x-if="(!selectedData.credentials || getSelectedCredential(api.id).length == 0) && api.authenticationType && api.authenticationType != 'PASSTHROUGH'">
+                    <template
+                            x-if="(!selectedData.credentials || getSelectedCredential(api.id).length == 0) && api.authenticationType && api.authenticationType != 'PASSTHROUGH'">
                         <button @click.prevent="postData['apiId']=api.id,isModalInsert=true"
                                 class="btn btn-sm btn-primary"
                                 data-toggle="modal" data-target="#credentials-modal">
@@ -83,7 +83,7 @@
                                     type="search"
                                     class="form-control form-control-sm"
                                     placeholder="Search..."
-                                    @keyup.debounce.500ms="search('/apis/search?q=', $event.target.value)">
+                                    @keyup.debounce.1000ms="search('/apis/search?q=', $event.target.value)">
                         </div>
                     </div>
                     <div class="row table-responsive scroll-area-lg">
