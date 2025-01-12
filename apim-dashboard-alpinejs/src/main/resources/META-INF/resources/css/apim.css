@@ -7,3 +7,7 @@ table td, th {
     vertical-align: middle !important;
     text-align: center !important;
 }
+
+.alert-danger ul {
+	margin-bottom: 0;
+}

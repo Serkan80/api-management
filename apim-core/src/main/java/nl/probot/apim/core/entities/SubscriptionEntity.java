@@ -26,7 +26,6 @@ import org.hibernate.annotations.NaturalId;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +34,6 @@ import java.util.Set;
 
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
-import static java.util.stream.Collectors.joining;
 import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
@@ -95,16 +93,21 @@ public class SubscriptionEntity extends PanacheEntity {
     }
 
     public static boolean accountNotExists(String subscriptionKey, String[] users) {
-        var arrays = Arrays.stream(users)
-                .map("'%s'"::formatted)
-                .collect(joining(",", "array(", ")"));
+        var usersArray = "{%s}".formatted(String.join(",", users));
+        var where = new PanacheDyanmicQueryHelper().statements(
+                new StaticStatement("subscriptionKey", subscriptionKey),
+                new DynamicStatement("accounts && cast(:users as varchar[])", usersArray)
+        ).buildWhereStatement();
+
+        var query = getEntityManager().createNativeQuery("select count(*) from subscription where %s".formatted(where));
 
         if (subscriptionKey != null) {
-            var query = "subscriptionKey <> ?1 and array_includes(accounts, %s)".formatted(arrays);
-            return count(query, subscriptionKey) == 0;
+            query.setParameter(1, subscriptionKey).setParameter(2, usersArray);
+        } else {
+            query.setParameter(1, usersArray);
         }
 
-        return count("array_includes(accounts, %s)".formatted(arrays)) == 0;
+        return (Long) query.getSingleResult() == 0;
     }
 
     public static SubscriptionEntity getByNaturalId(String subscriptionKey) {

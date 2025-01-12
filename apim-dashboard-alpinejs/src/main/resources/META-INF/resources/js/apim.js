@@ -43,6 +43,7 @@ function spa() {
 
         // Dynamically load page content
         async loadPage(route) {
+            this.currentRoute = route;
             window.dispatchEvent(new CustomEvent('page-changed'));
             const index = route.indexOf('_') > -1 ? route.indexOf('_') : route.length;
             const path = route.substring(0, index);
@@ -401,8 +402,14 @@ function getTotalsPerSub(data) {
 function getTotalPerStatus(data) {
 	return metricTemplate(
                         data,
-                        row => true,
-                        row => { return {proxyPath: row.metric.proxyPath, status: row.metric.status, value: row.value[1]}; });
+                        row => row.metric.status >= 400,
+                        row => { return {
+	                                    proxyPath: row.metric.proxyPath,
+	                                    status: row.metric.status,
+	                                    value: row.value[1],
+	                                    ts: new Date(row.value[0] * 1000).toLocaleString('nl-NL')
+                                    }
+                                });
 }
 
 function getTotalRequestsPerSub(data) {

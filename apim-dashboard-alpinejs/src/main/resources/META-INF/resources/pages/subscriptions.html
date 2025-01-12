@@ -64,7 +64,11 @@
             <div class="card-body">
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
-                        <a data-toggle="tab" href="#tab-sub" class="nav-link active" x-text="isInsert ? 'New Subscription' : 'Subscription'"></a>
+                        <a data-toggle="tab"
+                           href="#tab-sub"
+                           class="nav-link active"
+                           @click.prevent="currentRoute='/subscriptions'"
+                           x-text="isInsert ? 'New Subscription' : 'Subscription'"></a>
                     </li>
                     <template x-if="!isInsert">
                         <li class="nav-item">
