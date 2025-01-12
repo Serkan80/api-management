@@ -11,3 +11,7 @@ table td, th {
 .alert-danger ul {
 	margin-bottom: 0;
 }
+
+.form-control {
+	color: #3e709a;
+}

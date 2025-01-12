@@ -18,7 +18,7 @@
             <th>Proxy path</th>
             <th>Proxy url</th>
             <th>Owner</th>
-            <th>Max requests</th>
+            <th>Max requests/min</th>
             <th>OpenAPI URL</th>
             <th>Authentication Type</th>
             <th>Description</th>
@@ -38,9 +38,12 @@
                 <td x-text="api.proxyPath"></td>
                 <td x-text="api.proxyUrl"></td>
                 <td x-text="api.owner"></td>
-                <td x-text="api.maxRequests"></td>
-                <td><a :href="api.openApiUrl" x-text="api.openApiUrl" target="_blank"></a></td>
-                <td x-text="api.authenticationType"></td>
+                <td x-text="api.maxRequests || '-'"></td>
+                <td>
+                    <a :href="api.openApiUrl" x-text="api.openApiUrl" target="_blank" x-show="api.openApiUrl"></a>
+                    <span x-show="!api.openApiUrl">-</span>
+                </td>
+                <td x-text="api.authenticationType || '-'"></td>
                 <td x-text="api.description"></td>
                 <td>
                     <template
@@ -107,7 +110,7 @@
                                     <td x-text="api.proxyPath"></td>
                                     <td x-text="api.proxyUrl"></td>
                                     <td x-text="api.owner"></td>
-                                    <td x-text="api.authenticationType"></td>
+                                    <td x-text="api.authenticationType || '-'"></td>
                                     <td x-text="api.description"></td>
                                 </tr>
                             </template>
