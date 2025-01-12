@@ -125,14 +125,15 @@
             <div class="col-lg-5">
                 <div class="main-card mb-3 card">
                     <div class="card-body">
-                        <h5>API Status</h5>
-                        <table class="table table-bordered table-sm">
+                        <h5>API Errors</h5>
+                        <p x-show="!metrics[5] || metrics[5].length == 0"></p>
+                        <table class="table table-bordered table-sm" x-show="metrics[5]?.length">
                             <thead>
                             <tr>
                                 <th>Proxy path</th>
                                 <th>Status</th>
                                 <th>Total</th>
-                                <th>Time</th>
+                                <th>Date</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -141,7 +142,7 @@
                                     <td x-text="metric.proxyPath"></td>
                                     <td x-text="metric.status" :class="metric.status >= 400 && 'bg-danger text-white'"></td>
                                     <td x-text="metric.value"></td>
-                                    <td x-text="metric.ts"></td>
+                                    <td x-text="metric.ts.toLocaleString('nl-NL')"></td>
                                 </tr>
                             </template>
                             </tbody>

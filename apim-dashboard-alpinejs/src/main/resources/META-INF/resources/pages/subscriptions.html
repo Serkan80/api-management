@@ -29,7 +29,6 @@
                         <tr>
                             <th>Name</th>
                             <th>Status</th>
-                            <th>Key</th>
                             <th>Created At</th>
                             <th>End Date</th>
                             <th>Accounts</th>
@@ -45,7 +44,6 @@
                                           style="width: 10px; height: 10px;">
                                     </span>
                                 </td>
-                                <td x-text="sub.subscriptionKey"></td>
                                 <td x-text="new Date(sub.createdAt).toLocaleString('nl-NL', {timezone: 'Europe/Amsterdam'})"></td>
                                 <td x-text="sub.endDate"></td>
                                 <td x-text="sub.accounts"></td>

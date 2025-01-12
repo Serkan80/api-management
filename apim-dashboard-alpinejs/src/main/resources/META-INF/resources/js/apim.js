@@ -373,10 +373,18 @@ function sse() {
     }
 }
 
-function metricTemplate(data, filter, mapper) {
+function metricTemplate(data, filter, mapper, sorter = null) {
     var result = data.result.filter(filter).map(mapper);
-    return result.sort((a, b) => b.value - a.value).slice(0, 10);
+
+    if (sorter) {
+        result.sort(sorter);
+    } else {
+        result.sort((a, b) => b.value - a.value);
+    }
+
+    return result.slice(0, 10);
 }
+
 
 function getTotalCounts(data) {
     return metricTemplate(
@@ -396,7 +404,7 @@ function getTotalsPerSub(data) {
 	return metricTemplate(
                         data,
                         row => true,
-                        row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; });
+                        row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; })
 }
 
 function getTotalPerStatus(data) {
@@ -407,9 +415,10 @@ function getTotalPerStatus(data) {
 	                                    proxyPath: row.metric.proxyPath,
 	                                    status: row.metric.status,
 	                                    value: row.value[1],
-	                                    ts: new Date(row.value[0] * 1000).toLocaleString('nl-NL')
+	                                    ts: new Date(row.value[0] * 1000)
                                     }
-                                });
+                                },
+                        (a, b) => b.ts.getTime() - a.ts.getTime());
 }
 
 function getTotalRequestsPerSub(data) {
