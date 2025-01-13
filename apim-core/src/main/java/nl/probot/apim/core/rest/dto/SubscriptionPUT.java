@@ -17,6 +17,10 @@ public record SubscriptionPUT(
         Set<String> accounts) {
 
     public String[] accountAsArray() {
+        if (this.accounts == null) {
+            return null;
+        }
+        
         return this.accounts.stream().map(String::strip).toArray(String[]::new);
     }
 

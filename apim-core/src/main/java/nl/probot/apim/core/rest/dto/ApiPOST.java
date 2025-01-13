@@ -33,7 +33,8 @@ public record ApiPOST(
         String openApiUrl,
 
         @NotBlank
-        @Size(max = 200)
+        @Size(max = 100)
+        @Pattern(regexp = "^[\\w\\d\\s_-]+$", message = "Description must only contain characters & digits and no special characters")
         @Schema(example = "test description")
         String description,
 

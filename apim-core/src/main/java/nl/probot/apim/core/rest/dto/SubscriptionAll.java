@@ -1,6 +1,5 @@
 package nl.probot.apim.core.rest.dto;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 
@@ -21,10 +20,10 @@ public record SubscriptionAll(
         List<ApiCredential> credentials,
         String[] accounts
 ) {
-    @JsonGetter("accounts")
-    public String accountsAsString() {
-        return String.join(",", this.accounts);
-    }
+//    @JsonGetter("accounts")
+//    public String accountsAsString() {
+//        return String.join(",", this.accounts);
+//    }
 
     public static SubscriptionAll toDto(SubscriptionEntity entity) {
         var apis = entity.apis.stream().map(Api::toDto).toList();

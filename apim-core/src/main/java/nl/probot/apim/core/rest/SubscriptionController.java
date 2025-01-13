@@ -9,7 +9,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.UriInfo;
-import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.ApiEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.rest.dto.ApiCredential;
@@ -145,26 +144,11 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
-    public RestResponse<Map<String, Long>> cleanupExpiredSubscriptions() {
-        //@formatter:off
-        var ids = SubscriptionEntity.find("""
-                                          select id
-                                          from SubscriptionEntity s
-                                          where s.endDate is not null and s.endDate <= current_date 
-                                          """)
-                .project(Long.class)
-                .list();
-        //@formatter:on
-
+    public RestResponse<Void> cleanupExpiredSubscriptions() {
+        var ids = SubscriptionEntity.cleanup();
         if (!ids.isEmpty()) {
-            var count1 = ApiCredentialEntity.delete("id.subscription.id in (?1)", ids);
-            Log.infof("%d expired credentials(s) deleted", count1);
-
-            var count2 = SubscriptionEntity.delete("id in (?1)", ids);
-            Log.infof("%d expired subscription(s) deleted", count2);
-            return RestResponse.ok(Map.of("countApiCredentials", count1, "countSubscriptions", count2));
+            return RestResponse.ok();
         }
-
         return RestResponse.noContent();
     }
 }

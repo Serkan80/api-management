@@ -115,5 +115,5 @@ public interface SubscriptionOpenApi {
     @Path("/cleanup")
     @Operation(summary = "Cleans up expired subscriptions")
     @APIResponse(name = "OK", responseCode = "204")
-    RestResponse<Map<String, Long>> cleanupExpiredSubscriptions();
+    RestResponse<Void> cleanupExpiredSubscriptions();
 }

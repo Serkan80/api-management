@@ -206,13 +206,34 @@ public class SubscriptionEntity extends PanacheEntity {
     public static void addCredential(ApiCredential credential) {
         var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, credential.apiId());
         var subscriptionEntity = Optional.ofNullable(SubscriptionEntity.getByNaturalId(credential.subscriptionKey()))
-                .orElseThrow(() -> new NotFoundException("Subscription with the given not found"));
+                .orElseThrow(() -> new NotFoundException("Subscription with the given key not found or was disabled"));
 
         var credentialEntity = credential.toEntity();
         credentialEntity.id.api = apiEntity;
         credentialEntity.id.subscription = subscriptionEntity;
         credentialEntity.persist();
         Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.name);
+    }
+
+    public static List<Long> cleanup() {
+        //@formatter:off
+        var ids = SubscriptionEntity.find("""
+                                          select id
+                                          from SubscriptionEntity s
+                                          where s.endDate is not null and s.endDate <= current_date 
+                                          """)
+                .project(Long.class)
+                .list();
+        //@formatter:on
+
+        if (!ids.isEmpty()) {
+            var count1 = ApiCredentialEntity.delete("id.subscription.id in (?1)", ids);
+            Log.infof("%d expired credentials(s) deleted", count1);
+
+            var count2 = SubscriptionEntity.delete("id in (?1)", ids);
+            Log.infof("%d expired subscription(s) deleted", count2);
+        }
+        return ids;
     }
 
     @Override

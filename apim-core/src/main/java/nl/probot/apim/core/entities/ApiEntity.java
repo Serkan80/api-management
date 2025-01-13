@@ -51,7 +51,7 @@ public class ApiEntity extends PanacheEntity {
     public String openApiUrl;
 
     @NotBlank
-    @Size(max = 200)
+    @Size(max = 100)
     public String description;
 
     public boolean enabled = true;
@@ -122,8 +122,8 @@ public class ApiEntity extends PanacheEntity {
 
         if (obj instanceof ApiEntity api) {
             return Objects.equals(this.owner, api.owner)
-                    && Objects.equals(this.proxyPath, api.proxyPath)
-                    && Objects.equals(this.proxyUrl, api.proxyUrl);
+                   && Objects.equals(this.proxyPath, api.proxyPath)
+                   && Objects.equals(this.proxyUrl, api.proxyUrl);
         }
         return false;
     }
