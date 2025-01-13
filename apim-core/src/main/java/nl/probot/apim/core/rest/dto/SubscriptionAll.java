@@ -20,10 +20,6 @@ public record SubscriptionAll(
         List<ApiCredential> credentials,
         String[] accounts
 ) {
-//    @JsonGetter("accounts")
-//    public String accountsAsString() {
-//        return String.join(",", this.accounts);
-//    }
 
     public static SubscriptionAll toDto(SubscriptionEntity entity) {
         var apis = entity.apis.stream().map(Api::toDto).toList();

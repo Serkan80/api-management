@@ -236,7 +236,7 @@ class GatewayRouteTest {
             switch (type) {
                 case CLIENT_CREDENTIALS -> response.body("headers.Authorization", equalTo("Bearer 123456"));
                 case BASIC -> response.body("headers.Authorization", notNullValue());
-                case PASSTHROUGH -> response.body("headers.Authorization", nullValue());
+                case PASSTHROUGH -> response.body("headers.Authorization", equalTo("dummy"));
                 case API_KEY -> response.header("ApiKey", is("token-12345"));
             }
         }
@@ -301,7 +301,7 @@ class GatewayRouteTest {
 
     private ValidatableResponse triggerRateLimit(String path, int maxRequests) {
         for (int i = 0; i < maxRequests; i++) {
-            makeApiCall(this.mainSubKey, GET.name(), path);
+            makeApiCall(this.mainSubKey, GET.name(), path).assertThat().header("X-RateLimit-Limit", equalTo("1"));
         }
 
         // +1 call should trigger rate limit max
@@ -317,6 +317,7 @@ class GatewayRouteTest {
                 //@formatter:off
             given()
                     .contentType(APPLICATION_JSON)
+                    .header(AUTHORIZATION, "dummy")
                     .header("subscription-key", subKey)
 //                    .log().all()
             .when()

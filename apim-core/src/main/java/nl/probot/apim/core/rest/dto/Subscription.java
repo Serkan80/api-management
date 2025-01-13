@@ -10,9 +10,4 @@ public record Subscription(
         LocalDate endDate,
         boolean enabled,
         String[] accounts) {
-
-//    @JsonGetter("accounts")
-//    public String accountsAsString() {
-//        return String.join(",", this.accounts);
-//    }
 }
