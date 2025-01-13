@@ -91,7 +91,7 @@ public class SubscriptionController implements SubscriptionOpenApi {
 
     @Override
     @JsonView(Views.PublicFields.class)
-    @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
+    @RolesAllowed("${apim.roles.manager}")
     public List<Subscription> search(String searchQuery) {
         return SubscriptionEntity.search(searchQuery);
     }
