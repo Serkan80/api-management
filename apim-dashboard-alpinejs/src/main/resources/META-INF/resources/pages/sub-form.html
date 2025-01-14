@@ -77,7 +77,7 @@
                     placeholder="2030-01-01"
                     data-toggle="datepicker"
                     x-model="selectedData.endDate"
-                    :min="new Date().toISOString().substring(0,10)">
+                    :min="new Date(Date.now() + (3600 * 1000 * 24)).toISOString().substring(0,10)">
             <em class="invalid-feedback">Please provide a date in the future.</em>
         </div>
 

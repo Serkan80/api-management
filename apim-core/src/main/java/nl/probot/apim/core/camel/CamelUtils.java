@@ -17,9 +17,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.message.BasicNameValuePair;
 
+import java.net.URLEncoder;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -32,8 +31,10 @@ import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.HttpHeaders.COOKIE;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
+import static java.util.stream.Collectors.joining;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
@@ -65,23 +66,31 @@ public final class CamelUtils {
         // text part of multipart
         if (body != null) {
             body.entrySet().forEach(entry -> {
-                if (exchange.getIn().getHeader(CONTENT_TYPE).equals(APPLICATION_FORM_URLENCODED)) {
-                    multiPartBuilder.setContentType(ContentType.APPLICATION_FORM_URLENCODED);
-                    multiPartBuilder.addParameter(new BasicNameValuePair(entry.getKey(), entry.getValue().toString()));
-                } else {
-                    multiPartBuilder.addTextBody(entry.getKey(), entry.getValue().toString());
-                }
+                multiPartBuilder.addTextBody(entry.getKey(), entry.getValue().toString());
                 exchange.getIn().getHeaders().remove(entry.getKey());
             });
         }
 
         // binary part of multipart
         if (attachments != null) {
-            attachments.entrySet()
-                    .forEach(entry -> multiPartBuilder.addBinaryBody(entry.getKey(), Unchecked.supplier(() -> entry.getValue().getInputStream()).get()));
+            attachments.entrySet().forEach(entry -> multiPartBuilder.addBinaryBody(
+                    entry.getKey(),
+                    Unchecked.supplier(() -> entry.getValue().getInputStream()).get()));
         }
 
         exchange.getMessage().setBody(multiPartBuilder.build());
+    }
+
+    public static void formUrlEncodedProcessor(Exchange exchange) {
+        exchange.getIn().setHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED);
+        var body = (Map<String, Object>) exchange.getIn().getBody(Map.class);
+        var formData = body.entrySet().stream()
+                .map(entry -> {
+                    exchange.getIn().getHeaders().remove(entry.getKey());
+                    return "%s=%s".formatted(entry.getKey(), URLEncoder.encode(entry.getValue().toString(), UTF_8));
+                })
+                .collect(joining("&"));
+        exchange.getIn().setBody(formData);
     }
 
     public static void forwardUrlProcessor(Exchange exchange) {

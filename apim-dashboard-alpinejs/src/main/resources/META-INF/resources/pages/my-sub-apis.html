@@ -12,7 +12,9 @@
             <th>OpenAPI URL</th>
             <th>Authentication Type</th>
             <th>Description</th>
-            <th></th>
+            <template x-if="getSelectedCredential(api.id).length > 0">
+                <th>&nbsp;</th>
+            </template>
         </tr>
         </thead>
         <tbody>
@@ -35,15 +37,15 @@
                 </td>
                 <td x-text="api.authenticationType || '-'"></td>
                 <td x-text="api.description"></td>
-                <td>
-                    <template x-if="getSelectedCredential(api.id).length > 0">
+                <template x-if="getSelectedCredential(api.id).length > 0">
+                    <td>
                         <button @click.prevent="postData=getSelectedCredential(api.id)[0]"
                                 class="btn btn-sm btn-primary"
                                 data-toggle="modal" data-target="#credentials-view-modal">
                             View Credential
                         </button>
-                    </template>
-                </td>
+                    </td>
+                </template>
             </tr>
         </template>
         </tbody>
@@ -85,113 +87,119 @@
                         </div>
                     </div>
 
-                    <!-- basic auth -->
-                    <fieldset>
-                        <legend>Basic Authentication</legend>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="username" class="form-label">Username</label>
-                                <input
-                                        id="username"
-                                        name="username"
-                                        type="text"
-                                        class="form-control"
-                                        x-model="postData.username"
-                                        disabled>
+                    <template x-if="selectedData.apis.some(api => api.id === postData.apiId && api.authenticationType === 'BASIC')">
+                        <!-- basic auth -->
+                        <fieldset>
+                            <legend>Basic Authentication</legend>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input
+                                            id="username"
+                                            name="username"
+                                            type="text"
+                                            class="form-control"
+                                            x-model="postData.username"
+                                            disabled>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input
+                                            id="password"
+                                            name="password"
+                                            type="text"
+                                            class="form-control"
+                                            x-model="postData.password"
+                                            disabled>
+                                </div>
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="password" class="form-label">Password</label>
-                                <input
-                                        id="password"
-                                        name="password"
-                                        type="text"
-                                        class="form-control"
-                                        x-model="postData.password"
-                                        disabled>
-                            </div>
-                        </div>
-                    </fieldset>
+                        </fieldset>
+                    </template>
 
                     <!-- client credentials -->
-                    <fieldset>
-                        <legend>Client Credentials</legend>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="clientId" class="form-label">Client ID</label>
+                    <template x-if="selectedData.apis.some(api => api.id === postData.apiId && api.authenticationType === 'CLIENT_CREDENTIALS')">
+                        <fieldset>
+                            <legend>Client Credentials</legend>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="clientId" class="form-label">Client ID</label>
+                                    <input
+                                            id="clientId"
+                                            name="clientId"
+                                            type="text"
+                                            class="form-control"
+                                            x-model="postData.clientId"
+                                            disabled>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="clientSecret" class="form-label">Client Secret</label>
+                                    <input
+                                            id="clientSecret"
+                                            name="clientSecret"
+                                            type="text"
+                                            class="form-control"
+                                            x-model="postData.clientSecret"
+                                            disabled>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="clientUrl" class="form-label">Client URL</label>
                                 <input
-                                        id="clientId"
-                                        name="clientId"
-                                        type="text"
+                                        id="clientUrl"
+                                        name="clientUrl"
+                                        type="url"
                                         class="form-control"
-                                        x-model="postData.clientId"
+                                        x-model="postData.clientUrl"
                                         disabled>
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="clientSecret" class="form-label">Client Secret</label>
+                            <div class="form-group mb-3">
+                                <label for="clientScopes" class="form-label">Client Scopes</label>
                                 <input
-                                        id="clientSecret"
-                                        name="clientSecret"
-                                        type="text"
+                                        id="clientScopes"
+                                        name="clientScopes"
+                                        type="url"
                                         class="form-control"
-                                        x-model="postData.clientSecret"
+                                        x-model="postData.clientScope"
                                         disabled>
                             </div>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="clientUrl" class="form-label">Client URL</label>
-                            <input
-                                    id="clientUrl"
-                                    name="clientUrl"
-                                    type="url"
-                                    class="form-control"
-                                    x-model="postData.clientUrl"
-                                    disabled>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="clientScopes" class="form-label">Client Scopes</label>
-                            <input
-                                    id="clientScopes"
-                                    name="clientScopes"
-                                    type="url"
-                                    class="form-control"
-                                    x-model="postData.clientScope"
-                                    disabled>
-                        </div>
-                    </fieldset>
+                        </fieldset>
+                    </template>
 
                     <!-- api token -->
-                    <fieldset>
-                        <legend>ApiKey</legend>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="apiKey" class="form-label">Api-Key</label>
-                                <input
-                                        id="apiKey"
-                                        name="apiKey"
-                                        type="text"
-                                        class="form-control"
-                                        x-model="postData.apiKey"
-                                        disabled>
-                            </div>
-                            <div class="form-group col-md-5">
-                                <label for="apiKeyHeader" class="form-label">Api-Key Header</label>
-                                <input
-                                        id="apiKeyHeader"
-                                        name="apiKeyHeader"
-                                        type="text"
-                                        class="form-control"
-                                        x-model="postData.apiKeyHeader"
-                                        disabled
-                                >
-                            </div>
+                    <template x-if="selectedData.apis.some(api => api.id === postData.apiId && api.authenticationType === 'API_KEY')">
+                        <fieldset>
+                            <legend>ApiKey</legend>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="apiKey" class="form-label">Api-Key</label>
+                                    <input
+                                            id="apiKey"
+                                            name="apiKey"
+                                            type="text"
+                                            class="form-control"
+                                            x-model="postData.apiKey"
+                                            disabled>
+                                </div>
+                                <div class="form-group col-md-5">
+                                    <label for="apiKeyHeader" class="form-label">Api-Key Header</label>
+                                    <input
+                                            id="apiKeyHeader"
+                                            name="apiKeyHeader"
+                                            type="text"
+                                            class="form-control"
+                                            x-model="postData.apiKeyHeader"
+                                            disabled
+                                    >
+                                </div>
 
-                            <div class="form-group col-md-3">
-                                <label for="clientUrl" class="form-label">Api-Key Location</label>
-                                <select name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation" disabled>
-                                </select>
+                                <div class="form-group col-md-3">
+                                    <label for="clientUrl" class="form-label">Api-Key Location</label>
+                                    <select name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation" disabled>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                    </fieldset>
+                        </fieldset>
+                    </template>
                 </div>
             </div>
             <div class="modal-footer">

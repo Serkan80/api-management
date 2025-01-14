@@ -27,7 +27,6 @@ import static nl.probot.apim.commons.jpa.QuerySeparator.COMMA;
  */
 public class PanacheDyanmicQueryHelper {
 
-    QuerySeparator separator;
     boolean allowBlankValues = false;
     List<Statement> statements = new ArrayList<>();
 
@@ -164,7 +163,7 @@ public class PanacheDyanmicQueryHelper {
 
     public record DynamicStatement(String statement, List<Object> param) implements Statement {
         public DynamicStatement(String statement, Object value) {
-            this(statement, List.of(value));
+            this(statement, value != null ? List.of(value) : List.of());
         }
     }
 

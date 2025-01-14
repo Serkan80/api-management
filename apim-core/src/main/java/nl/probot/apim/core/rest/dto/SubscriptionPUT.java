@@ -13,14 +13,14 @@ public record SubscriptionPUT(
         Boolean enabled,
         LocalDate endDate,
 
-        @Size(max = 20)
+        @Size(min = 1, max = 20)
         Set<String> accounts) {
 
     public String[] accountAsArray() {
         if (this.accounts == null) {
             return null;
         }
-        
+
         return this.accounts.stream().map(String::strip).toArray(String[]::new);
     }
 

@@ -73,6 +73,12 @@ public class SubscriptionEntity extends PanacheEntity {
         api.subscriptions.add(this);
     }
 
+    public static SubscriptionEntity getByNaturalId(String subscriptionKey) {
+        return getEntityManager().unwrap(Session.class)
+                .bySimpleNaturalId(SubscriptionEntity.class)
+                .load(subscriptionKey);
+    }
+
     public ApiEntity findApi(String incomingRequestPath) {
         var path = incomingRequestPath.substring(incomingRequestPath.indexOf('/', 1));
         return this.apis.stream()
@@ -86,34 +92,6 @@ public class SubscriptionEntity extends PanacheEntity {
         return this.apiCredentials.stream()
                 .filter(credential -> credential.id.api.id.equals(apiId))
                 .findFirst();
-    }
-
-    public static boolean accountNotExists(String[] users) {
-        return accountNotExists(null, users);
-    }
-
-    public static boolean accountNotExists(String subscriptionKey, String[] users) {
-        var usersArray = "{%s}".formatted(String.join(",", users));
-        var where = new PanacheDyanmicQueryHelper().statements(
-                new StaticStatement("subscriptionKey", subscriptionKey),
-                new DynamicStatement("accounts && cast(:users as varchar[])", usersArray)
-        ).buildWhereStatement();
-
-        var query = getEntityManager().createNativeQuery("select count(*) from subscription where %s".formatted(where));
-
-        if (subscriptionKey != null) {
-            query.setParameter(1, subscriptionKey).setParameter(2, usersArray);
-        } else {
-            query.setParameter(1, usersArray);
-        }
-
-        return (Long) query.getSingleResult() == 0;
-    }
-
-    public static SubscriptionEntity getByNaturalId(String subscriptionKey) {
-        return getEntityManager().unwrap(Session.class)
-                .bySimpleNaturalId(SubscriptionEntity.class)
-                .load(subscriptionKey);
     }
 
     public static SubscriptionEntity findByKey(String key) {
@@ -167,6 +145,28 @@ public class SubscriptionEntity extends PanacheEntity {
                 .project(Subscription.class)
                 .page(0, 50)
                 .list();
+    }
+
+    public static boolean accountNotExists(String[] users) {
+        return accountNotExists(null, users);
+    }
+
+    public static boolean accountNotExists(String subscriptionKey, String[] users) {
+        var usersArray = "{%s}".formatted(String.join(",", users));
+        var where = new PanacheDyanmicQueryHelper().statements(
+                new DynamicStatement("subscription_key <> :subKey", subscriptionKey),
+                new DynamicStatement("accounts && cast(:users as varchar[])", usersArray)
+        ).buildWhereStatement();
+
+        var query = getEntityManager().createNativeQuery("select count(*) from subscription where %s".formatted(where));
+
+        if (subscriptionKey != null) {
+            query.setParameter(1, subscriptionKey).setParameter(2, usersArray);
+        } else {
+            query.setParameter(1, usersArray);
+        }
+
+        return (Long) query.getSingleResult() == 0;
     }
 
     public static int updateCredentialConditionally(Long subId, Long apiId, ApiCredentialPUT credential) {
