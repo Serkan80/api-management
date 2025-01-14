@@ -47,7 +47,7 @@ public class GatewayRoute extends EndpointRouteBuilder {
                     .when(header(CONTENT_TYPE).contains(MULTIPART_FORM_DATA))
                         .process(CamelUtils::multiPartProcessor)
                     .endChoice()
-                    .when(header(CONTENT_TYPE).isEqualTo(APPLICATION_FORM_URLENCODED))
+                    .when(header(CONTENT_TYPE).startsWith(APPLICATION_FORM_URLENCODED))
                         .process(CamelUtils::formUrlEncodedProcessor)
                     .endChoice()
                 .end()

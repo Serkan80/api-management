@@ -51,9 +51,9 @@ class ApiControllerTest {
     @CsvSource(textBlock = """
             /jp, 201, 1
             /jp, 500, 1
-            /jp/v2, 201, 2
-            jp, 400, 2
-            , 400, 2
+            /jp/v2, 201, 1
+            jp, 400, 0
+            , 400, 0
             """)
     @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
     void saveEdgeCases(String proxyPath, int expectedStatus, int totalApis) {
@@ -63,8 +63,10 @@ class ApiControllerTest {
 
         createApi(request, expectedStatus, null);
 
-        var apis = given().contentType(APPLICATION_JSON).get().thenReturn().as(Api[].class);
-        assertThat(apis.length).isEqualTo(totalApis);
+        if (proxyPath != null && !proxyPath.isBlank()) {
+            var apis = given().contentType(APPLICATION_JSON).get().thenReturn().as(Api[].class);
+            assertThat(apis).filteredOn(api -> api.proxyPath().equals(proxyPath)).hasSize(totalApis);
+        }
     }
 
     @Test

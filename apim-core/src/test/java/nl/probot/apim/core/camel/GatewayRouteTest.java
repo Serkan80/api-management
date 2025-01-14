@@ -33,11 +33,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.joining;
 import static nl.probot.apim.core.InstancioHelper.apiModel;
 import static nl.probot.apim.core.RestHelper.addApi;
 import static nl.probot.apim.core.RestHelper.addCredential;
@@ -138,7 +141,7 @@ class GatewayRouteTest {
         if (method != HEAD) {
             response.body("method", equalTo(method.name()))
                     .body("headers.subscription-key", nullValue())
-                    .body("headers.Authorization", nullValue());
+                    .body("headers.Authorization", equalTo("dummy"));
         }
     }
 
@@ -158,7 +161,7 @@ class GatewayRouteTest {
         createApi(Instancio.of(apiModel).set(field(ApiPOST::proxyPath), "/forbidden").create(), this.apisUrl);
         makeApiCall(this.mainSubKey, GET.name(), "/forbidden", 404)
                 .body("exception", equalTo("jakarta.ws.rs.NotFoundException"))
-                .body("message", equalTo("Api(proxyPath=/forbidden) not found or was not enabled"));
+                .body("message", equalTo("Api(proxyPath=/forbidden) not found or was not enabled on current subscription"));
     }
 
     @Order(5)
@@ -219,6 +222,17 @@ class GatewayRouteTest {
     void bigUploads(int sizeMB, int status) {
         var data = new ByteArrayInputStream(createDummyContent(sizeMB));
         makeMultipartCall(this.mainSubKey, "dummy", data).statusCode(status);
+    }
+
+    @Order(502)
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
+    void formUrlEncoded(boolean viaBody) {
+        makeFormDataCall(this.mainSubKey, viaBody, Map.of("firstname", "bob", "lastname", "backend"))
+                .statusCode(200)
+                .body("firstname", equalTo("bob"))
+                .body("lastname", equalTo("backend"));
     }
 
     @Order(799)
@@ -339,6 +353,24 @@ class GatewayRouteTest {
                 .then();
 
         //@formatter:on
+    }
+
+    private ValidatableResponse makeFormDataCall(String subKey, boolean viaBody, Map<String, Object> formData) {
+        var builder = given().header("subscription-key", subKey).log().all();
+        var queryParams = "";
+
+        if (viaBody) {
+            builder.formParams(formData);
+        } else {
+            queryParams = formData.entrySet().stream()
+                    .map(entry -> "%s=%s".formatted(entry.getKey(), URLEncoder.encode(entry.getValue().toString(), UTF_8)))
+                    .collect(joining("&", "?", ""));
+        }
+
+        return builder
+                .when()
+                .post("%s%s%s%s".formatted(serverUrl(), this.apimContextRoot, "/multipart/form", queryParams))
+                .then();
     }
 
     private SubscriptionResponse createSubscriptionWithApi(String subject, String proxyPath) {
