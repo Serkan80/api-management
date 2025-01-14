@@ -86,8 +86,8 @@
                                 <tr>
                                     <td x-text="metric.proxyPath"></td>
                                     <td x-text="metric.value"
-                                        :class="metric.value >= 10 && 'bg-danger text-white'"
-                                        :class="metric.value >= 5 && metric.value < 10 && 'bg-warn text-white'"></td>
+                                        :class="metric.value >= 5 ? 'bg-danger text-white' : (metric.value >= 2 && metric.value < 5) && 'bg-warning text-white'">
+                                    </td>
                                 </tr>
                             </template>
                             </tbody>
@@ -132,7 +132,6 @@
                             <tr>
                                 <th>Proxy path</th>
                                 <th>Status</th>
-                                <th>Total</th>
                                 <th>Date</th>
                             </tr>
                             </thead>
@@ -141,8 +140,7 @@
                                 <tr>
                                     <td x-text="metric.proxyPath"></td>
                                     <td x-text="metric.status" :class="metric.status >= 400 && 'bg-danger text-white'"></td>
-                                    <td x-text="metric.value"></td>
-                                    <td x-text="metric.ts.toLocaleString('nl-NL')"></td>
+                                    <td x-text="metric.ts"></td>
                                 </tr>
                             </template>
                             </tbody>

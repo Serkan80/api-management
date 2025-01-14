@@ -9,11 +9,13 @@ import nl.probot.apim.core.entities.SubscriptionEntity;
 import nl.probot.apim.core.utils.CacheManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static nl.probot.apim.core.camel.CamelUtils.apiTokenAuth;
 import static nl.probot.apim.core.camel.CamelUtils.basicAuth;
 import static nl.probot.apim.core.camel.CamelUtils.clientCredentialsAuth;
+import static nl.probot.apim.core.camel.CamelUtils.passthroughAuth;
 import static nl.probot.apim.core.entities.AuthenticationType.PASSTHROUGH;
 import static org.apache.camel.Exchange.HTTP_URI;
 
@@ -25,6 +27,9 @@ public class SubscriptionProcessor implements Processor {
     public static final String SUBSCRIPTION = "subscription";
     public static final String THROTTLING_ENABLED = "throttling_enabled";
     public static final String THROTTLING_MAX_REQUESTS = "throttling_maxRequests";
+
+    @ConfigProperty(name = "mp.jwt.token.cookie", defaultValue = "NA")
+    String accessTokenName;
 
     @Inject
     CacheManager cacheManager;
@@ -44,7 +49,7 @@ public class SubscriptionProcessor implements Processor {
         exchange.setProperty(PROXY_PATH, api.proxyPath);
     }
 
-    private static void checkApiCredentials(Exchange exchange, SubscriptionEntity subscription, ApiEntity api) {
+    private void checkApiCredentials(Exchange exchange, SubscriptionEntity subscription, ApiEntity api) {
         var authType = api.authenticationType;
 
         if (authType != null && authType != PASSTHROUGH) {
@@ -58,6 +63,8 @@ public class SubscriptionProcessor implements Processor {
                 case API_KEY -> apiTokenAuth(exchange, credential);
                 case CLIENT_CREDENTIALS -> clientCredentialsAuth(exchange, credential);
             }
+        } else {
+            passthroughAuth(exchange, this.accessTokenName);
         }
     }
 

@@ -138,9 +138,6 @@
             </div>
             <div class="modal-body">
                 <form id="credentialsForm" novalidate>
-                    <div class="card-header text-white bg-info">
-                        Note that the credentials you fill in, should match the authenticationType of the API !
-                    </div>
                     <div class="card-body">
                         <div x-html="fetchPage('errors.html')"></div>
 
@@ -164,123 +161,128 @@
                                         type="text"
                                         class="form-control"
                                         :value="selectedData.subscriptionKey"
-                                        disabled
-                                >
+                                        disabled>
                             </div>
                         </div>
 
                         <!-- basic auth -->
-                        <fieldset>
-                            <legend>Basic Authentication</legend>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input
-                                            id="username"
-                                            name="username"
-                                            type="text"
-                                            class="form-control"
-                                            minlength="5"
-                                            maxlength="50"
-                                            x-model="postData.username">
-                                    <em class="invalid-feedback">Please provide username between 5 and 50 characters.</em>
+                        <template x-if="selectedData.apis.some(api => api.id === postData.apiId && api.authenticationType === 'BASIC')">
+                            <fieldset>
+                                <legend>Basic Authentication</legend>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="username" class="form-label">Username</label>
+                                        <input
+                                                id="username"
+                                                name="username"
+                                                type="text"
+                                                class="form-control"
+                                                minlength="5"
+                                                maxlength="50"
+                                                x-model="postData.username">
+                                        <em class="invalid-feedback">Please provide username between 5 and 50 characters.</em>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="password" class="form-label">Password</label>
+                                        <input
+                                                id="password"
+                                                name="password"
+                                                type="text"
+                                                class="form-control"
+                                                minlength="5"
+                                                maxlength="20"
+                                                x-model="postData.password">
+                                        <em class="invalid-feedback">Please provide password between 5 and 20 characters.</em>
+                                    </div>
                                 </div>
-                                <div class="form-group col-md-6">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input
-                                            id="password"
-                                            name="password"
-                                            type="text"
-                                            class="form-control"
-                                            minlength="5"
-                                            maxlength="20"
-                                            x-model="postData.password">
-                                    <em class="invalid-feedback">Please provide password between 5 and 20 characters.</em>
-                                </div>
-                            </div>
-                        </fieldset>
+                            </fieldset>
+                        </template>
 
                         <!-- client credentials -->
-                        <fieldset>
-                            <legend>Client Credentials</legend>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label for="clientId" class="form-label">Client ID</label>
-                                    <input
-                                            id="clientId"
-                                            name="clientId"
-                                            type="text"
-                                            class="form-control"
-                                            x-model="postData.clientId">
+                        <template x-if="selectedData.apis.some(api => api.id === postData.apiId && api.authenticationType === 'CLIENT_CREDENTIALS')">
+                            <fieldset>
+                                <legend>Client Credentials</legend>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="clientId" class="form-label">Client ID</label>
+                                        <input
+                                                id="clientId"
+                                                name="clientId"
+                                                type="text"
+                                                class="form-control"
+                                                x-model="postData.clientId">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="clientSecret" class="form-label">Client Secret</label>
+                                        <input
+                                                id="clientSecret"
+                                                name="clientSecret"
+                                                type="text"
+                                                class="form-control"
+                                                x-model="postData.clientSecret">
+                                    </div>
                                 </div>
-                                <div class="form-group col-md-6">
-                                    <label for="clientSecret" class="form-label">Client Secret</label>
+                                <div class="form-group mb-3">
+                                    <label for="clientUrl" class="form-label">Client URL</label>
                                     <input
-                                            id="clientSecret"
-                                            name="clientSecret"
-                                            type="text"
+                                            id="clientUrl"
+                                            name="clientUrl"
+                                            type="url"
                                             class="form-control"
-                                            x-model="postData.clientSecret">
+                                            placeholder="https://oauth-server.com/token"
+                                            x-model="postData.clientUrl">
+                                    <em class="invalid-feedback">Please provide a valid URL.</em>
                                 </div>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="clientUrl" class="form-label">Client URL</label>
-                                <input
-                                        id="clientUrl"
-                                        name="clientUrl"
-                                        type="url"
-                                        class="form-control"
-                                        placeholder="https://oauth-server.com/token"
-                                        x-model="postData.clientUrl">
-                                <em class="invalid-feedback">Please provide a valid URL.</em>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="clientScopes" class="form-label">Client Scopes</label>
-                                <input
-                                        id="clientScopes"
-                                        name="clientScopes"
-                                        type="url"
-                                        class="form-control"
-                                        placeholder="profile, microprofile-jwt, email, ..."
-                                        x-model="postData.clientScope">
-                            </div>
-                        </fieldset>
+                                <div class="form-group mb-3">
+                                    <label for="clientScopes" class="form-label">Client Scopes</label>
+                                    <input
+                                            id="clientScopes"
+                                            name="clientScopes"
+                                            type="url"
+                                            class="form-control"
+                                            placeholder="profile, microprofile-jwt, email, ..."
+                                            x-model="postData.clientScope">
+                                </div>
+                            </fieldset>
+                        </template>
 
                         <!-- api token -->
-                        <fieldset>
-                            <legend>ApiKey</legend>
-                            <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label for="apiKey" class="form-label">Api-Key</label>
-                                    <input
-                                            id="apiKey"
-                                            name="apiKey"
-                                            type="text"
-                                            class="form-control"
-                                            placeholder="123456789"
-                                            x-model="postData.apiKey">
-                                </div>
-                                <div class="form-group col-md-5">
-                                    <label for="apiKeyHeader" class="form-label">Api-Key Header</label>
-                                    <input
-                                            id="apiKeyHeader"
-                                            name="apiKeyHeader"
-                                            type="text"
-                                            class="form-control"
-                                            placeholder="Authorization: ApiToken "
-                                            x-model="postData.apiKeyHeader">
-                                </div>
+                        <template x-if="selectedData.apis.some(api => api.id === postData.apiId && api.authenticationType === 'API_KEY')">
+                            <fieldset>
+                                <legend>ApiKey</legend>
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label for="apiKey" class="form-label">Api-Key</label>
+                                        <input
+                                                id="apiKey"
+                                                name="apiKey"
+                                                type="text"
+                                                class="form-control"
+                                                placeholder="123456789"
+                                                x-model="postData.apiKey">
+                                    </div>
+                                    <div class="form-group col-md-5">
+                                        <label for="apiKeyHeader" class="form-label">Api-Key Header</label>
+                                        <input
+                                                id="apiKeyHeader"
+                                                name="apiKeyHeader"
+                                                type="text"
+                                                class="form-control"
+                                                placeholder="Authorization: ApiToken "
+                                                x-model="postData.apiKeyHeader">
+                                    </div>
 
-                                <div class="form-group col-md-3">
-                                    <label for="clientUrl" class="form-label">Api-Key Location</label>
-                                    <select name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation">
-                                        <option value="">Select...</option>
-                                        <option value="HEADER">In HTTP Header</option>
-                                        <option value="QUERY">As Query Parameter</option>
-                                    </select>
+                                    <div class="form-group col-md-3">
+                                        <label for="clientUrl" class="form-label">Api-Key Location</label>
+                                        <select name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation">
+                                            <option value="">Select...</option>
+                                            <option value="HEADER">In HTTP Header</option>
+                                            <option value="QUERY">As Query Parameter</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                        </fieldset>
+                            </fieldset>
+                        </template>
                     </div>
                 </form>
             </div>

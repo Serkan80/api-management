@@ -282,7 +282,7 @@ function sse() {
 
 		startStream() {
 		    const promQueries = [
-		        '?query=sum by (proxyPath, status) (apim_metrics_seconds_count)',
+		        '?query=sum by (proxyPath, status, ts) (apim_metrics_seconds_count)',
 		        'query=sum by (proxyPath, subscription) (apim_metrics_seconds_count)',
 		        'query=avg by (proxyPath) (apim_metrics_seconds_max)',
 		        'query=sum by (proxyPath) (apim_metrics_seconds_count)',
@@ -415,10 +415,10 @@ function getTotalPerStatus(data) {
 	                                    proxyPath: row.metric.proxyPath,
 	                                    status: row.metric.status,
 	                                    value: row.value[1],
-	                                    ts: new Date(row.value[0] * 1000)
+	                                    ts: row.metric.ts
                                     }
                                 },
-                        (a, b) => b.ts.getTime() - a.ts.getTime());
+                        (a, b) => b.ts - a.ts);
 }
 
 function getTotalRequestsPerSub(data) {

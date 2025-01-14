@@ -9,6 +9,8 @@ import io.quarkus.security.UnauthorizedException;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.NewCookie;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
 import org.apache.camel.Exchange;
@@ -18,15 +20,20 @@ import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import static jakarta.ws.rs.core.HttpHeaders.COOKIE;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
@@ -153,6 +160,20 @@ public final class CamelUtils {
         exchange.setProperty("clientAuth", oauthParams);
     }
 
+    public static void passthroughAuth(Exchange exchange, String accessTokenName) {
+        var in = exchange.getIn();
+        var authorization = in.getHeader(AUTHORIZATION, String.class);
+
+        if (authorization == null || authorization.isBlank()) {
+            var cookies = parseCookies(in.getHeader(COOKIE, String.class));
+            cookies.stream()
+                    .filter(cookie -> cookie.getName().startsWith("q_session") || cookie.getName().equals(accessTokenName))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .ifPresent(at -> in.setHeader(AUTHORIZATION, "Bearer %s".formatted(at)));
+        }
+    }
+
     public static void metrics(Exchange exchange, MeterRegistry registry, boolean start) {
         if (start) {
             var sample = Timer.start(registry);
@@ -162,7 +183,7 @@ public final class CamelUtils {
             var timer = exchange.getProperty("timer", Sample.class);
             var subName = Optional.ofNullable(exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class))
                     .map(entity -> entity.name)
-                    .orElse("error: illegal call");
+                    .orElse("error: no subscription found for this request");
 
             timer.stop(registry.timer(
                     "apim_metrics",
@@ -170,8 +191,20 @@ public final class CamelUtils {
                     "proxyPath", requireNonBlankElse(exchange.getProperty("proxyPath", String.class), "proxyPath not available"),
                     "httpPath", exchange.getProperty("httpPath", String.class),
                     "traceId", requireNonBlankElse(exchange.getIn().getHeader(TRACE_ID, String.class), ""),
+                    "ts", OffsetDateTime.now().toString(),
                     "subscription", subName));
         }
+    }
+
+    private static List<NewCookie> parseCookies(String rawCookieHeader) {
+        return Arrays.stream(requireNonNullElse(rawCookieHeader, "").split(";"))
+                .map(cookiePair -> {
+                    var parts = cookiePair.split("=", 2);
+                    var name = parts[0].trim();
+                    var value = parts.length > 1 ? parts[1].trim() : "";
+                    return new NewCookie(name, value);
+                })
+                .toList();
     }
 
     private static String apiKeyValue(ApiCredentialEntity credential) {

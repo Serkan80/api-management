@@ -79,7 +79,7 @@ public class SubscriptionEntity extends PanacheEntity {
                 .filter(api -> api.enabled)
                 .filter(api -> path.startsWith(api.proxyPath))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Api(proxyPath=%s) not found or was not enabled".formatted(path)));
+                .orElseThrow(() -> new NotFoundException("Api(proxyPath=%s) not found or was not enabled on current subscription".formatted(path)));
     }
 
     public Optional<ApiCredentialEntity> findApiCredential(Long apiId) {
