@@ -244,15 +244,12 @@ class GatewayRouteTest {
         updateApi(this.apiId, 200, this.apisUrl, Map.of("authenticationType", type != null ? type.name() : ""));
 
         var response = makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH);
-        if (type == null) {
-            response.header("Authorization", nullValue());
-        } else {
-            switch (type) {
-                case CLIENT_CREDENTIALS -> response.body("headers.Authorization", equalTo("Bearer 123456"));
-                case BASIC -> response.body("headers.Authorization", notNullValue());
-                case PASSTHROUGH -> response.body("headers.Authorization", equalTo("dummy"));
-                case API_KEY -> response.header("ApiKey", is("token-12345"));
-            }
+        switch (type) {
+            case null -> response.header("Authorization", nullValue());
+            case CLIENT_CREDENTIALS -> response.body("headers.Authorization", equalTo("Bearer 123456"));
+            case BASIC -> response.body("headers.Authorization", notNullValue());
+            case PASSTHROUGH -> response.body("headers.Authorization", equalTo("dummy"));
+            case API_KEY -> response.header("ApiKey", is("token-12345"));
         }
     }
 
