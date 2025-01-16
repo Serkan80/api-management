@@ -95,7 +95,7 @@ public class AccessListEntity extends PanacheEntity {
                         new StaticStatement("description", dto.description())
                 ).buildUpdateStatement(new WhereStatement("ip = :ip", dto.ip()));
 
-        return AccessListEntity.update(query, helper.values());
+        return update(query, helper.values());
     }
 
     private static boolean isAllowed(AccessListEntity entry) {
