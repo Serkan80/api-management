@@ -204,7 +204,7 @@ public class SubscriptionEntity extends PanacheEntity {
     }
 
     public static void addCredential(ApiCredential credential) {
-        var apiEntity = ApiEntity.getEntityManager().getReference(ApiEntity.class, credential.apiId());
+        var apiEntity = getEntityManager().getReference(ApiEntity.class, credential.apiId());
         var subscriptionEntity = Optional.ofNullable(SubscriptionEntity.getByNaturalId(credential.subscriptionKey()))
                 .orElseThrow(() -> new NotFoundException("Subscription with the given key not found or was disabled"));
 

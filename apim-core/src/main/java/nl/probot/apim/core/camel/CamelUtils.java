@@ -125,8 +125,9 @@ public final class CamelUtils {
 
     public static void setErrorMessage(Exchange exchange) {
         var exception = exchange.getProperty(EXCEPTION_CAUGHT, Exception.class);
-        var errorMsg = exception.getMessage();
+        var errorMsg = requireNonBlankElse(exception.getMessage(), "null value detected");
         var status = 500;
+        Log.error(errorMsg);
 
         switch (exception) {
             case HttpOperationFailedException he -> {
@@ -145,7 +146,7 @@ public final class CamelUtils {
         message.setBody(JsonObject.of(
                 "routeId", exchange.getProperty(FAILURE_ROUTE_ID),
                 "exception", exception.getClass(),
-                "message", requireNonBlankElse(errorMsg, exception.getMessage()),
+                "message", errorMsg,
                 "failureEndpoint", trimOptions(exchange.getProperty(FAILURE_ENDPOINT, String.class))
         ).encodePrettily());
         exchange.setRouteStop(true);

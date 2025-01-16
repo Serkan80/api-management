@@ -17,7 +17,10 @@ import static org.apache.camel.Exchange.CONTENT_TYPE;
 public class GatewayRoute extends EndpointRouteBuilder {
 
     @ConfigProperty(name = "apim.context-root")
-    String apimPath;
+    String apimContextRoot;
+
+    @Inject
+    AccessProcessor accessProcessor;
 
     @Inject
     SubscriptionProcessor subscriptionProcessor;
@@ -35,9 +38,10 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .end();
 
         //@formatter:off
-        from(platformHttp(this.apimPath).matchOnUriPrefix(true))
+        from(platformHttp(this.apimContextRoot).matchOnUriPrefix(true))
                 .id("apimRoute")
                 .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, true))
+                .process(this.accessProcessor)
                 .process(this.subscriptionProcessor)
                 .choice()
                     .when(exchangeProperty(THROTTLING_ENABLED).isEqualTo(true))

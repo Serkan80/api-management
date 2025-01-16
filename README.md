@@ -13,12 +13,13 @@ The APIM provides the following features:
 - proxying REST, SOAP & GraphQL protocols,
 - managing APIs & Subscriptions,
 - analytics: tracing, metrics & logging info about an API,
+- white- & blacklisting, 
 - rate limiting,
 - circuit breaker,
-- multipart,
+- multipart & fileupload support,
 - CORS,
 - TLS/SSL,
-- downstream Basic Auth, Client Credentials and token based authentication,
+- Basic Auth, Client Credentials, token based or pass-through authentication for the APIs,
 - OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM,
 - a dashboard for managing the APIM
 
@@ -103,7 +104,7 @@ classDiagram
   needed to gain access to the APIM.
 - _Api_: this is the Api of the downstream service/backend that needs to be accessed via the APIM. An Api can be shared
   among many Subscriptions.
-- _ApiCredentials_: optional: you can add an authentication method to the Api, if this is needed. An ApiCredential
+- _ApiCredentials_: optional: you can add an authentication method to an Api, if this is needed. An ApiCredential
   belongs to a Subscription.    
   The supported authentication methods are:
     - basic auth
