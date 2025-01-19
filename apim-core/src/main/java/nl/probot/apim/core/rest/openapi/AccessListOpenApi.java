@@ -1,6 +1,7 @@
 package nl.probot.apim.core.rest.openapi;
 
 import jakarta.validation.Valid;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -18,6 +19,7 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
@@ -25,7 +27,7 @@ import java.util.List;
 import static org.eclipse.microprofile.openapi.annotations.enums.SchemaType.STRING;
 import static org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType.HTTP;
 
-@Path("/access-list")
+@Path("/apim/core/access-list")
 @Tag(name = "AccessList Controller")
 @SecurityRequirement(name = "basic")
 @SecuritySchemes(@SecurityScheme(type = HTTP, scheme = "basic", securitySchemeName = "basic"))
@@ -46,6 +48,20 @@ public interface AccessListOpenApi {
     RestResponse<Void> update(@Valid AccessListPUT dto);
 
     @GET
-    @Operation(summary = "Returns all access-lists")
+    @Path("/{ip}")
+    @Operation(summary = "Returns the AccessList by ip address")
+    @APIResponses({
+            @APIResponse(name = "OK", responseCode = "200"),
+            @APIResponse(name = "Not Found", responseCode = "404", description = "When the AccessList is not found")
+    })
+    AccessList findByIp(@RestPath String ip);
+
+    @GET
+    @Operation(summary = "Returns all AccessLists")
     List<AccessList> findAll();
+
+    @DELETE
+    @Path("/{ip}")
+    @Operation(summary = "Deletes the AccessList for the given ip")
+    RestResponse<Void> delete(String ip);
 }

@@ -23,7 +23,7 @@ public record AccessListPUT(
 
     @JsonIgnore
     @AssertTrue(message = "At least one parameter must be provided")
-    public Boolean isNotEmpty() {
+    public boolean isNotEmpty() {
         return isNotBlank(this.newIp)
                || isNotBlank(this.description)
                || this.blacklisted != null
@@ -32,18 +32,26 @@ public record AccessListPUT(
 
     @JsonIgnore
     @AssertTrue(message = "Blacklisted and whitelisted cannot have the same value")
-    public Boolean isValid() {
-        return requireNonNullElse(this.blacklisted, false) ^ requireNonNullElse(this.whitelisted, false);
+    public boolean isValid() {
+        if (this.blacklisted == null && this.whitelisted == null) {
+            return true;
+        }
+
+        return requireNonNullElse(this.blacklisted, false) != requireNonNullElse(this.whitelisted, false);
     }
 
 
     @JsonIgnore
     @AssertTrue(message = "New ip is not a valid ip address")
-    public Boolean isValidIpAddress() {
+    public boolean isValidIpAddress() {
         if (this.newIp == null || this.newIp.isBlank()) {
             return true;
         }
 
         return isValidIPv4(this.newIp) || isValidIPv6(this.newIp);
+    }
+
+    public Boolean toggle(Boolean type) {
+        return Boolean.FALSE.equals(type);
     }
 }

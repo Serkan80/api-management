@@ -85,12 +85,15 @@ public class AccessListEntity extends PanacheEntity {
     }
 
     public static int updateConditionally(AccessListPUT dto, String user) {
+        var blacklisted = Boolean.TRUE.equals(dto.blacklisted());
+        var whitelisted = !blacklisted;
+
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper
                 .statements(
                         new StaticStatement("ip", dto.newIp()),
-                        new StaticStatement("blacklisted", dto.blacklisted()),
-                        new StaticStatement("whitelisted", dto.whitelisted()),
+                        new StaticStatement("blacklisted", blacklisted),
+                        new StaticStatement("whitelisted", whitelisted),
                         new StaticStatement("updatedBy", requireNonNull(user)),
                         new StaticStatement("description", dto.description())
                 ).buildUpdateStatement(new WhereStatement("ip = :ip", dto.ip()));

@@ -75,6 +75,7 @@ public final class CamelUtils {
 
         // binary part of multipart
         if (attachments != null) {
+            exchange.getContext().setStreamCaching(true);
             attachments.entrySet().forEach(entry -> multiPartBuilder.addBinaryBody(
                     entry.getKey(),
                     Unchecked.supplier(() -> entry.getValue().getInputStream()).get()));

@@ -6,6 +6,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.entities.AccessListEntity;
 import nl.probot.apim.core.rest.dto.AccessList;
@@ -17,6 +18,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import java.net.URI;
 import java.util.List;
 
+import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.jboss.resteasy.reactive.RestResponse.created;
 import static org.jboss.resteasy.reactive.RestResponse.noContent;
@@ -33,7 +35,7 @@ public class AccessListController implements AccessListOpenApi {
     public RestResponse<Void> save(AccessListPOST dto, UriInfo uriInfo) {
         var entity = dto.toEntity(this.identity.getPrincipal().getName());
         entity.persist();
-        Log.infof("AccessList(ip=%d, blacklisted=%s, whitelisted=%s) created", entity.ip, entity.blacklisted, entity.whitelisted);
+        Log.infof("AccessList(ip=%s, blacklisted=%s, whitelisted=%s) created", entity.ip, entity.blacklisted, entity.whitelisted);
 
         return created(URI.create("%s/%s".formatted(uriInfo.getPath(), entity.id)));
     }
@@ -43,10 +45,18 @@ public class AccessListController implements AccessListOpenApi {
     public RestResponse<Void> update(AccessListPUT dto) {
         var count = AccessListEntity.updateConditionally(dto, this.identity.getPrincipal().getName());
         if (count > 0) {
-            Log.infof("AccessList(ip=%s) updated", dto.ip(), count);
+            Log.infof("AccessList(ip=%s) updated", requireNonNullElse(dto.newIp(), dto.ip()));
             return ok();
         }
         return noContent();
+    }
+
+    @Override
+    public AccessList findByIp(String ip) {
+        return AccessListEntity.find("ip = ?1", ip)
+                .project(AccessList.class)
+                .singleResultOptional()
+                .orElseThrow(() -> new NotFoundException("AccessList(ip=%s) not found".formatted(ip)));
     }
 
     @Override
@@ -55,5 +65,15 @@ public class AccessListController implements AccessListOpenApi {
                 .withHint(HINT_READONLY, true)
                 .project(AccessList.class)
                 .list();
+    }
+
+    @Override
+    @Transactional
+    public RestResponse<Void> delete(String ip) {
+        var count = AccessListEntity.delete("ip = ?1", ip);
+        if (count > 0) {
+            Log.infof("AccessList(ip=%s) deleted", ip);
+        }
+        return ok();
     }
 }

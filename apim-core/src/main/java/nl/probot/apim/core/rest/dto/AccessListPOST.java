@@ -25,13 +25,13 @@ public record AccessListPOST(
 
     @JsonIgnore
     @AssertTrue(message = "Blacklisted and whitelisted cannot have the same value")
-    public Boolean isValid() {
+    public boolean isValid() {
         return requireNonNullElse(this.blacklisted, false) ^ requireNonNullElse(this.whitelisted, false);
     }
 
     @JsonIgnore
     @AssertTrue(message = "Ip is not a valid ip address")
-    public Boolean isValidIpAddress() {
+    public boolean isValidIpAddress() {
         return isValidIPv4(this.ip) || isValidIPv6(this.ip);
     }
 
