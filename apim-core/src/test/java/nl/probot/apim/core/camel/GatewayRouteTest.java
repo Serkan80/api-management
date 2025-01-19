@@ -11,8 +11,10 @@ import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.ApiKeyLocation;
 import nl.probot.apim.core.entities.AuthenticationType;
 import nl.probot.apim.core.entities.SubscriptionEntity;
+import nl.probot.apim.core.rest.AccessListController;
 import nl.probot.apim.core.rest.ApiController;
 import nl.probot.apim.core.rest.SubscriptionController;
+import nl.probot.apim.core.rest.dto.AccessListPOST;
 import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiPOST;
 import org.apache.camel.http.common.HttpMethods;
@@ -37,6 +39,7 @@ import java.net.URLEncoder;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -44,6 +47,7 @@ import static java.util.stream.Collectors.joining;
 import static nl.probot.apim.core.InstancioHelper.apiModel;
 import static nl.probot.apim.core.RestHelper.addApi;
 import static nl.probot.apim.core.RestHelper.addCredential;
+import static nl.probot.apim.core.RestHelper.createAccessList;
 import static nl.probot.apim.core.RestHelper.createApi;
 import static nl.probot.apim.core.RestHelper.createSubscription;
 import static nl.probot.apim.core.RestHelper.updateApi;
@@ -80,6 +84,10 @@ class GatewayRouteTest {
     @TestHTTPResource
     @TestHTTPEndpoint(SubscriptionController.class)
     URL subscriptionsUrl;
+
+    @TestHTTPResource
+    @TestHTTPEndpoint(AccessListController.class)
+    URL accessListsUrl;
 
     Long apiId;
     Long mainSubId;
@@ -186,6 +194,27 @@ class GatewayRouteTest {
         } else {
             response.body("message", equalTo("Api requires API_KEY authentication but no credentials were found for this Api"));
         }
+    }
+
+    @Order(6)
+    @ParameterizedTest
+    @CsvSource(textBlock = """
+            127.0.0.1, true, false, 403
+            127.0.0.0/8, true, false, 403
+            127.0.0.1, false, true, 200
+            127.0.0.0/8, false, true, 200
+            """)
+    @TestSecurity(user = "bob", roles = "manager", authMechanism = "basic")
+    void accessListCheck(String ip, Boolean blacklisted, Boolean whitelisted, int expectedStatus) {
+        var request = Instancio.of(AccessListPOST.class)
+                .set(field(AccessListPOST::ip), ip)
+                .set(field(AccessListPOST::blacklisted), blacklisted)
+                .set(field(AccessListPOST::whitelisted), whitelisted)
+                .create();
+
+        createAccessList(request, 201, this.accessListsUrl);
+        makeApiCall(this.mainSubKey, GET.name(), PROXY_PATH, expectedStatus);
+        given().contentType(JSON).delete(this.accessListsUrl.toString() + "/{ip}", ip);
     }
 
     @Test
@@ -330,11 +359,9 @@ class GatewayRouteTest {
                     .contentType(APPLICATION_JSON)
                     .header(AUTHORIZATION, "dummy")
                     .header("subscription-key", subKey)
-//                    .log().all()
             .when()
                     .request(method, "%s%s%s".formatted(serverUrl(), this.apimContextRoot, path))
             .then()
-//                    .log().all()
                     .statusCode(status);
            //@formatter:on
     }

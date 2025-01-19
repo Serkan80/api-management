@@ -3,7 +3,6 @@ package nl.probot.apim.core.rest;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
-import io.restassured.response.ValidatableResponse;
 import nl.probot.apim.core.rest.dto.AccessList;
 import nl.probot.apim.core.rest.dto.AccessListPOST;
 import nl.probot.apim.core.rest.dto.AccessListPUT;
@@ -20,6 +19,9 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static java.util.Objects.requireNonNullElse;
 import static nl.probot.apim.core.InstancioHelper.settings;
+import static nl.probot.apim.core.RestHelper.createAccessList;
+import static nl.probot.apim.core.RestHelper.getAccessList;
+import static nl.probot.apim.core.RestHelper.getAccessLists;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
@@ -54,7 +56,7 @@ class AccessListControllerTest {
                 .withSettings(settings)
                 .create();
 
-        createAccessList(request, expectedStatus);
+        createAccessList(request, expectedStatus, null);
 
         if (expectedStatus == 201) {
             getAccessList(ip)
@@ -130,44 +132,6 @@ class AccessListControllerTest {
         var request = createAccessList();
         given().contentType(JSON).delete("/{ip}", request.ip()).then().statusCode(200);
         getAccessList(request.ip()).statusCode(404);
-    }
-
-    private static AccessListPOST createAccessList() {
-        var request = Instancio.of(AccessListPOST.class)
-                .generate(field(AccessListPOST::ip), gen -> gen.net().ip4())
-                .set(field(AccessListPOST::whitelisted), true)
-                .ignore(field(AccessListPOST::blacklisted))
-                .withSettings(settings)
-                .create();
-
-        createAccessList(request, 201);
-        return request;
-    }
-
-    private static ValidatableResponse createAccessList(AccessListPOST request, int expectedStatus) {
-        return given()
-                .contentType(JSON)
-                .body(request)
-                .when()
-                .post()
-                .then()
-                .statusCode(expectedStatus);
-    }
-
-    private static ValidatableResponse getAccessList(String ip) {
-        return given()
-                .contentType(JSON)
-                .when()
-                .get("/{ip}", ip)
-                .then();
-    }
-
-    private static AccessList[] getAccessLists() {
-        return given()
-                .contentType(JSON)
-                .when()
-                .get()
-                .thenReturn().as(AccessList[].class);
     }
 }
 

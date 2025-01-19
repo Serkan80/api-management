@@ -16,7 +16,9 @@ public class AccessProcessor implements Processor {
     @Override
     @ActivateRequestContext
     public void process(Exchange exchange) {
-        var ip = exchange.getIn().getHeader(REMOTE_ADDRESS, String.class);
+        var fullIp = exchange.getIn().getHeader(REMOTE_ADDRESS, String.class).split(":");
+        var ip = fullIp[0];
+
         var hasAccess = AccessListEntity.hasAccess(ip);
         Log.debugf("%s is accessing the apim", ip);
 

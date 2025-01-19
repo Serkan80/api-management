@@ -1,5 +1,8 @@
 package nl.probot.apim.core;
 
+import io.restassured.response.ValidatableResponse;
+import nl.probot.apim.core.rest.dto.AccessList;
+import nl.probot.apim.core.rest.dto.AccessListPOST;
 import nl.probot.apim.core.rest.dto.Api;
 import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiPOST;
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
 import static jakarta.ws.rs.core.HttpHeaders.LOCATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static nl.probot.apim.core.InstancioHelper.settings;
@@ -128,6 +132,44 @@ public final class RestHelper {
 
     public static void updateCredential(Map<String, Object> request, URL url) {
         given().contentType(APPLICATION_JSON).body(request).when().put(getUrl(url) + "/credentials").then().statusCode(200);
+    }
+
+    public static AccessListPOST createAccessList() {
+        var request = Instancio.of(AccessListPOST.class)
+                .generate(field(AccessListPOST::ip), gen -> gen.net().ip4())
+                .set(field(AccessListPOST::whitelisted), true)
+                .ignore(field(AccessListPOST::blacklisted))
+                .withSettings(settings)
+                .create();
+
+        createAccessList(request, 201, null);
+        return request;
+    }
+
+    public static ValidatableResponse createAccessList(AccessListPOST request, int expectedStatus, URL url) {
+        return given()
+                .contentType(JSON)
+                .body(request)
+                .when()
+                .post(getUrl(url))
+                .then()
+                .statusCode(expectedStatus);
+    }
+
+    public static ValidatableResponse getAccessList(String ip) {
+        return given()
+                .contentType(JSON)
+                .when()
+                .get("/{ip}", ip)
+                .then();
+    }
+
+    public static AccessList[] getAccessLists() {
+        return given()
+                .contentType(JSON)
+                .when()
+                .get()
+                .thenReturn().as(AccessList[].class);
     }
 
     public static String extractId(String location) {
