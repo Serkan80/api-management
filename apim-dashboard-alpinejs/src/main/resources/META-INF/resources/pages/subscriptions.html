@@ -8,14 +8,16 @@
                         placeholder="Search in name & accounts..."
                         @keyup.debounce.1000ms="search('/subscriptions/search?q=', $event.target.value)">
             </div>
-            <div style="width: auto">
-                <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
+            <template x-if="hasManagerRole()">
+                <div style="width: auto">
+                    <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
                     <span class="btn-icon-wrapper pr-2 opacity-7">
                         <i class="fa fa-plus fa-w-20"></i>
                     </span>
-                    New Subscription
-                </button>
-            </div>
+                        New Subscription
+                    </button>
+                </div>
+            </template>
         </div>
 
         <p x-show="data.length == 0">No subscriptions available</p>

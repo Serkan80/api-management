@@ -1,0 +1,27 @@
+<template x-if="hasManagerRole()">
+    <div class="card mb-4 col-md-12 mx-auto">
+        <div class="card-body">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a data-toggle="tab"
+                       href="#tab-accesslist"
+                       class="nav-link active"
+                       @click.prevent="currentRoute='/administration'">
+                        Access Control
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a data-toggle="tab" href="#tab-cleanup" class="nav-link" @click.prevent="currentRoute='/administration'">Cleanup</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div id="tab-accesslist" class="tab-pane active" role="tabpanel">
+                    <div x-html="fetchPage('admin-accesslist.html')"></div>
+                </div>
+                <div id="tab-cleanup" class="tab-pane" role="tabpanel">
+<!--                    <div x-html="fetchPage('admin-cleanup.html')"></div>-->
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

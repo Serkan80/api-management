@@ -2,11 +2,10 @@ package nl.probot.apim.core.rest;
 
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
-import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.entities.AccessListEntity;
 import nl.probot.apim.core.rest.dto.AccessList;
@@ -27,13 +26,10 @@ import static org.jboss.resteasy.reactive.RestResponse.ok;
 @RolesAllowed("${apim.roles.manager}")
 public class AccessListController implements AccessListOpenApi {
 
-    @Inject
-    SecurityIdentity identity;
-
     @Override
     @Transactional
-    public RestResponse<Void> save(AccessListPOST dto, UriInfo uriInfo) {
-        var entity = dto.toEntity(this.identity.getPrincipal().getName());
+    public RestResponse<Void> save(AccessListPOST dto, SecurityContext identity, UriInfo uriInfo) {
+        var entity = dto.toEntity(identity.getUserPrincipal().getName());
         entity.persist();
         Log.infof("AccessList(ip=%s, blacklisted=%s, whitelisted=%s) created", entity.ip, entity.blacklisted, entity.whitelisted);
 
@@ -42,8 +38,8 @@ public class AccessListController implements AccessListOpenApi {
 
     @Override
     @Transactional
-    public RestResponse<Void> update(AccessListPUT dto) {
-        var count = AccessListEntity.updateConditionally(dto, this.identity.getPrincipal().getName());
+    public RestResponse<Void> update(AccessListPUT dto, SecurityContext identity) {
+        var count = AccessListEntity.updateConditionally(dto, identity.getUserPrincipal().getName());
         if (count > 0) {
             Log.infof("AccessList(ip=%s) updated", requireNonNullElse(dto.newIp(), dto.ip()));
             return ok();
@@ -69,10 +65,10 @@ public class AccessListController implements AccessListOpenApi {
 
     @Override
     @Transactional
-    public RestResponse<Void> delete(String ip) {
+    public RestResponse<Void> delete(String ip, SecurityContext identity) {
         var count = AccessListEntity.delete("ip = ?1", ip);
         if (count > 0) {
-            Log.infof("AccessList(ip=%s) deleted", ip);
+            Log.infof("AccessList(ip=%s) deleted by %s*****", ip, identity.getUserPrincipal().getName().substring(0, 3));
         }
         return ok();
     }

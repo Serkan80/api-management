@@ -6,6 +6,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
 import nl.probot.apim.core.rest.dto.AccessList;
 import nl.probot.apim.core.rest.dto.AccessListPOST;
@@ -36,7 +37,7 @@ public interface AccessListOpenApi {
     @POST
     @Operation(summary = "Adds a new AccessList and returns its Location")
     @APIResponse(name = "OK", responseCode = "201", headers = @Header(name = "Location", schema = @Schema(type = STRING, format = "uri")))
-    RestResponse<Void> save(@Valid AccessListPOST dto, UriInfo uriInfo);
+    RestResponse<Void> save(@Valid AccessListPOST dto, SecurityContext identity, UriInfo uriInfo);
 
     @PUT
     @Operation(summary = "Updates the given AccessList")
@@ -45,7 +46,7 @@ public interface AccessListOpenApi {
             @APIResponse(name = "Not updated", responseCode = "204", description = "When the access-list is not updated"),
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the access-list is not found")
     })
-    RestResponse<Void> update(@Valid AccessListPUT dto);
+    RestResponse<Void> update(@Valid AccessListPUT dto, SecurityContext identity);
 
     @GET
     @Path("/{ip}")
@@ -63,5 +64,5 @@ public interface AccessListOpenApi {
     @DELETE
     @Path("/{ip}")
     @Operation(summary = "Deletes the AccessList for the given ip")
-    RestResponse<Void> delete(String ip);
+    RestResponse<Void> delete(String ip, SecurityContext identity);
 }

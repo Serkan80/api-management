@@ -1,7 +1,9 @@
 <template x-if="errors != null">
     <div class="alert alert-danger fade show alert-dismissible" role="alert">
         <ul>
-            <li x-text="errors"></li>
+            <template x-for="(err, index) in errors" x-key="index">
+            <li x-text="err"></li>
+            </template>
         </ul>
     </div>
 </template>

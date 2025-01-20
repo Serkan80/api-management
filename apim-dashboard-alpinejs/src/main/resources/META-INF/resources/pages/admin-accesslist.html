@@ -1,0 +1,164 @@
+<template x-if="hasManagerRole()">
+    <div x-init="get('/access-list')" x-data="fetchData">
+        <div x-show="!showForm">
+            <div class="row justify-content-between">
+                <div class="ml-auto mt-3 mb-4" style="width: auto">
+                    <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
+                        <span class="btn-icon-wrapper pr-2 opacity-7">
+                            <i class="fa fa-plus fa-w-20"></i>
+                        </span>
+                        Add Entry
+                    </button>
+                </div>
+            </div>
+            <p x-show="data.length == 0">No access list available</p>
+            <div class="row table-responsive" x-show="data.length > 0">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Whitelisted</th>
+                        <th>Blacklisted</th>
+                        <th>Updated By</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
+                        <th>Description</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="(accessList,index) in data" :key="index">
+                        <tr @click.prevent="edit(accessList, false)" style="cursor: pointer">
+                            <td x-text="accessList.ip"></td>
+                            <td>
+                                    <span class="status-indicator rounded-circle d-inline-block"
+                                          :class="accessList.whitelisted && 'bg-success'"
+                                          x-text="accessList.whitelisted ? ''  : '-'"
+                                          style="width: 10px; height: 10px;">
+                                    </span>
+                            </td>
+                            <td>
+                                    <span class="status-indicator rounded-circle d-inline-block"
+                                          :class="accessList.blacklisted && 'bg-success'"
+                                          x-text="accessList.blacklisted ? ''  : '-'"
+                                          style="width: 10px; height: 10px;">
+                                    </span>
+                            </td>
+                            <td x-text="accessList.updatedBy"></td>
+                            <td x-text="accessList.createdAt"></td>
+                            <td x-text="accessList.updatedAt"></td>
+                            <td x-text="accessList.description"></td>
+                            <td>
+                                <a @click.stop.prevent="selectedData=accessList,$('#deleteAccessListModal').modal('show')" class="btn">
+                                    <li class="fas fa-fw fa-trash"></li>
+                                </a>
+                            </td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <template x-if="showForm">
+            <form id="accessListForm" novalidate>
+                <div class="card-body">
+                    <div x-html="fetchPage('errors.html')"></div>
+
+                    <div class="form-group required mb-3">
+                        <label for="ip" class="form-label">IP Address</label>
+                        <input
+                                type="text"
+                                id="ip"
+                                name="ip"
+                                class="form-control"
+                                placeholder="ipv4 or ipv6 with or without CIDR"
+                                pattern="(.+\\.){3}{.+}|(.+\\:){2,}(.+)"
+                                x-model="postData.ip"
+                                :disabled="!isInsert"
+                                required>
+                        <em class="invalid-feedback">Please provide a valid IP Address.</em>
+                    </div>
+
+                    <div class="form-group mb-3" x-show="!isInsert">
+                        <label for="newip" class="form-label">New IP Address</label>
+                        <input
+                                type="text"
+                                id="newip"
+                                name="newip"
+                                class="form-control"
+                                placeholder="ipv4 or ipv6 with or without CIDR"
+                                pattern="(.+\\.){3}{.+}|(.+\\:){2,}(.+)"
+                                x-model="postData.newIp"
+                                >
+                        <em class="invalid-feedback">Please provide a valid IP Address.</em>
+                    </div>
+
+                    <div class="ml-3 form-check form-switch">
+                        <input class="form-check-input"
+                               type="radio"
+                               id="whitelisted"
+                               name="type"
+                               value="whitelist"
+                               :checked="postData.whitelisted"
+                               @change="postData.whitelisted = true; postData.blacklisted = false">
+                        <label class="form-check-label" for="whitelisted">Whitelist</label>
+                    </div>
+                    <div class="ml-3 mb-3 form-check form-switch">
+                        <input class="form-check-input"
+                               type="radio"
+                               id="blacklisted"
+                               name="type"
+                               value="blacklist"
+                               :checked="postData.blacklisted"
+                               @change="postData.blacklisted = true; postData.whitelisted = false">
+                        <label class="form-check-label" for="blacklisted">Blacklist</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea
+                                id="description"
+                                name="description"
+                                class="form-control"
+                                x-model="postData.description"
+                                >
+                        </textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-block text-right card-footer">
+                        <button class="mr-2 btn btn-link btn-sm" @click.prevent="loadPage('/administration')">Cancel</button>
+                        <button type="button" class="btn btn-primary"
+                                @click.prevent="post('#accessListForm', '/access-list', postData, '/administration')"
+                                x-show="isInsert">Submit
+                        </button>
+                        <button type="button" class="btn btn-primary"
+                                @click.prevent="post('#accessListForm', '/access-list', postData, '/administration')"
+                                x-show="!isInsert">Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </template>
+
+        <div class="modal fade" id="deleteAccessListModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" x-text="'Delete entry ' + selectedData.ip + ' ?'"></div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                        <a class="btn btn-primary" data-dismiss="modal" @click="remove('/access-list', selectedData.ip)">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

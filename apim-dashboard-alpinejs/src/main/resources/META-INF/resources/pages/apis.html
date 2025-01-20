@@ -8,7 +8,7 @@
                         placeholder="Search in proxyPath, proxyUrl & owner..."
                         @keyup.debounce.1000ms="search('/apis/search?q=', $event.target.value)">
             </div>
-            <template x-if="isManager">
+            <template x-if="hasManagerRole()">
                 <div style="width: auto">
                     <button type="button" class="btn btn-shadow btn-wide btn-primary" @click.prevent="edit('', true)">
                     <span class="btn-icon-wrapper pr-2 opacity-7">
@@ -194,8 +194,11 @@
                     <!-- Submit Button -->
                     <div class="d-block text-right card-footer">
                         <button class="mr-2 btn btn-link btn-sm" @click.prevent="showForm=false;postData=null">Cancel</button>
-                        <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis/' + postData.id, postData, '/apis')" x-show="!isInsert">Save</button>
-                        <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis', postData, '/apis')" x-show="isInsert">Submit</button>
+                        <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis/' + postData.id, postData, '/apis')"
+                                x-show="!isInsert">Save
+                        </button>
+                        <button type="submit" class="btn btn-primary" @click.prevent="post('#apiForm', '/apis', postData, '/apis')" x-show="isInsert">Submit
+                        </button>
                     </div>
                 </div>
             </form>

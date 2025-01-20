@@ -10,7 +10,8 @@ function spa() {
             '/subscription': 'subscription.html',
             '/subscriptions': 'subscriptions.html',
             '/apis': 'apis.html',
-            '/analytics': 'analytics.html'
+            '/analytics': 'analytics.html',
+            '/administration': 'administration.html'
         },
         username: null,
         roles: [],
@@ -73,6 +74,10 @@ function spa() {
             }
 			this.isManager = sessionStorage.getItem('isManager');
             return sessionStorage.getItem('username') !== null;
+        },
+
+        hasManagerRole() {
+            return JSON.parse(sessionStorage.getItem('isManager'));
         },
 
         logout() {
@@ -153,7 +158,6 @@ function fetchData() {
                                 if (err.violations) {
                                     this.errors = new Array();
                                     err.violations.forEach(ex => this.errors.push(`${ex.field.split('.').at(-1)}: ${ex.message}`));
-                                    this.errors = this.errors.join([separator='\n']);
                                 } else if (err.message) {
                                     this.errors = err.message;
                                 } else {
@@ -175,11 +179,13 @@ function fetchData() {
 		},
 
 		edit(elem, insert) {
-			this.errors = null;
-			this.isInsert = insert;
-			this.showForm = true;
-			if (elem && elem !== '') {
-				this.postData = elem;
+		    if (this.hasManagerRole()) {
+                this.errors = null;
+                this.isInsert = insert;
+                this.showForm = true;
+                if (elem && elem !== '') {
+                    this.postData = elem;
+                }
 			}
 		},
 
@@ -194,6 +200,18 @@ function fetchData() {
                     this.selectedData = json;
                     if (this.selectedData.apis) {
                         this.selectedData.apis.sort((a, b) => b.id - a.id);
+                    }
+                });
+		},
+
+		remove(path, id) {
+            const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'delete' };
+
+            fetchInterceptor(`${this.baseUrl}${path}/${encodeURIComponent(id)}`, options)
+                .then(res => {
+                    if (res.ok) {
+                        this.selectedData = null;
+                        this.data = this.data.filter(row => row.ip != id);
                     }
                 });
 		},
@@ -291,6 +309,7 @@ function sse() {
 		    ];
 		    const queries = promQueries.join('&');
 
+            this.closeSse();
 			this.metrics = [];
 			this.source = new EventSource(this.baseUrl + queries, { withCredentials: true });
 		    this.source.onmessage = (event) => {
