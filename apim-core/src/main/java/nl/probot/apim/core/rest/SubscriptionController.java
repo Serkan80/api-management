@@ -144,11 +144,8 @@ public class SubscriptionController implements SubscriptionOpenApi {
     @Override
     @Transactional
     @RolesAllowed("${apim.roles.manager}")
-    public RestResponse<Void> cleanupExpiredSubscriptions() {
-        var ids = SubscriptionEntity.cleanup();
-        if (!ids.isEmpty()) {
-            return RestResponse.ok();
-        }
-        return RestResponse.noContent();
+    public RestResponse<Map<String, Long>> cleanupExpiredSubscriptions() {
+        var counts = SubscriptionEntity.cleanup();
+        return RestResponse.ok(counts);
     }
 }

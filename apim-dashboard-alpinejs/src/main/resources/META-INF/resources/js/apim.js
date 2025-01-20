@@ -114,6 +114,7 @@ function fetchData() {
 		isModalInsert: true,
 		errors: null,
 		baseUrl: '/apim/core',
+		extraInfo: null,
 
 		get(path) {
 		    this.isLoading = true;
@@ -204,17 +205,29 @@ function fetchData() {
                 });
 		},
 
-		remove(path, id) {
+        remove(path, id, encode) {
             const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'delete' };
+            let param = id;
+            if (encode) {
+                param = encodeURIComponent(id);
+            }
 
-            fetchInterceptor(`${this.baseUrl}${path}/${encodeURIComponent(id)}`, options)
+            fetchInterceptor(`${this.baseUrl}${path}/${param}`, options)
                 .then(res => {
                     if (res.ok) {
                         this.selectedData = null;
                         this.data = this.data.filter(row => row.ip != id);
+                        return res.json();
                     }
-                });
-		},
+                    throw new Error('Delete request failed');
+                })
+                .then(info => {
+                    if (info.countCredentials !== undefined) {
+                        this.extraInfo = `Total ${info.countCredentials} credentials and ${info.countSubscriptions} subscriptions deleted`;
+                    }
+                })
+                .catch(err => console.log(err));
+        },
 
 		toggleRow(id) {
 			if (this.selectedRows.indexOf(id) > -1) {

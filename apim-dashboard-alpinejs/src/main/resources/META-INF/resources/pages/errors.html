@@ -1,9 +1,17 @@
 <template x-if="errors != null">
-    <div class="alert alert-danger fade show alert-dismissible" role="alert">
-        <ul>
-            <template x-for="(err, index) in errors" x-key="index">
-            <li x-text="err"></li>
-            </template>
-        </ul>
+    <div class="col-8 alert alert-danger fade show" role="alert">
+        <template x-if="Array.isArray(errors)">
+            <ul>
+                <template x-for="(err, index) in errors" x-key="index">
+                    <li x-text="err"></li>
+                </template>
+            </ul>
+        </template>
+
+        <template x-if="!Array.isArray(errors)">
+            <ul>
+                <li x-text="errors"></li>
+            </ul>
+        </template>
     </div>
 </template>

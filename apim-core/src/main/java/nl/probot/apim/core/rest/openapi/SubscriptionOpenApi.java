@@ -114,6 +114,6 @@ public interface SubscriptionOpenApi {
     @DELETE
     @Path("/cleanup")
     @Operation(summary = "Cleans up expired subscriptions")
-    @APIResponse(name = "OK", responseCode = "204")
-    RestResponse<Void> cleanupExpiredSubscriptions();
+    @APIResponse(name = "OK", responseCode = "200", description = "The total counts of deleted subscriptions & credentials")
+    RestResponse<Map<String, Long>> cleanupExpiredSubscriptions();
 }

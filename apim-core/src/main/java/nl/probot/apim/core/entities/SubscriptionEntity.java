@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -215,7 +216,7 @@ public class SubscriptionEntity extends PanacheEntity {
         Log.infof("ApiCredential(apiId=%d, sub='%s') added", apiEntity.id, subscriptionEntity.name);
     }
 
-    public static List<Long> cleanup() {
+    public static Map<String, Long> cleanup() {
         //@formatter:off
         var ids = SubscriptionEntity.find("""
                                           select id
@@ -225,15 +226,16 @@ public class SubscriptionEntity extends PanacheEntity {
                 .project(Long.class)
                 .list();
         //@formatter:on
-
+        var result = Map.<String, Long>of();
         if (!ids.isEmpty()) {
             var count1 = ApiCredentialEntity.delete("id.subscription.id in (?1)", ids);
             Log.infof("%d expired credentials(s) deleted", count1);
 
             var count2 = SubscriptionEntity.delete("id in (?1)", ids);
             Log.infof("%d expired subscription(s) deleted", count2);
+            result = Map.of("countCredentials", count1, "countSubscriptions", count2);
         }
-        return ids;
+        return result;
     }
 
     @Override
