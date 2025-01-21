@@ -6,15 +6,16 @@
             <th>ID</th>
             <th>Status</th>
             <th>Proxy path</th>
-            <th>Proxy url</th>
             <th>Owner</th>
             <th>Max requests/min</th>
             <th>OpenAPI URL</th>
             <th>Authentication Type</th>
             <th>Description</th>
-            <template x-if="getSelectedCredential(api.id).length > 0">
-                <th>&nbsp;</th>
-            </template>
+            <th>&nbsp;
+                <span x-show="selectedData.apis?.credentials?">
+                    <i class="fas fa-key"></i>
+                </span>
+            </th>
         </tr>
         </thead>
         <tbody>
@@ -28,7 +29,6 @@
                     </span>
                 </td>
                 <td x-text="api.proxyPath"></td>
-                <td x-text="api.proxyUrl"></td>
                 <td x-text="api.owner"></td>
                 <td x-text="api.maxRequests || '-'"></td>
                 <td>
@@ -37,15 +37,14 @@
                 </td>
                 <td x-text="api.authenticationType || '-'"></td>
                 <td x-text="api.description"></td>
-                <template x-if="getSelectedCredential(api.id).length > 0">
-                    <td>
-                        <button @click.prevent="postData=getSelectedCredential(api.id)[0]"
-                                class="btn btn-sm btn-primary"
-                                data-toggle="modal" data-target="#credentials-view-modal">
-                            View Credential
-                        </button>
-                    </td>
-                </template>
+                <td>
+                    <a
+                            x-show="getSelectedCredential(api.id).length > 0"
+                            class="text-primary"
+                            @click.stop.prevent="postData=getSelectedCredential(api.id)[0],$('#credentials-view-modal').modal('show')">
+                        <li class="fas fa-eye"></li>
+                    </a>
+                </td>
             </tr>
         </template>
         </tbody>
@@ -194,8 +193,7 @@
 
                                 <div class="form-group col-md-3">
                                     <label for="clientUrl" class="form-label">Api-Key Location</label>
-                                    <select name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation" disabled>
-                                    </select>
+                                    <input type="text" name="apiTokenLocation" class="form-control" x-model="postData.apiKeyLocation" disabled>
                                 </div>
                             </div>
                         </fieldset>

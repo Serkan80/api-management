@@ -118,6 +118,18 @@ public class SubscriptionController implements SubscriptionOpenApi {
 
     @Override
     @Transactional
+    @RolesAllowed("${apim.roles.manager}")
+    public RestResponse<Void> removeApi(String key, Long apiId) {
+        var deleted = SubscriptionEntity.removeApis(key, apiId);
+        if (deleted > 0) {
+            this.cacheManager.invalidate(key);
+            Log.infof("Deleted %d apis from Subscription(apiId=%d)", deleted, apiId);
+        }
+        return RestResponse.ok();
+    }
+
+    @Override
+    @Transactional
     @RolesAllowed({"${apim.roles.manager}"})
     public RestResponse<Void> addCredential(ApiCredential credential) {
         SubscriptionEntity.addCredential(credential);

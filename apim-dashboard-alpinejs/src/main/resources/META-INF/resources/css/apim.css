@@ -8,10 +8,19 @@ table td, th {
     text-align: center !important;
 }
 
-.alert-danger ul {
+td a {
+    cursor: pointer;
+}
+
+.alert ul {
 	margin-bottom: 0;
 }
 
 .form-control {
 	color: #3e709a;
+}
+
+.modal-body {
+    max-height: 70vh; /* 70% of viewport height */
+    overflow-y: auto;
 }

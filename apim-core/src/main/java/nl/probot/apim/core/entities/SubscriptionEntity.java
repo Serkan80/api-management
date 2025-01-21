@@ -95,6 +95,28 @@ public class SubscriptionEntity extends PanacheEntity {
                 .findFirst();
     }
 
+    public static int removeApis(String subscriptionKey, Long apiId) {
+        getEntityManager().createNativeQuery("""
+                        DELETE FROM api_credential 
+                        WHERE sub_id = (SELECT id FROM subscription WHERE subscription_key = ?1)
+                        AND api_id = ?2
+                        """)
+                .setParameter(1, subscriptionKey)
+                .setParameter(2, apiId)
+                .executeUpdate();
+
+        var relationshipDeleted = getEntityManager().createNativeQuery("""
+                        DELETE FROM subscription_api 
+                        WHERE subscriptions_id = (SELECT id FROM subscription WHERE subscription_key = ?1)
+                        AND apis_id = ?2
+                        """)
+                .setParameter(1, subscriptionKey)
+                .setParameter(2, apiId)
+                .executeUpdate();
+
+        return relationshipDeleted;
+    }
+
     public static SubscriptionEntity findByKey(String key) {
         return find("""
                 select s 

@@ -92,6 +92,10 @@ public interface SubscriptionOpenApi {
     })
     RestResponse<SubscriptionAll> addApi(@RestPath String key, @NotEmpty Set<Long> apiIds);
 
+    @DELETE
+    @Path("/{key}/{apiId}")
+    RestResponse<Void> removeApi(@RestPath String key, @RestPath Long apiId);
+
     @POST
     @Path("/credentials")
     @Operation(summary = "Adds a credential to the given Api")

@@ -181,7 +181,7 @@ function fetchData() {
 	        form.classList.add('was-validated');
 
             if (form.checkValidity()) {
-                if (body.accounts && body.accounts?.length) {
+                if (body.accounts !== 'undefined' && body.accounts?.length) {
                     body.accounts = body.accounts.split(',');
                 }
 
@@ -241,7 +241,21 @@ function fetchData() {
                 });
 		},
 
-        remove(path, id, encode) {
+		removeApi(key, apiId) {
+		    const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'delete' };
+
+            fetchInterceptor(`${this.baseUrl}/subscriptions/${key}/${apiId}`, options)
+                .then(res => {
+                    if (res.ok) {
+                        this.selectedData.apis = this.selectedData.apis.filter(row => row.id != apiId);
+                        return res.json();
+                    }
+                    throw new Error('Delete request failed');
+                })
+                .catch(err => console.log(err));
+		},
+
+        removeAL(path, id, encode) {
             const options = { headers: {'Content-Type': 'application/json'}, credentials: 'include', method: 'delete' };
             let param = id;
             if (encode) {
@@ -486,7 +500,7 @@ function getTotalPerStatus(data) {
 	                                    ts: row.metric.ts
                                     }
                                 },
-                        (a, b) => b.ts - a.ts);
+                        (a, b) => b.ts.localeCompare(a.ts));
 }
 
 function getTotalRequestsPerSub(data) {

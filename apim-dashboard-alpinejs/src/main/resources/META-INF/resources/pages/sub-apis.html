@@ -18,11 +18,13 @@
             <th>Proxy path</th>
             <th>Proxy url</th>
             <th>Owner</th>
-            <th>Max requests/min</th>
-            <th>OpenAPI URL</th>
             <th>Authentication Type</th>
             <th>Description</th>
-            <th></th>
+            <th>
+                <span x-show="selectedData.credentials?.length">
+                    <i class="fas fa-key"></i>
+                </span>
+            </th>
         </tr>
         </thead>
         <tbody>
@@ -38,34 +40,54 @@
                 <td x-text="api.proxyPath"></td>
                 <td x-text="api.proxyUrl"></td>
                 <td x-text="api.owner"></td>
-                <td x-text="api.maxRequests || '-'"></td>
-                <td>
-                    <a :href="api.openApiUrl" x-text="api.openApiUrl" target="_blank" x-show="api.openApiUrl"></a>
-                    <span x-show="!api.openApiUrl">-</span>
-                </td>
                 <td x-text="api.authenticationType || '-'"></td>
                 <td x-text="api.description"></td>
                 <td>
                     <template
                             x-if="(!selectedData.credentials || getSelectedCredential(api.id).length == 0) && api.authenticationType && api.authenticationType != 'PASSTHROUGH'">
-                        <button @click.prevent="postData['apiId']=api.id,isModalInsert=true"
-                                class="btn btn-sm btn-primary"
-                                data-toggle="modal" data-target="#credentials-modal">
-                            Add Credential
-                        </button>
+                        <a
+                                class="text-primary"
+                                @click.stop.prevent="postData['apiId']=api.id,isModalInsert=true,$('#credentials-modal').modal('show')">
+                            <i class="fas fa-plus"></i>
+                        </a>
                     </template>
                     <template x-if="getSelectedCredential(api.id).length > 0">
-                        <button @click.prevent="postData=getSelectedCredential(api.id)[0],isModalInsert=false"
-                                class="btn btn-sm btn-primary"
-                                data-toggle="modal" data-target="#credentials-modal">
-                            Update Credential
-                        </button>
+                        <a
+                                class="text-primary"
+                                @click.stop.prevent="postData=getSelectedCredential(api.id)[0],isModalInsert=false,$('#credentials-modal').modal('show')">
+                            <i class="fas fa-edit"></i>
+                        </a>
                     </template>
+                    <a
+                            class="text-primary"
+                            @click.stop.prevent="postData=api,$('#deleteApiModal').modal('show')">
+                        <li class="fas fa-trash"></li>
+                    </a>
                 </td>
             </tr>
         </template>
         </tbody>
     </table>
+</div>
+
+<div class="modal fade" id="deleteApiModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body" x-text="'Delete API ' + postData.id + ' ?'"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                <a class="btn btn-primary" data-dismiss="modal"
+                   @click="removeApi(selectedData.subscriptionKey, postData.id)">
+                    Delete
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="apis-modal" class="modal fade show" tabindex="-1" role="dialog" aria-modal="true" x-init="get('/apis')">
@@ -131,7 +153,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Credential</h5>
+                <h5 class="modal-title" x-text="isModalInsert ? 'Add Credential' : 'Update Credential'"></h5>
                 <button id="modalCloseCredentials" type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
