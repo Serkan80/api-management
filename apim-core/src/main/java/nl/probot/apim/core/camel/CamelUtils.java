@@ -18,7 +18,6 @@ import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -34,9 +33,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toMap;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
@@ -87,22 +84,20 @@ public final class CamelUtils {
     public static void formUrlEncodedProcessor(Exchange exchange) {
         exchange.getIn().setHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED);
         var body = (Map<String, Object>) exchange.getIn().getBody(Map.class);
-        var bodyMap = body;
 
         if (body == null) {
-            bodyMap = Arrays.stream(exchange.getIn().getHeader(HTTP_QUERY, String.class).split("&"))
-                    .map(pair -> pair.split("="))
-                    .collect(toMap(pair -> URLDecoder.decode(pair[0], UTF_8), pair -> URLDecoder.decode(pair[1], UTF_8)));
+            exchange.getIn().setBody(exchange.getIn().getHeader(HTTP_QUERY, String.class));
+            exchange.getIn().getHeaders().remove(HTTP_QUERY);
+        } else {
+            var formData = body.entrySet().stream()
+                    .map(entry -> {
+                        exchange.getIn().getHeaders().remove(entry.getKey());
+                        return "%s=%s".formatted(entry.getKey(), URLEncoder.encode(entry.getValue().toString(), UTF_8));
+                    })
+                    .collect(joining("&"));
+
+            exchange.getIn().setBody(formData);
         }
-
-        var formData = bodyMap.entrySet().stream()
-                .map(entry -> {
-                    exchange.getIn().getHeaders().remove(entry.getKey());
-                    return "%s=%s".formatted(entry.getKey(), URLEncoder.encode(entry.getValue().toString(), UTF_8));
-                })
-                .collect(joining("&"));
-
-        exchange.getIn().setBody(formData);
     }
 
     public static void forwardUrlProcessor(Exchange exchange) {
@@ -219,7 +214,7 @@ public final class CamelUtils {
     }
 
     private static List<NewCookie> parseCookies(String rawCookieHeader) {
-        return Arrays.stream(requireNonNullElse(rawCookieHeader, "").split(";"))
+        return Arrays.stream(requireNonBlankElse(rawCookieHeader, "").split(";"))
                 .map(cookiePair -> {
                     var parts = cookiePair.split("=", 2);
                     var name = parts[0].trim();

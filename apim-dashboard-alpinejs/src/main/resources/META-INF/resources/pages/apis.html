@@ -55,7 +55,7 @@
                                 <td x-text="api.owner"></td>
                                 <td x-text="api.maxRequests || '-'"></td>
                                 <td>
-                                    <a :href="api.openApiUrl" x-text="api.openApiUrl" target="_blank" x-show="api.openApiUrl"></a>
+                                    <a @click.stop :href="api.openApiUrl" x-text="api.openApiUrl" target="_blank" x-show="api.openApiUrl"></a>
                                     <span x-show="!api.openApiUrl">-</span>
                                 </td>
                                 <td x-text="api.authenticationType || '-'"></td>
@@ -151,7 +151,7 @@
                                 name="openApiUrl"
                                 type="url"
                                 class="form-control"
-                                placeholder="https://api.example.com"
+                                placeholder="https://api.example.com/openapi"
                                 x-model="postData.openApiUrl">
                         <em class="invalid-feedback">Please provide a valid URL.</em>
                     </div>

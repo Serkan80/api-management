@@ -1,3 +1,31 @@
+const expectedValues = new Map();
+
+function setToSession(key, value) {
+    expectedValues.set(key, value);
+    sessionStorage.setItem(key, value);
+}
+
+function validateSessionStorage() {
+    let tampered = false;
+
+    if (sessionStorage.length > 0) {
+        expectedValues.forEach((expectedValue, key) => {
+            const currentValue = sessionStorage.getItem(key);
+            if (currentValue !== expectedValue) {
+                tampered = true;
+                sessionStorage.setItem(key, expectedValue);
+            }
+        });
+    }
+
+    if (tampered) {
+        console.warn('Detected unauthorized sessionStorage modification');
+    }
+}
+
+const CHECK_INTERVAL = 1000;
+setInterval(validateSessionStorage, CHECK_INTERVAL);
+
 function spa() {
 	return {
 	    year: new Date().getFullYear(),
@@ -66,14 +94,22 @@ function spa() {
 	            const res = await fetch('/apim/oidc/userinfo', { headers: {'Content-Type': 'application/json'}, mode: 'no-cors', redirect: 'follow', credentials: 'include' });
 	            if (res.ok) {
 	                const data = await res.json();
-	                sessionStorage.setItem('username', data.username);
-	                sessionStorage.setItem('roles', data.roles);
+	                setToSession('username', data.username);
+	                setToSession('roles', data.roles);
+	                setToSession('isManager', data.roles.includes(data.managerRole));
 	                this.isManager = data.roles.includes(data.managerRole);
 	            }
 	            return res.ok;
             }
-			this.isManager = sessionStorage.getItem('isManager');
-            return sessionStorage.getItem('username') !== null;
+
+            const username = sessionStorage.getItem('username');
+            if (username !== null) {
+                setToSession('username', username);
+                setToSession('roles', sessionStorage.getItem('roles'));
+                setToSession('isManager', sessionStorage.getItem('isManager'));
+			    this.isManager = this.hasManagerRole();
+            }
+            return username !== null;
         },
 
         hasManagerRole() {
@@ -488,9 +524,9 @@ function authBasic() {
                     }
                 })
                 .then(data => {
-                    sessionStorage.setItem("username", data.username);
-                    sessionStorage.setItem("roles", data.roles);
-                    sessionStorage.setItem("isManager", data.roles.includes(data.managerRole));
+                    setToSession("username", data.username);
+                    setToSession("roles", data.roles);
+                    setToSession("isManager", data.roles.includes(data.managerRole));
                     window.location.href = "index.html";
                 })
                 .catch((err) => console.log(err));

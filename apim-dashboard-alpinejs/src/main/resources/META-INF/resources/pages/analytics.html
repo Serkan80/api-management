@@ -140,7 +140,7 @@
                                 <tr>
                                     <td x-text="metric.proxyPath"></td>
                                     <td x-text="metric.status" :class="metric.status >= 400 && 'bg-danger text-white'"></td>
-                                    <td x-text="metric.ts"></td>
+                                    <td x-text="metric.ts.split('.')[0]"></td>
                                 </tr>
                             </template>
                             </tbody>

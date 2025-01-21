@@ -3,6 +3,7 @@ package nl.probot.apim.core.rest;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.SecurityContext;
@@ -23,6 +24,7 @@ import static org.jboss.resteasy.reactive.RestResponse.created;
 import static org.jboss.resteasy.reactive.RestResponse.noContent;
 import static org.jboss.resteasy.reactive.RestResponse.ok;
 
+@ApplicationScoped
 @RolesAllowed("${apim.roles.manager}")
 public class AccessListController implements AccessListOpenApi {
 
@@ -56,10 +58,20 @@ public class AccessListController implements AccessListOpenApi {
     }
 
     @Override
+    public List<AccessList> search(String searchQuery) {
+        return AccessListEntity.find("ip like concat('%', ?1, '%')", Sort.ascending("ip"), searchQuery)
+                .withHint(HINT_READONLY, true)
+                .project(AccessList.class)
+                .page(0, 50)
+                .list();
+    }
+
+    @Override
     public List<AccessList> findAll() {
         return AccessListEntity.findAll(Sort.ascending("ip"))
                 .withHint(HINT_READONLY, true)
                 .project(AccessList.class)
+                .page(0, 50)
                 .list();
     }
 

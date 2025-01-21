@@ -21,6 +21,7 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestPath;
+import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
@@ -56,6 +57,11 @@ public interface AccessListOpenApi {
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the AccessList is not found")
     })
     AccessList findByIp(@RestPath String ip);
+
+    @GET
+    @Path("/search")
+    @Operation(summary = "Searches for AccessLists by ip addresses")
+    List<AccessList> search(@RestQuery("q") String searchQuery);
 
     @GET
     @Operation(summary = "Returns all AccessLists")
