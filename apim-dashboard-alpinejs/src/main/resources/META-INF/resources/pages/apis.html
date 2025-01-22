@@ -29,21 +29,22 @@
                     <table class="table table-bordered table-sm table-hover" width="100%" cellspacing="0">
                         <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Info</th>
                             <th>Status</th>
                             <th>Proxy path</th>
                             <th>Proxy url</th>
                             <th>Owner</th>
-<!--                            <th>Max requests/min</th>-->
-                            <th>OpenAPI URL</th>
-<!--                            <th>Authentication Type</th>-->
                             <th>Description</th>
                         </tr>
                         </thead>
                         <tbody>
                         <template x-for="api in data" :key="api.id">
                             <tr @click="edit(api, false)" style="cursor: pointer">
-                                <td x-text="api.id"></td>
+                                <td>
+                                    <i class="fa fa-info-circle text-primary" style="cursor: pointer"
+                                       @click.stop.prevent="extraInfo=api,$('#info-modal').modal('show')">
+                                    </i>
+                                </td>
                                 <td>
                                     <span class="status-indicator rounded-circle d-inline-block"
                                           :class="api.enabled ? 'bg-success' : 'bg-danger'"
@@ -53,12 +54,6 @@
                                 <td x-text="api.proxyPath"></td>
                                 <td x-text="api.proxyUrl"></td>
                                 <td x-text="api.owner"></td>
-<!--                                <td x-text="api.maxRequests || '-'"></td>-->
-                                <td>
-                                    <a @click.stop :href="api.openApiUrl" x-text="api.openApiUrl" target="_blank" x-show="api.openApiUrl"></a>
-                                    <span x-show="!api.openApiUrl">-</span>
-                                </td>
-<!--                                <td x-text="api.authenticationType || '-'"></td>-->
                                 <td x-text="api.description"></td>
                             </tr>
                         </template>
@@ -204,4 +199,47 @@
             </form>
         </div>
     </template>
+    <div id="info-modal" class="modal fade show" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Test the API</h5>
+                    <button id="modalCloseInfo" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div class="bg-dark rounded-lg overflow-hidden mb-3">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-secondary">
+                                <span class="text-white">httpie</span>
+                                <button class="btn btn-sm btn-outline-light"
+                                        @click="navigator.clipboard.writeText('http -A bearer -a [access token] ' + window.location.origin + '/gateway' + extraInfo.proxyPath + ' subscription-key: [key]')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="m-0 px-3 py-2 text-white" style="background: transparent; white-space: pre-wrap;">
+                            <code data-lang="bash" class="d-block" style="text-align: left;"
+                                  x-text="'http -A bearer -a [access token] ' + window.location.origin + '/gateway' + extraInfo.proxyPath + ' subscription-key: [key]'"></code>
+                        </pre>
+                        </div>
+
+                        <div class="bg-dark rounded-lg overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-secondary">
+                                <span class="text-white">curl</span>
+                                <button class="btn btn-sm btn-outline-light"
+                                        @click="navigator.clipboard.writeText('curl -H &quot;Content-Type: application/json&quot; &quot;Authorization: Bearer [access token]&quot; -H  &quot;subscription-key: [key]' + '&quot; ' + window.location.origin + '/gateway' + extraInfo.proxyPath)">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="m-0 px-3 py-2 text-white" style="background: transparent; white-space: pre-wrap;">
+                            <code data-lang="bash" class="d-block" style="text-align: left;"
+                                  x-text="'curl \n-H &quot;Content-Type: application/json&quot; \n-H &quot;Authorization: Bearer [access token]&quot; \n-H &quot;subscription-key: [key]' + '&quot;\n ' + window.location.origin + '/gateway' + extraInfo.proxyPath"></code>
+                        </pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

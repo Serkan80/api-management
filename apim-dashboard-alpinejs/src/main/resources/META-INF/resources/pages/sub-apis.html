@@ -13,7 +13,6 @@
     <table class="table table-bordered table-sm">
         <thead>
         <tr>
-            <th>ID</th>
             <th>Status</th>
             <th>Proxy path</th>
             <th>Proxy url</th>
@@ -30,7 +29,6 @@
         <tbody>
         <template x-for="api in selectedData.apis" :key="api.id">
             <tr>
-                <td x-text="api.id"></td>
                 <td>
                     <span class="status-indicator rounded-circle d-inline-block"
                           :class="api.enabled ? 'bg-success' : 'bg-danger'"
@@ -61,7 +59,7 @@
                     <a
                             class="text-primary"
                             @click.stop.prevent="postData=api,$('#deleteApiModal').modal('show')">
-                        <li class="fas fa-trash"></li>
+                        <li class="fas fa-trash text-danger"></li>
                     </a>
                 </td>
             </tr>

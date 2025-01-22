@@ -109,7 +109,7 @@ public final class CamelUtils {
         Log.debugf("forward url: %s", forwardUrl);
         exchange.setProperty("forwardUrl", forwardUrl);
         exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
-        exchange.getIn().setHeader(TRACE_ID, UUID.randomUUID());
+        exchange.getIn().setHeader(TRACE_ID, generateTraceId());
     }
 
     public static void cleanUpHeaders(Exchange exchange) {
@@ -257,5 +257,10 @@ public final class CamelUtils {
         }
 
         return original;
+    }
+
+    private static String generateTraceId() {
+        UUID uuid = UUID.randomUUID();
+        return uuid.toString().replace("-", "");
     }
 }
