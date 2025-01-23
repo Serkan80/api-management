@@ -88,7 +88,7 @@ To build and run this project locally, you need the following libraries and tool
 - Java 21 or greater
 - Maven 3.9.x or greater
 - Docker or Podman
-- A REST client tool like Postman, Httpie, Curl, etc. In the examples below, Httpie is used.
+- A REST client tool like Postman, httpie, Curl, etc. In the examples below, httpie is used.
 
 ## Terminology
 
@@ -142,46 +142,71 @@ The default user with the `manager` and `viewer` roles is:
 #### Adding APIs
 On the Dashboard click: `APIs > New API` to add an API. 
 
-- __Proxy Path__: is the mapping prefix to the API. Example: `/v1/myapi`.
-- __Proxy Url__: is the URL of the API. Example: https://myapi.com
+![](/docs/img/add_api_01.png)
+![](/docs/img/add_api_02.png)
+
+- __Proxy Path__: is the mapping prefix to the API. 
+- __Proxy Url__: is the URL of the API.
 - __Owner__: the team or organisation that owns the API.
 - __Authentication Type__: default is passthrough (even when you leave it empty). Choose this if the API requires authentication.
 
-The full url to call https://myapi.com from the APIM will be: 
+When you have added the API, you will see this:
+![](/docs/img/add_api_03.png)
 
-http://localhost:8080/gateway/v1/myapi
+The full url to call https://jsonplaceholder.typicode.com from the APIM will be: 
+
+http://localhost:8080/gateway/v1/jp (See also the `Info` icon the table row)
 
 - `/gateway`: this is the `apim.context-root` see also `application.propeties` in `apim-application` folder. All Api
   calls will start with this path.
-- `/v1/myapi`: is the mapping (the `proxyPath`). Any call to `/v1/myapi` will be forwarded to `myapi.com` (the proxyUrl).
-- any path after `/v1/myapi` will be added and forwarded to `myapi.com`. This includes: query parameters, headers, cookies
+- `/v1/jp`: is the mapping (the `proxyPath`). Any call to `/v1/jp` will be forwarded to `https://jsonplaceholder.typicode.com` (the proxyUrl).
+- any path after `/v1/jp` will be added and forwarded to `proxyUrl`. This includes: query parameters, headers, cookies
   and the request body.
 
 #### Adding a Subscription
 
 On the Dashboard click: `Subsriptions > New Subscription` to add a subscription.
 
+![](/docs/img/add_sub_01.png)
+![](/docs/img/add_sub_02.png)
+
 - __Name__: the name for the subscription, usually the name of a team or organisation.
 - __User accounts__: a comma separated list of accounts, that belong to this subscription. This is needed when a team member wants to view his subscription
 via the dashboard. Max. 20 accounts allowed.
 - __End date__: a date in the future to end the subscription (not mandatory), if the subscription is temporary.
 
+![](/docs/img/add_sub_03.png)
+
 #### Adding APIs to a Subscription
 
 On the Dashboard click: `Subscriptions > Select a subscription from the table > choose the APIs tab > Add API`.
 
+![](/docs/img/add_sub_04.png)
+![](/docs/img/add_sub_05.png)
+![](/docs/img/add_sub_06.png)
+![](/docs/img/add_sub_07.png)
+
 #### Adding a Credential to an API (if needed)
 
-Make sure that the API has an `Authentication Type`, see above `Adding an API`.
+Make sure that the API has an `Authentication Type`:
 
-On the Dashboard click: `Subscriptions > Select a subscription from the table > choose the APIs tab > Click Add Credentials on the row`.
+![](/docs/img/add_credentials_01.png)
 
-The `Add Credentials` button will only show up, if the API has an `Authentication Type` which is not equal to `passthrough`.
+On the Dashboard click: `Subscriptions > Select a subscription from the table > choose the APIs tab > Click + button on the row`.
+
+![](/docs/img/add_credentials_02.png)
+![](/docs/img/add_credentials_03.png)
+
+The `+` button will only show up, if the API has an `Authentication Type` which is not equal to `passthrough`.
 
 #### View My Subscription
 
 If the logged-in user has a subscription, and the latter contains his username in `User Accounts` (see above), then the user can view his subscription via:
 `My Subscription`.
+
+![](/docs/img/my_sub_01.png)
+![](/docs/img/add_credentials_04.png)
+![](/docs/img/add_credentials_05.png)
 
 #### View Analytics
 
@@ -195,6 +220,31 @@ Analytics are shown, when the APIM has processed requests (see below), and it sh
 - Top 10 API avg. response times
 - Top 10 API requests per subscription
 - Top 10 API requests and its status
+
+![](/docs/img/analytics-01.png)
+![](/docs/img/analytics-02.png)
+
+#### White & Blacklisting IP Addresses
+
+You can control which IP addresses can have access to the APIM by adding new entries to the `Access Control` table: 
+
+![](/docs/img/access-list-01.png)
+![](/docs/img/access-list-02.png)
+
+- __IP Address__: this can be a ipv4 or ipv6 address with or without a CIDR. In the example above, all requests from 127.x.x.x will be blocked: 
+
+![](/docs/img/access-list-03.png)
+
+#### Cleaning up expired subscriptions
+
+In the example below, there are some expired subscriptions: 
+
+![](/docs/img/cleanup-01.png)
+
+To clean these up manually, follow the instructions below:
+
+![](/docs/img/cleanup-02.png)
+![](/docs/img/cleanup-03.png)
 
 ## Making requests via the APIM
 
@@ -210,7 +260,7 @@ Save the access token as a variable:
 
 - Now call your API via the gateway.
 
-> http -A bearer -a $JWT_TOKEN post :8080/gateway/v1/myapi subscription-key:[your key]
+> http -A bearer -a $JWT_TOKEN post :8080/gateway/v1/jp subscription-key:[your key]
 
 ## Important urls
 

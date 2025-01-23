@@ -158,7 +158,7 @@
                     <div class="modal-body" x-text="'Delete entry ' + selectedData.ip + ' ?'"></div>
                     <div class="modal-footer">
                         <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                        <a class="btn btn-primary" data-dismiss="modal" @click="remove('/access-list', selectedData.ip, true)">
+                        <a class="btn btn-primary" data-dismiss="modal" @click="removeAL('/access-list', selectedData.ip, true)">
                             Delete
                         </a>
                     </div>
