@@ -12,42 +12,6 @@
     <div x-show="metrics !== null && Object.keys(metrics).length > 0" @page-changed.window="closeSse()">
         <div class="row mt-3">
             <div class="col-md-3">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Total API calls
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800" x-text="metrics[0]"></div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Avg. Response Times
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800" x-text="metrics[1]"></div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-clock fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-md-3">
                 <div class="main-card mb-3 card">
                     <div class="card-body">
                         <h5>Top 10</h5>
@@ -122,15 +86,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-5">
+            <div class="col-lg-5" x-show="metrics[5]?.length">
                 <div class="main-card mb-3 card">
                     <div class="card-body">
                         <h5>API Errors</h5>
-                        <p x-show="!metrics[5] || metrics[5].length == 0"></p>
-                        <table class="table table-bordered table-sm" x-show="metrics[5]?.length">
+                        <table class="table table-bordered table-sm" >
                             <thead>
                             <tr>
                                 <th>Proxy path</th>
+                                <th>Subscription</th>
                                 <th>Status</th>
                                 <th>Date</th>
                             </tr>
@@ -139,6 +103,7 @@
                             <template x-for="(metric, index) in metrics[5]" :key="index">
                                 <tr>
                                     <td x-text="metric.proxyPath"></td>
+                                    <td x-text="metric.sub"></td>
                                     <td x-text="metric.status" :class="metric.status >= 400 && 'bg-danger text-white'"></td>
                                     <td x-text="metric.ts.split('.')[0]"></td>
                                 </tr>

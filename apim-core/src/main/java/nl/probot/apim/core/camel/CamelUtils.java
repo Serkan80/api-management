@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
@@ -49,8 +48,6 @@ import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpCo
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.REMOTE_ADDRESS;
 
 public final class CamelUtils {
-
-    public static final String TRACE_ID = "X-APIM-TRACE-ID";
 
     private CamelUtils() {
         super();
@@ -109,7 +106,6 @@ public final class CamelUtils {
         Log.debugf("forward url: %s", forwardUrl);
         exchange.setProperty("forwardUrl", forwardUrl);
         exchange.getIn().setHeader("X-Forward-For", exchange.getIn().getHeader(REMOTE_ADDRESS));
-        exchange.getIn().setHeader(TRACE_ID, generateTraceId());
     }
 
     public static void cleanUpHeaders(Exchange exchange) {
@@ -207,7 +203,6 @@ public final class CamelUtils {
                     "status", requireNonBlankElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
                     "proxyPath", requireNonBlankElse(exchange.getProperty("proxyPath", String.class), "proxyPath not available"),
                     "httpPath", exchange.getProperty("httpPath", String.class),
-                    "traceId", requireNonBlankElse(exchange.getIn().getHeader(TRACE_ID, String.class), ""),
                     "ts", OffsetDateTime.now().toString(),
                     "subscription", subName));
         }
@@ -257,10 +252,5 @@ public final class CamelUtils {
         }
 
         return original;
-    }
-
-    private static String generateTraceId() {
-        UUID uuid = UUID.randomUUID();
-        return uuid.toString().replace("-", "");
     }
 }

@@ -68,12 +68,12 @@ public class AccessListEntity extends PanacheEntity {
         try {
             var cidrList = AccessListEntity.<AccessListEntity>list("isCidr = true");
             var cidrWhitelist = cidrList.stream().filter(entry -> entry.whitelisted).toList();
-            var cidrBlacklist = cidrList.stream().filter(entry -> entry.blacklisted).toList();
 
             if (!cidrWhitelist.isEmpty()) {
                 return isInCdrlist(ip, cidrWhitelist, false);
             }
 
+            var cidrBlacklist = cidrList.stream().filter(entry -> entry.blacklisted).toList();
             if (!cidrBlacklist.isEmpty()) {
                 return isInCdrlist(ip, cidrBlacklist, true);
             }

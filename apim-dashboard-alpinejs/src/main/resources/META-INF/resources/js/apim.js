@@ -181,7 +181,7 @@ function fetchData() {
 	        form.classList.add('was-validated');
 
             if (form.checkValidity()) {
-                if (body.accounts !== 'undefined' && body.accounts?.length) {
+                if (typeof body.accounts !== 'undefined' && !Array.isArray(body.accounts)) {
                     body.accounts = body.accounts.split(',');
                 }
 
@@ -363,12 +363,10 @@ function sse() {
 
 		startStream() {
 		    const promQueries = [
-		        '?query=sum by (proxyPath, status, ts) (apim_metrics_seconds_count)',
-		        'query=sum by (proxyPath, subscription) (apim_metrics_seconds_count)',
-		        'query=avg by (proxyPath) (apim_metrics_seconds_max)',
-		        'query=sum by (proxyPath) (apim_metrics_seconds_count)',
-		        'query=sum(apim_metrics_seconds_max*apim_metrics_seconds_count)/sum(apim_metrics_seconds_count)',
-		        'query=sum(apim_metrics_seconds_count)'
+		        '?query=sum by (proxyPath, status, subscription, ts)  (last_over_time(apim_metrics_seconds_count[1d]))',
+		        'query=sum by (proxyPath, subscription)  (last_over_time(apim_metrics_seconds_count[1d]))',
+		        'query=avg by (proxyPath) (last_over_time((apim_metrics_seconds_max != 0)[1d:]))',
+		        'query=sum by (proxyPath)  (last_over_time(apim_metrics_seconds_count[1d]))'
 		    ];
 		    const queries = promQueries.join('&');
 
@@ -378,25 +376,18 @@ function sse() {
 		    this.source.onmessage = (event) => {
 		        const data = JSON.parse(event.data).data;
 
-		        if (data.result.length == 1) {
-			        const value = data.result[0].value[1];
-			        if (value.indexOf('.') > -1) {
-			            this.metrics[1] = parseFloat(value).toFixed(4);
-			        } else {
-			            this.metrics[0] = value;
-			        }
-		        } else if (data.result.length > 1) {
+		        if (data.result.length > 0) {
 		            const isAvgSet = data.result.every(metric => metric.value[1].indexOf('.') > -1 || metric.value[1] === '0');
 					const isTotalPerSub = data.result[0].metric.hasOwnProperty('subscription');
 					const isTotalPerStatus = data.result[0].metric.hasOwnProperty('status');
 
 		            if (isAvgSet) {
 		                this.metrics[3] = getAvgResponseTimes(data);
-		            } else if (isTotalPerSub) {
-		                this.metrics[4] = getTotalsPerSub(data);
 		            } else if (isTotalPerStatus) {
-		                this.metrics[5] = getTotalPerStatus(data);
-		            } else {
+                        this.metrics[5] = getTotalPerStatus(data);
+                    } else if (isTotalPerSub) {
+		                this.metrics[4] = getTotalsPerSub(data);
+		            }  else {
 		                this.metrics[2] = getTotalCounts(data);
 		            }
 		        }
@@ -413,8 +404,8 @@ function sse() {
 	        this.closeSse();
 	        const promQueries = [
 	            `sum by (proxyPath) (apim_metrics_seconds_count{subscription="${subName}"})`,
-	            `sum by (httpPath) (apim_metrics_seconds_count{subscription="${subName}"})`,
-	            `avg by (proxyPath, subscription) (apim_metrics_seconds_max{subscription="${subName}"})`
+	            `topk(10, sum by (httpPath) (apim_metrics_seconds_count{subscription="${subName}"}))`,
+	            `avg by (proxyPath, subscription) (last_over_time((apim_metrics_seconds_max{subscription="${subName}"} != 0)[1d:]))`
 	        ];
 
 	        const queryParams = promQueries.reduce((params, query) => {
@@ -486,7 +477,7 @@ function getTotalsPerSub(data) {
 	return metricTemplate(
                         data,
                         row => true,
-                        row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; })
+                        row => { return {proxyPath: row.metric.proxyPath, sub: row.metric.subscription, value: row.value[1]}; });
 }
 
 function getTotalPerStatus(data) {
@@ -497,6 +488,7 @@ function getTotalPerStatus(data) {
 	                                    proxyPath: row.metric.proxyPath,
 	                                    status: row.metric.status,
 	                                    value: row.value[1],
+	                                    sub: row.metric.subscription,
 	                                    ts: row.metric.ts
                                     }
                                 },

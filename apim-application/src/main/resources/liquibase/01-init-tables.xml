@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create-sequences" author="serkan">
+        <createSequence sequenceName="access_list_seq" startValue="1" incrementBy="50" />
+        <createSequence sequenceName="api_seq" startValue="1" incrementBy="50" />
+        <createSequence sequenceName="subscription_seq" startValue="1" incrementBy="50" />
+    </changeSet>
+
+    <changeSet id="create-subscription-table" author="serkan">
+        <createTable tableName="subscription">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="subscription_key" type="VARCHAR(255)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accounts" type="VARCHAR[]">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            CREATE INDEX idx_subscription_accounts ON subscription USING GIN (accounts);
+        </sql>
+    </changeSet>
+
+    <changeSet id="create-api-table" author="serkan">
+        <createTable tableName="api">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="proxy_path" type="VARCHAR(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="proxy_url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="openapi_url" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="description" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="authentication_type" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="max_requests" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-subscription-api-table" author="serkan">
+        <createTable tableName="subscription_api">
+            <column name="subscriptions_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="apis_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="subscriptions_id, apis_id" tableName="subscription_api" constraintName="pk_subscription_api"/>
+        <addForeignKeyConstraint baseColumnNames="subscriptions_id" baseTableName="subscription_api" constraintName="fk_subscription_api_subscription"
+                                 referencedColumnNames="id" referencedTableName="subscription"/>
+        <addForeignKeyConstraint baseColumnNames="apis_id" baseTableName="subscription_api" constraintName="fk_subscription_api_api"
+                                 referencedColumnNames="id" referencedTableName="api"/>
+    </changeSet>
+
+    <changeSet id="create-api-credential-table" author="serkan">
+        <createTable tableName="api_credential">
+            <column name="sub_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="api_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_secret" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_url" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_scope" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="apikey" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="apikey_header" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="apikey_location" type="VARCHAR(10)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="sub_id, api_id" tableName="api_credential" constraintName="pk_api_credential"/>
+        <addForeignKeyConstraint baseColumnNames="sub_id" baseTableName="api_credential" constraintName="fk_api_credential_subscription"
+                                 referencedColumnNames="id" referencedTableName="subscription"/>
+        <addForeignKeyConstraint baseColumnNames="api_id" baseTableName="api_credential" constraintName="fk_api_credential_api"
+                                 referencedColumnNames="id" referencedTableName="api"/>
+    </changeSet>
+
+    <changeSet id="create-access-list-table" author="serkan">
+        <createTable tableName="access_list">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ip" type="VARCHAR(255)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blacklisted" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="whitelisted" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_cidr" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_ip" tableName="access_list">
+            <column name="ip" type="VARCHAR(255)"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
