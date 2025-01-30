@@ -76,6 +76,21 @@ public class ApiEntity extends PanacheEntity {
         return find("id in (?1)", apis).withHint(HINT_READONLY, true).list();
     }
 
+    public static List<Api> search(String searchQuery) {
+        var helper = new PanacheDyanmicQueryHelper();
+        var query = helper.statements(
+                new DynamicStatement("lower(proxyPath) like concat('%', lower(:pp), '%')", searchQuery),
+                new DynamicStatement("lower(proxyUrl) like concat('%', lower(:pu), '%')", searchQuery),
+                new DynamicStatement("lower(owner) like concat('%', lower(:owner), '%')", searchQuery)
+        ).buildWhereStatement(OR);
+
+        return find(query, Sort.descending("id"), helper.values())
+                .withHint(HINT_READONLY, true)
+                .project(Api.class)
+                .page(0, 50)
+                .list();
+    }
+
     public static int updateConditionally(Long apiId, ApiPUT api) {
         var helper = new PanacheDyanmicQueryHelper();
         var query = helper
@@ -91,22 +106,7 @@ public class ApiEntity extends PanacheEntity {
                         new StaticStatement("authenticationType", api.authenticationType())
                 ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
 
-        return ApiEntity.update(query, helper.values());
-    }
-
-    public static List<Api> search(String searchQuery) {
-        var helper = new PanacheDyanmicQueryHelper();
-        var query = helper.statements(
-                new DynamicStatement("lower(proxyPath) like concat('%', lower(:pp), '%')", searchQuery),
-                new DynamicStatement("lower(proxyUrl) like concat('%', lower(:pu), '%')", searchQuery),
-                new DynamicStatement("lower(owner) like concat('%', lower(:owner), '%')", searchQuery)
-        ).buildWhereStatement(OR);
-
-        return ApiEntity.find(query, Sort.descending("id"), helper.values())
-                .withHint(HINT_READONLY, true)
-                .project(Api.class)
-                .page(0, 50)
-                .list();
+        return update(query, helper.values());
     }
 
     @Override

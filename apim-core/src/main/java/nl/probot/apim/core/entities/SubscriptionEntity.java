@@ -218,12 +218,12 @@ public class SubscriptionEntity extends PanacheEntity {
         ).buildUpdateStatement(new WhereStatement("subscriptionKey = :key", key));
 
         if (sub.accounts() != null && !sub.accounts().isEmpty()) {
-            if (!SubscriptionEntity.accountNotExists(key, sub.accountAsArray())) {
+            if (!accountNotExists(key, sub.accountAsArray())) {
                 throw new WebApplicationException("Subscription contains account(s) that exists in another subscription", 400);
             }
         }
 
-        return SubscriptionEntity.update(query, helper.values());
+        return update(query, helper.values());
     }
 
     public static void addCredential(ApiCredential credential) {
@@ -239,15 +239,14 @@ public class SubscriptionEntity extends PanacheEntity {
     }
 
     public static Map<String, Long> cleanup() {
-        //@formatter:off
         var ids = SubscriptionEntity.find("""
-                                          select id
-                                          from SubscriptionEntity s
-                                          where s.endDate is not null and s.endDate <= current_date 
-                                          """)
+                        select id
+                        from SubscriptionEntity s
+                        where s.endDate is not null and s.endDate <= current_date 
+                        """)
                 .project(Long.class)
                 .list();
-        //@formatter:on
+
         var result = Map.<String, Long>of();
         if (!ids.isEmpty()) {
             var count1 = ApiCredentialEntity.delete("id.subscription.id in (?1)", ids);
