@@ -35,8 +35,12 @@ backends or middleware: Messaging Queues/Topics, Databases, Fileservers, SaaS, e
 
 TODOS:
 
-- add Readme to each module
-- documentation on how to use in production
+- [ ] add Readme to each module
+- [ ] documentation on how to use in production
+- [ ] add caching support
+- [ ] define route templates in `apim-core` for extendability
+- [ ] use Qute templating on dashboard to make it more secure 
+- [ ] create ready to use Docker images for OIDC & JWT 
 
 ## Modules
 
@@ -107,7 +111,7 @@ To build and run this project locally, you need the following libraries and tool
 
 ```mermaid
 classDiagram
-    class AccessList   
+    class AccessList
     Subscription "1..n" -- "1..n" Api
     Subscription "0..n" -- ApiCredential
     ApiCredential --> Api
@@ -124,8 +128,7 @@ classDiagram
     - basic auth
     - client credentials
     - token based
-    - pass-through, this is the default behaviour, and it will pass through anything from the original request to the
-      downstream services.
+    - pass-through, this is the default behaviour, and it will pass through the access token from the APIM to the APIs.
 
 ## Usage in development mode
 
