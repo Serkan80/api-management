@@ -78,16 +78,17 @@ For more info on how to use these modules, refer to the `README.md` file in each
     ContainerDb(trace, "OpenTelemetry", "", "Stores traces from APIM in OTeL format")
   }
 
+  Rel(apim, trace, "", "")
   Rel(web_app, apim-auth, "", "")
   Rel(service, apim-auth, "", "")
   Rel(prom, apim, "", "")
-  Rel(apim, trace, "", "")
   Rel(apim-prom, prom, "", "")
   Rel(apim-auth, apim, "", "")
   Rel(apim, db, "", "")
   Rel(dashboard, apim, "", "")
   Rel(dashboard, apim-prom, "", "")
   Rel(apim, backend, "", "")
+  
   
   UpdateRelStyle(dashboard, apim-prom, $textColor="red", $offsetX="0", $offsetY="140")
   UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
@@ -106,11 +107,12 @@ To build and run this project locally, you need the following libraries and tool
 
 ```mermaid
 classDiagram
+    class AccessList   
     Subscription "1..n" -- "1..n" Api
     Subscription "0..n" -- ApiCredential
     ApiCredential --> Api
 ```
-
+- _AccessList_: contains IP addresses that are either white- or blacklisted.
 - _Subscription_: this is similar to a team or an organisation who wants to subscribe and gain access to the APIM.
   A Subscription can have many Apis. After subscribing successfully, a subscription key will be generated. This is
   needed to gain access to the APIM.
@@ -224,14 +226,12 @@ If the logged-in user has a subscription, and the latter contains his username i
 
 Analytics only works if `apim-prometheus-client` is added to `apim-application`, and with a running Prometheus instance. See also [README.md of apim-prometheus](apim-prometheus-client/README.md).
 
-Analytics are shown, when the APIM has processed requests (see below), and it shows the following:
+Analytics are shown, when the APIM has processed requests (see below), and it shows the following **daily** metrics:
 
-- Total amount of all requests
-- Avg. response time of all requests
 - Top 10 API requests
 - Top 10 API avg. response times
 - Top 10 API requests per subscription
-- Top 10 API requests and its status
+- Top 10 API errors
 
 ![](/docs/img/analytics-01.png)
 ![](/docs/img/analytics-02.png)
