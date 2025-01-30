@@ -75,11 +75,13 @@ For more info on how to use these modules, refer to the `README.md` file in each
     Component(dashboard, "apim-dashboard", "Html, Alpine.js, JS", "The dashboard of APIM")
     Component(apim-prom, "apim-prometheus", "Quarkus", "Queries & streams data from Prometheus")
     ContainerDb(prom, "Prometheus", "", "Stores & scrapes metrics from APIM")
+    ContainerDb(trace, "OpenTelemetry", "", "Stores traces from APIM in OTeL format")
   }
 
   Rel(web_app, apim-auth, "", "")
   Rel(service, apim-auth, "", "")
   Rel(prom, apim, "", "")
+  Rel(apim, trace, "", "")
   Rel(apim-prom, prom, "", "")
   Rel(apim-auth, apim, "", "")
   Rel(apim, db, "", "")
