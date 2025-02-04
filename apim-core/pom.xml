@@ -58,6 +58,10 @@
             <artifactId>quarkus-jdbc-postgresql</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-reactive-routes</artifactId>
+        </dependency>
 
         <!-- camel-quarkus -->
         <dependency>
@@ -90,11 +94,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-reactive-routes</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
