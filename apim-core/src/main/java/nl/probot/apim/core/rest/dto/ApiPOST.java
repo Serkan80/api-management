@@ -43,6 +43,15 @@ public record ApiPOST(
         @Schema(description = "max amount of requests per minute")
         Integer maxRequests,
 
+        Boolean cachingEnabled,
+
+        @Min(1)
+        @Max(3600)
+        Integer cachingTTL,
+
+        @Size(max = 255)
+        String cachedPaths,
+
         AuthenticationType authenticationType
 
 ) {
@@ -56,6 +65,9 @@ public record ApiPOST(
         result.description = this.description;
         result.maxRequests = this.maxRequests;
         result.authenticationType = this.authenticationType;
+        result.cachingEnabled = this.cachingEnabled;
+        result.cachingTTL = this.cachingTTL;
+        result.cachedPaths = this.cachedPaths;
         return result;
     }
 }

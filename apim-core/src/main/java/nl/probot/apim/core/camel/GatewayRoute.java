@@ -3,11 +3,13 @@ package nl.probot.apim.core.camel;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import nl.probot.apim.core.utils.CacheManager;
 import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static jakarta.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static nl.probot.apim.core.camel.SubscriptionProcessor.CACHING_KEY;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.THROTTLING_ENABLED;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.THROTTLING_MAX_REQUESTS;
@@ -28,11 +30,14 @@ public class GatewayRoute extends EndpointRouteBuilder {
     @Inject
     MeterRegistry meterRegistry;
 
+    @Inject
+    CacheManager cacheManager;
+
     @Override
     public void configure() {
         onException(Throwable.class)
                 .handled(true)
-                .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, false))
+                .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, false, false))
                 .process(CamelUtils::cleanUpHeaders)
                 .process(CamelUtils::setErrorMessage)
                 .end();
@@ -40,7 +45,7 @@ public class GatewayRoute extends EndpointRouteBuilder {
         //@formatter:off
         from(platformHttp(this.apimContextRoot).matchOnUriPrefix(true))
                 .id("apimRoute")
-                .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, true))
+                .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, true, false))
                 .process(this.accessProcessor)
                 .process(this.subscriptionProcessor)
                 .choice()
@@ -58,7 +63,8 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .process(CamelUtils::forwardUrlProcessor)
                 .process(CamelUtils::cleanUpHeaders)
                 .toD("${exchangeProperty.forwardUrl}?bridgeEndpoint=true&skipRequestHeaders=false&followRedirects=true&connectionClose=true&copyHeaders=true${exchangeProperty.clientAuth}")
-                .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, false));
+                .to("direct:caching-set")
+                .process(exchange -> CamelUtils.metrics(exchange, this.meterRegistry, false, false));
         //@formatter:on
 
         from("direct:throttling")
@@ -67,6 +73,14 @@ public class GatewayRoute extends EndpointRouteBuilder {
                 .rejectExecution(true)
                 .timePeriodMillis(60000)
                 .setHeader("X-RateLimit-Limit", exchangeProperty(THROTTLING_MAX_REQUESTS));
+
+        //@formatter:off
+        from("direct:caching-set")
+                .choice()
+                    .when(exchangeProperty(CACHING_KEY).isNotNull())
+                        .process(ex -> CamelUtils.setToCache(ex, this.cacheManager))
+                .end();
+        //@formatter:on
     }
 }
 

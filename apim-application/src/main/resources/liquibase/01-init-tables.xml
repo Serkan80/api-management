@@ -63,6 +63,15 @@
             <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
+            <column name="caching_enabled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="true"/>
+            </column>
+            <column name="caching_ttl" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cached_paths" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
             <column name="authentication_type" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>

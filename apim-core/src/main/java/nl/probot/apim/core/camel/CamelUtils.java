@@ -13,13 +13,16 @@ import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.NewCookie;
 import nl.probot.apim.core.entities.ApiCredentialEntity;
 import nl.probot.apim.core.entities.SubscriptionEntity;
+import nl.probot.apim.core.utils.CacheManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.attachment.AttachmentMessage;
+import org.apache.camel.converter.stream.InputStreamCache;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 
 import java.net.URLEncoder;
 import java.time.OffsetDateTime;
+import java.time.temporal.ValueRange;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,17 +36,20 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static nl.probot.apim.core.camel.SubscriptionProcessor.CACHING_KEY;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION;
 import static nl.probot.apim.core.camel.SubscriptionProcessor.SUBSCRIPTION_KEY;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.apache.camel.Exchange.EXCEPTION_CAUGHT;
 import static org.apache.camel.Exchange.FAILURE_ENDPOINT;
+import static org.apache.camel.Exchange.HTTP_METHOD;
 import static org.apache.camel.Exchange.HTTP_PATH;
 import static org.apache.camel.Exchange.HTTP_QUERY;
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
 import static org.apache.camel.Exchange.HTTP_URI;
 import static org.apache.camel.ExchangePropertyKey.FAILURE_ROUTE_ID;
 import static org.apache.camel.component.http.HttpCredentialsHelper.generateBasicAuthHeader;
+import static org.apache.camel.component.http.HttpMethods.GET;
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.AUTHENTICATED_USER;
 import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConstants.REMOTE_ADDRESS;
 
@@ -187,25 +193,61 @@ public final class CamelUtils {
         }
     }
 
-    public static void metrics(Exchange exchange, MeterRegistry registry, boolean start) {
+    public static void metrics(Exchange exchange, MeterRegistry registry, boolean start, boolean fromCache) {
         if (start) {
             var sample = Timer.start(registry);
             exchange.setProperty("timer", sample);
             exchange.setProperty("httpPath", sanitize(exchange.getIn().getHeader(HTTP_URI, String.class)));
         } else {
             var timer = exchange.getProperty("timer", Sample.class);
+            var status = getStatus(exchange, fromCache);
             var subName = Optional.ofNullable(exchange.getProperty(SUBSCRIPTION, SubscriptionEntity.class))
                     .map(entity -> entity.name)
                     .orElse("error: no subscription found for this request");
 
             timer.stop(registry.timer(
                     "apim_metrics",
-                    "status", requireNonBlankElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), "500"),
+                    "status", status,
                     "proxyPath", requireNonBlankElse(exchange.getProperty("proxyPath", String.class), "proxyPath not available"),
                     "httpPath", exchange.getProperty("httpPath", String.class),
                     "ts", OffsetDateTime.now().toString(),
                     "subscription", subName));
         }
+    }
+
+    public static void setToCache(Exchange ex, CacheManager cacheManager) {
+        if (isOKGetResponse(ex)) {
+            var cacheKey = ex.getProperty(CACHING_KEY, String.class);
+            var body = ex.getIn().getBody();
+            var length = switch (body) {
+                case InputStreamCache is -> is.length();
+                case byte[] b -> b.length;
+                case String s -> s.length();
+                default -> body.toString().length();
+            };
+
+            if (length < 5 * 1024 * 1024) {
+                Log.debugf("Setting body into cache, size: %s", length);
+                cacheManager.set(cacheKey, body);
+            }
+        }
+    }
+
+    private static String getStatus(Exchange exchange, boolean fromCache) {
+        var errorStatus = switch (exchange.getProperty(EXCEPTION_CAUGHT, Exception.class)) {
+            case null -> "200";
+            case HttpOperationFailedException he -> String.valueOf(he.getStatusCode());
+            default -> "500";
+        };
+
+        return requireNonBlankElse(exchange.getIn().getHeader(HTTP_RESPONSE_CODE, String.class), fromCache ? "200" : errorStatus);
+    }
+
+    private static boolean isOKGetResponse(Exchange ex) {
+        var status = ex.getMessage().getHeader(HTTP_RESPONSE_CODE, Integer.class);
+        var method = ex.getIn().getHeader(HTTP_METHOD, String.class);
+
+        return method.equalsIgnoreCase(GET.name()) && ValueRange.of(200, 204).isValidIntValue(status);
     }
 
     private static List<NewCookie> parseCookies(String rawCookieHeader) {
@@ -252,5 +294,6 @@ public final class CamelUtils {
         }
 
         return original;
+
     }
 }

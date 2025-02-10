@@ -40,6 +40,14 @@ public record ApiPUT(
         @Schema(description = "max amount of requests per minute")
         Integer maxRequests,
         Boolean enabled,
+        Boolean cachingEnabled,
+
+        @Min(1)
+        @Max(3600)
+        Integer cachingTTL,
+
+        @Size(max = 255)
+        String cachedPaths,
         AuthenticationType authenticationType
 ) {
 
@@ -47,12 +55,13 @@ public record ApiPUT(
     @AssertTrue(message = "At least one update parameter must be specified")
     public boolean isNotEmpty() {
         return isNotBlank(this.proxyPath)
-                || isNotBlank(this.proxyUrl)
-                || isNotBlank(this.owner)
-                || this.description != null
-                || this.openApiUrl != null
-                || this.maxRequests != null
-                || this.enabled != null
-                || this.authenticationType != null;
+               || isNotBlank(this.proxyUrl)
+               || isNotBlank(this.owner)
+               || this.description != null
+               || this.openApiUrl != null
+               || this.maxRequests != null
+               || this.enabled != null
+               || this.cachingEnabled != null
+               || this.authenticationType != null;
     }
 }

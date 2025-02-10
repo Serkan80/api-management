@@ -39,10 +39,10 @@ class CacheManagerTest {
     @ParameterizedTest
     public void addEntry(String value) {
         if (isNullOrEmpty(value)) {
-            assertThatThrownBy(() -> this.cacheManager.get("test", () -> value)).isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> this.cacheManager.getAndSet("test", () -> value)).isInstanceOf(NullPointerException.class);
             assertThat(this.cacheManager.cache).isEmpty();
         } else {
-            var result = this.cacheManager.get("test", () -> "hello world");
+            var result = this.cacheManager.getAndSet("test", () -> "hello world");
 
             assertThat(result).isEqualTo("hello world");
             assertThat(this.cacheManager.cache).hasSize(1);
@@ -61,7 +61,7 @@ class CacheManagerTest {
             this.cacheManager.cache.put("%d".formatted(i), new TimedValue(i));
         }
 
-        var value = this.cacheManager.get("101", () -> "I should be present");
+        var value = this.cacheManager.getAndSet("101", () -> "I should be present");
         assertThat(this.cacheManager.cache).hasSize(51).allSatisfy((k, v) -> assertThat(Integer.valueOf(k)).isGreaterThanOrEqualTo(51));
         assertThat(value).isEqualTo("I should be present");
     }

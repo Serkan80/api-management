@@ -15,6 +15,9 @@ public record Api(
         String openApiUrl,
         String description,
         boolean enabled,
+        Boolean cachingEnabled,
+        Integer cachingTTL,
+        String cachedPaths,
         Integer maxRequests,
         AuthenticationType authenticationType
 ) {
@@ -27,6 +30,9 @@ public record Api(
                 entity.openApiUrl,
                 entity.description,
                 entity.enabled,
+                entity.cachingEnabled,
+                entity.cachingTTL,
+                entity.cachedPaths,
                 entity.maxRequests,
                 entity.authenticationType
         );

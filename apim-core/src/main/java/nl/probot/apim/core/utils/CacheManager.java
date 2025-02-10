@@ -9,6 +9,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -32,22 +33,26 @@ public class CacheManager {
 
     Map<String, TimedValue> cache = new ConcurrentHashMap<>(100);
 
-    public <T> T get(String key, Supplier<T> supplier) {
+    public <T> T getAndSet(String key, Supplier<T> supplier) {
         var timedValue = this.cache.get(key);
         if (timedValue == null) {
             var result = supplier.get();
-            var size = this.cache.size();
-
-            if (size >= this.maxAmount) {
-                Log.debugf("Removing stale date from cache, size: %d", size);
-                this.cache.entrySet().removeIf(entry -> entry.getValue().isStale(this.keepTime));
-            }
+            checkCacheSize();
 
             this.cache.put(key, new TimedValue(result));
             return result;
         }
 
         return (T) timedValue.value;
+    }
+
+    public Optional<TimedValue> get(String key) {
+        return Optional.ofNullable(this.cache.get(key));
+    }
+
+    public void set(String key, Object value) {
+        checkCacheSize();
+        this.cache.put(key, new TimedValue(value));
     }
 
     public void invalidate(String key) {
@@ -58,7 +63,17 @@ public class CacheManager {
         this.cache.clear();
     }
 
-    record TimedValue(Object value, long timestamp) {
+    private void checkCacheSize() {
+        var size = this.cache.size();
+
+        if (size >= this.maxAmount) {
+            Log.debugf("Removing stale date from cache, size: %d", size);
+            this.cache.entrySet().removeIf(entry -> entry.getValue().isStale(this.keepTime));
+        }
+    }
+
+    public record TimedValue(Object value, long timestamp) {
+
 
         public TimedValue(Object value) {
             this(Objects.requireNonNull(value), System.currentTimeMillis());

@@ -19,11 +19,13 @@ import nl.probot.apim.core.rest.dto.Api;
 import nl.probot.apim.core.rest.dto.ApiPUT;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.persistence.EnumType.STRING;
 import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
@@ -65,8 +67,32 @@ public class ApiEntity extends PanacheEntity {
     @Column(name = "max_requests")
     public Integer maxRequests;
 
+    @Column(name = "caching_enabled")
+    public Boolean cachingEnabled = false;
+
+    @Min(1)
+    @Max(3600)
+    @Column(name = "caching_ttl")
+    public Integer cachingTTL;
+
+    @Size(max = 255)
+    @Column(name = "cached_paths")
+    public String cachedPaths;
+
     @ManyToMany(mappedBy = "apis")
     public Set<SubscriptionEntity> subscriptions = new HashSet<>();
+
+    public boolean isPathCached(String incomingRequest) {
+        if (Boolean.FALSE.equals(this.cachingEnabled)) {
+            return false;
+        }
+
+        if (isNullOrEmpty(this.cachedPaths)) {
+            return true;
+        }
+
+        return Arrays.stream(this.cachedPaths.split(",")).anyMatch(path -> incomingRequest.contains(path));
+    }
 
     public static List<ApiEntity> findByIds(Set<Long> apis) {
         if (apis.isEmpty()) {
@@ -103,6 +129,9 @@ public class ApiEntity extends PanacheEntity {
                         new StaticStatement("description", api.description()),
                         new StaticStatement("maxRequests", api.maxRequests()),
                         new StaticStatement("enabled", api.enabled()),
+                        new StaticStatement("cachingEnabled", api.cachingEnabled()),
+                        new StaticStatement("cachingTTL", api.cachingTTL()),
+                        new StaticStatement("cachedPaths", api.cachedPaths()),
                         new StaticStatement("authenticationType", api.authenticationType())
                 ).buildUpdateStatement(new WhereStatement("id = :id", apiId));
 
