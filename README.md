@@ -17,6 +17,7 @@ The APIM provides the following features:
 - white- & blacklisting, 
 - rate limiting,
 - circuit breaker,
+- caching
 - multipart & file upload support,
 - CORS,
 - TLS/SSL,
@@ -36,7 +37,7 @@ TODOS:
 
 - [ ] add Readme to each module
 - [ ] documentation on how to use in production
-- [ ] add caching support
+- [X] add caching support
 - [ ] define route templates in `apim-core` for extendability
 - [ ] use Qute templating on dashboard to make it more secure 
 - [ ] create ready to use Docker images for OIDC & JWT 
