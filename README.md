@@ -1,10 +1,8 @@
-# Background
+# OpenSesame
 
-This project contains an api-management (APIM) system built with Quarkus and Apache Camel. It is built in a modular way,
+OpenSesame is an api-management (APIM) system built with Quarkus and Apache Camel. It is built in a modular way,
 where you can build your own APIM in a customizable way that fits your needs. Almost all functionalities are optional
 beside the core.
-
-Note that this project is still in progress.
 
 ## Features
 
