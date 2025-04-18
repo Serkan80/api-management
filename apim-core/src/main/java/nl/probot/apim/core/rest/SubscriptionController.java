@@ -15,6 +15,7 @@ import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
 import nl.probot.apim.core.rest.dto.SubscriptionAll;
+import nl.probot.apim.core.rest.dto.SubscriptionApi;
 import nl.probot.apim.core.rest.dto.SubscriptionPOST;
 import nl.probot.apim.core.rest.dto.SubscriptionPUT;
 import nl.probot.apim.core.rest.dto.Views;
@@ -26,6 +27,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
@@ -151,6 +153,12 @@ public class SubscriptionController implements SubscriptionOpenApi {
             return RestResponse.ok();
         }
         return RestResponse.noContent();
+    }
+
+    @Override
+    @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
+    public List<SubscriptionApi> findSubscriptionForApis(Optional<String> owner) {
+        return SubscriptionEntity.findSubscriptionsForApis(owner);
     }
 
     @Override

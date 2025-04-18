@@ -19,6 +19,7 @@ import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.WhereStatement;
 import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
+import nl.probot.apim.core.rest.dto.SubscriptionApi;
 import nl.probot.apim.core.rest.dto.SubscriptionPUT;
 import org.hibernate.Session;
 import org.hibernate.annotations.Array;
@@ -35,7 +36,7 @@ import java.util.Set;
 
 import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.CascadeType.PERSIST;
-import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
+import static nl.probot.apim.commons.jpa.QueryOperator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Entity
@@ -154,6 +155,25 @@ public class SubscriptionEntity extends PanacheEntity {
                 """, account)
                 .<SubscriptionEntity>singleResultOptional()
                 .orElseThrow(() -> new NotFoundException("Subscription with given key not found or is inactive"));
+    }
+
+    public static List<SubscriptionApi> findSubscriptionsForApis(Optional<String> owner) {
+        var query = getEntityManager().createNativeQuery("""
+                         SELECT s.name, a.owner, a.proxy_path, a.proxy_url
+                         FROM subscription s
+                         JOIN subscription_api sa ON s.id = sa.subscriptions_id
+                         JOIN api a ON sa.apis_id = a.id
+                         %s
+                         ORDER BY s.name, a.owner
+                        """.formatted(owner.map(name -> "where lower(a.owner) = lower(?1)").orElse("")),
+                SubscriptionApi.class
+        );
+
+        if (owner.isPresent()) {
+            query.setParameter(1, owner.get());
+        }
+
+        return query.getResultList();
     }
 
     public static List<Subscription> search(String searchQuery) {

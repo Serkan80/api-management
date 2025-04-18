@@ -1,6 +1,7 @@
 package nl.probot.apim.core.rest.openapi;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.DELETE;
@@ -14,6 +15,7 @@ import nl.probot.apim.core.rest.dto.ApiCredential;
 import nl.probot.apim.core.rest.dto.ApiCredentialPUT;
 import nl.probot.apim.core.rest.dto.Subscription;
 import nl.probot.apim.core.rest.dto.SubscriptionAll;
+import nl.probot.apim.core.rest.dto.SubscriptionApi;
 import nl.probot.apim.core.rest.dto.SubscriptionPOST;
 import nl.probot.apim.core.rest.dto.SubscriptionPUT;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -31,6 +33,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.eclipse.microprofile.openapi.annotations.enums.SchemaType.STRING;
@@ -114,6 +117,12 @@ public interface SubscriptionOpenApi {
             @APIResponse(name = "Not Found", responseCode = "404", description = "When the subscription is not found")
     })
     RestResponse<Void> updateCredential(@Valid ApiCredentialPUT credential);
+
+    @GET
+    @Path("/usage")
+    @RolesAllowed({"${apim.roles.viewer}", "${apim.roles.manager}"})
+    @Operation(summary = "Returns the apis with their usage by subscriptions")
+    List<SubscriptionApi> findSubscriptionForApis(@RestQuery Optional<String> owner);
 
     @DELETE
     @Path("/cleanup")

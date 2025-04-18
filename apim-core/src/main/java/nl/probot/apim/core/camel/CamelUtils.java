@@ -294,6 +294,5 @@ public final class CamelUtils {
         }
 
         return original;
-
     }
 }

@@ -1,6 +1,5 @@
 package nl.probot.apim.core.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.panache.common.Sort;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +10,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import nl.probot.apim.commons.jpa.ExtendPanacheBaseEntity;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
@@ -27,12 +27,12 @@ import java.util.Set;
 
 import static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;
 import static jakarta.persistence.EnumType.STRING;
-import static nl.probot.apim.commons.jpa.QuerySeparator.OR;
+import static nl.probot.apim.commons.jpa.QueryOperator.OR;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Entity
 @Table(name = "api")
-public class ApiEntity extends PanacheEntity {
+public class ApiEntity extends ExtendPanacheBaseEntity {
 
     @NotBlank
     @Size(max = 100)
@@ -100,6 +100,19 @@ public class ApiEntity extends PanacheEntity {
         }
 
         return find("id in (?1)", apis).withHint(HINT_READONLY, true).list();
+    }
+
+    public static List<Api> search2(String searchQuery) {
+        return dynamicSearch("""
+                        lower(proxyPath) like concat('%', lower(:pp), '%');
+                        lower(proxyUrl) like concat('%', lower(:pu), '%');
+                        lower(owner) like concat('%', lower(:owner), '%')
+                        """,
+                searchQuery, searchQuery, searchQuery)
+                .withHint(HINT_READONLY, true)
+                .project(Api.class)
+                .page(0, 50)
+                .list();
     }
 
     public static List<Api> search(String searchQuery) {

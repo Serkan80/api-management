@@ -18,6 +18,9 @@
                     <li class="nav-item">
                         <a data-toggle="tab" href="#tab-analytics" class="nav-link">My Analytics</a>
                     </li>
+                    <li class="nav-item">
+                        <a data-toggle="tab" href="#tab-api-usage" class="nav-link">My API Usages</a>
+                    </li>
                 </ul>
                 <div class="tab-content">
                     <div id="tab-sub" class="tab-pane active" role="tabpanel">
@@ -28,6 +31,9 @@
                     </div>
                     <div id="tab-analytics" class="tab-pane" role="tabpanel">
                         <div x-html="fetchPage('my-sub-analytics.html')"></div>
+                    </div>
+                    <div id="tab-api-usage" class="tab-pane" role="tabpanel">
+                        <div x-html="fetchPage('my-sub-usage.html')"></div>
                     </div>
                 </div>
             </div>

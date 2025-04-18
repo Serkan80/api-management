@@ -1,0 +1,42 @@
+<div x-data="fetchData" x-init="get('/subscriptions/usage')">
+    <p class="mt-4" x-show="data && data.length == 0">No subscriptions found on any API</p>
+
+    <div class="row justify-content-between">
+        <div class="col-md-4 mb-4 pl-0">
+            <input
+                    type="search"
+                    class="form-control form-control-sm"
+                    placeholder="Search"
+                    x-model="searchQuery"
+                    @keyup.debounce.500ms="searchLocal">
+        </div>
+    </div>
+
+    <div class="row card shadow mb-4" x-show="data.length > 0">
+        <h4 class="card-header">API Usages:</h4>
+        <div class="card-body">
+            <div class="row table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                    <tr>
+                        <th>Subscription</th>
+                        <th>API Owner</th>
+                        <th>API Proxy path</th>
+                        <th>API URL</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="(subApi,index) in searchLocal" :key="index">
+                        <tr>
+                            <td x-text="subApi.name"></td>
+                            <td x-text="subApi.owner"></td>
+                            <td x-text="subApi.proxyPath"></td>
+                            <td x-text="subApi.proxyUrl"></td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

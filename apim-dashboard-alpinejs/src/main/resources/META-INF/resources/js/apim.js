@@ -39,7 +39,9 @@ function spa() {
             '/subscriptions': 'subscriptions.html',
             '/apis': 'apis.html',
             '/analytics': 'analytics.html',
-            '/administration': 'administration.html'
+            '/administration': 'administration.html',
+            '/my-sub-usage': 'my-sub-usage.html',
+            '/usage': 'usage.html'
         },
         username: null,
         roles: [],
@@ -156,6 +158,7 @@ function fetchData() {
 		errors: null,
 		baseUrl: '/apim/core',
 		extraInfo: null,
+		searchQuery: '',
 
 		get(path) {
 		    this.isLoading = true;
@@ -179,6 +182,16 @@ function fetchData() {
                     this.isLoading = false;
                     this.data = json;
                 });
+        },
+
+        get searchLocal() {
+            if (this.searchQuery && this.searchQuery.length > 0) {
+                return this.data.filter(row => {
+                    let result = Object.values(row).join([separator=' ']).toLowerCase();
+                    return result.includes(this.searchQuery.toLowerCase());
+                });
+            }
+            return this.data;
         },
 
 		post(formId, path, body, toPage) {

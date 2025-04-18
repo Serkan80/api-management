@@ -1,0 +1,30 @@
+<div x-init="get('/subscriptions/usage?owner=' + selectedData.name)">
+    <p class="mt-4" x-show="data && data.length == 0">Your APIs are not used by anyone</p>
+
+    <div class="row card shadow mb-4" x-show="data.length > 0">
+        <h4 class="card-header pt-4">Your APIs are used by:</h4>
+        <div class="card-body">
+            <div class="row table-responsive" x-show="data && data.length > 0">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                    <tr>
+                        <th>API Owner</th>
+                        <th>Subscription</th>
+                        <th>API Proxy path</th>
+                        <th>API URL</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="(subApi,index) in data" :key="index">
+                        <tr>
+                            <td x-text="subApi.owner"></td>
+                            <td x-text="subApi.name"></td>
+                            <td x-text="subApi.proxyPath"></td>
+                            <td x-text="subApi.proxyUrl"></td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>

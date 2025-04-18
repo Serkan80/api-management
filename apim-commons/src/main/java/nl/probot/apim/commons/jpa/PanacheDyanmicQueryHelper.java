@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
-import static nl.probot.apim.commons.jpa.QuerySeparator.AND;
-import static nl.probot.apim.commons.jpa.QuerySeparator.COMMA;
+import static nl.probot.apim.commons.jpa.QueryOperator.AND;
+import static nl.probot.apim.commons.jpa.QueryOperator.COMMA;
 
 /***
  * Helps writing dynamic queries when parameters are optional.
@@ -58,7 +58,7 @@ public class PanacheDyanmicQueryHelper {
      * @param separator can be: PanacheDyanmicQueryHelper.AND, PanacheDyanmicQueryHelper.OR
      * @see PanacheDyanmicQueryHelper#buildWhereStatement()
      */
-    public String buildWhereStatement(QuerySeparator separator) {
+    public String buildWhereStatement(QueryOperator separator) {
         return buildQuery(separator.value, Optional.empty(), Optional.empty());
     }
 

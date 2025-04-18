@@ -55,9 +55,16 @@
         <hr class="sidebar-divider">
 
         <li class="nav-item" :class="{'active': currentRoute === '/apis'}">
-            <a class="nav-link" href="#/apis" @click.prevent="loadPage('/apis')">
+            <a class="nav-link collapsed" href="#/apis" @click.prevent="loadPage('/apis')"
+               data-toggle="collapse" data-target="#collapse1" aria-controls="collapse1" aria-expanded="false">
                 <i class="fas fa-fw fa-table"></i>
-                <span>APIs</span></a>
+                <span>APIs</span>
+            </a>
+            <div id="collapse1" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar" style="">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <a class="collapse-item" href="#/usage" @click.prevent="loadPage('/usage')">Usage by Subscriptions</a>
+                </div>
+            </div>
         </li>
 
         <template x-if="hasManagerRole()">
