@@ -10,17 +10,18 @@ The APIM provides the following features:
 
 - proxying REST, SOAP & GraphQL protocols,
 - managing APIs & Subscriptions via a Dashboard,
-- versioning & routing: easily manage multiple versions of your APIs and route traffic to the appropriate version.
+- get an overview of who is using which Api's,
+- versioning & routing: easily manage multiple versions of your APIs and route traffic to the appropriate version,
 - analytics: tracing, metrics & logging info about an API,
 - white- & blacklisting, 
 - rate limiting,
 - circuit breaker,
-- caching
+- caching,
 - multipart & file upload support,
 - CORS,
 - TLS/SSL,
 - Basic Auth, Client Credentials, token based or pass-through authentication for the APIs,
-- OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM,
+- OAuth/OIDC, custom JWT, properties file based, Database and LDAP authentication for the APIM.
 
 Non-functional features:
 - Scalability: the APIM is designed to be highly scalable, with the ability to handle high-traffic API workloads. 
