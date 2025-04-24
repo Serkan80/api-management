@@ -222,8 +222,8 @@ public final class CamelUtils {
             var length = switch (body) {
                 case InputStreamCache is -> is.length();
                 case byte[] b -> b.length;
-                case String s -> s.length();
-                default -> body.toString().length();
+                case String s -> s.getBytes().length;
+                default -> body.toString().getBytes().length;
             };
 
             if (length < 5 * 1024 * 1024) {

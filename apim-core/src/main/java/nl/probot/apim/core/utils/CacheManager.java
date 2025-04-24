@@ -74,7 +74,6 @@ public class CacheManager {
 
     public record TimedValue(Object value, long timestamp) {
 
-
         public TimedValue(Object value) {
             this(Objects.requireNonNull(value), System.currentTimeMillis());
         }

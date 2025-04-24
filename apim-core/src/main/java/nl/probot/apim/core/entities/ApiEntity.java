@@ -1,5 +1,6 @@
 package nl.probot.apim.core.entities;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.panache.common.Sort;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,7 +11,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import nl.probot.apim.commons.jpa.ExtendPanacheBaseEntity;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.DynamicStatement;
 import nl.probot.apim.commons.jpa.PanacheDyanmicQueryHelper.StaticStatement;
@@ -32,7 +32,7 @@ import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 
 @Entity
 @Table(name = "api")
-public class ApiEntity extends ExtendPanacheBaseEntity {
+public class ApiEntity extends PanacheEntity {
 
     @NotBlank
     @Size(max = 100)
@@ -83,10 +83,11 @@ public class ApiEntity extends ExtendPanacheBaseEntity {
     public Set<SubscriptionEntity> subscriptions = new HashSet<>();
 
     public boolean isPathCached(String incomingRequest) {
-        if (Boolean.FALSE.equals(this.cachingEnabled)) {
+        if (Boolean.FALSE.equals(this.cachingEnabled) || this.cachingTTL == null) {
             return false;
         }
 
+        // just cache the incoming request
         if (isNullOrEmpty(this.cachedPaths)) {
             return true;
         }
@@ -100,19 +101,6 @@ public class ApiEntity extends ExtendPanacheBaseEntity {
         }
 
         return find("id in (?1)", apis).withHint(HINT_READONLY, true).list();
-    }
-
-    public static List<Api> search2(String searchQuery) {
-        return dynamicSearch("""
-                        lower(proxyPath) like concat('%', lower(:pp), '%');
-                        lower(proxyUrl) like concat('%', lower(:pu), '%');
-                        lower(owner) like concat('%', lower(:owner), '%')
-                        """,
-                searchQuery, searchQuery, searchQuery)
-                .withHint(HINT_READONLY, true)
-                .project(Api.class)
-                .page(0, 50)
-                .list();
     }
 
     public static List<Api> search(String searchQuery) {
@@ -164,8 +152,8 @@ public class ApiEntity extends ExtendPanacheBaseEntity {
 
         if (obj instanceof ApiEntity api) {
             return Objects.equals(this.owner, api.owner)
-                   && Objects.equals(this.proxyPath, api.proxyPath)
-                   && Objects.equals(this.proxyUrl, api.proxyUrl);
+                    && Objects.equals(this.proxyPath, api.proxyPath)
+                    && Objects.equals(this.proxyUrl, api.proxyUrl);
         }
         return false;
     }
